@@ -18,14 +18,15 @@ Audience:
 - Visual as much as possible. 
 - Explain the audience. 
   -  Help decide the reader whether this is for them or not. 
-f.	Explain technical pre-requisites
-i.	Computing power, etc.  
+- Explain technical pre-requisites
+  - Computing power, etc. 
+ 
 2.	The ‘core’ guide
-a.	How to use this guide. 
-i.	Each section could be used/gone through on their own (i.e. you can start with Section B, we provide the data output to run that on the Bangladesh example.)
-b.	Section A: Getting the data you need. 
-i.	Introduction: Non-technical description of what you do in this section. 
-1.	Step by step diagram that explains the process. 
+- How to use this guide. 
+  - Each section could be used/gone through on their own (i.e. you can start with Section B, we provide the data output to run that on the Bangladesh example.)
+- Section A: Getting the data you need. 
+  - Introduction: Non-technical description of what you do in this section. 
+    -  Step by step diagram that explains the process. 
 ii.	The theory
 1.	Key concepts in geospatial analyses
 i.	The characteristics of geospatial datasets. 
