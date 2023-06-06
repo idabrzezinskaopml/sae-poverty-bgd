@@ -5,7 +5,23 @@ format: html
 editor: visual
 ---
 
-## Co-variate sources - Bangladesh
+# Section A: Geo-spatial 
+
+## 1. Introduction 
+
+## 2. Theory - key concepts in Geo-spatial analysis
+
+-   Vector vs. raster data
+
+-   Shapefile
+
+-   Structure of spatial data - different from traditional data frames
+
+-   CRS, spatial resolution, extent
+
+## 3. Applying this
+
+### Data sources - Bangladesh
 
 We will be working with the following data sets:
 
@@ -21,31 +37,17 @@ We will be working with the following data sets:
 
 6.  Pre-harmonised geo-spatial datasets from World Pop, available for all countries. The datasets includes information on topography, slope, Open Street Map distance to closest road, waterway, and various land cover classes. Note that this data has already been harmonised to our base layer and hence will not require any processing in this script.
 
-    ::: callout-note
-    ## Quick glossary
-
-    CRS -
-
-    Extent -
-
-    Spatial resolution -
-
-    Shape file -
-
-    Raster -
-    :::
-
-## Base layers
+### Base layers
 
 | Geo-spatial file name             | Description                                                          | Year | Link to download                                                                                                               |
-|:----------------------------------|:---------------------------------------------------------------------|:-----|:-------------------------------------------------------------------------------------------------------------------------------|
+|:------------|:---------------|:------------|:-------------------------------|
 | bgd_level0_100m_2000_2020.tif     | WorldPop Administrative Level 0 mastergrid base layer for Bangladesh | 2020 | [World Pop Hub - National boundaries](https://www.worldpop.org/geodata/summary?id=24282)                                       |
 | bgd_admbnda_adm3_bbs_20201113.shp | Administrative Level 3 (Upazila) Units in Bangladesh                 | 2015 | [Bangladesh - Subnational Administrative Boundaries - Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-bgd) |
 
-## Geo-spatial data sets to be harmonised
+### Geo-spatial data sets to be harmonised
 
 |                                                                             |                                                                              |      |                                                                                                                                                                                                                                                                                                  |
-|-----------------------------------------------------------------------------|------------------------------------------------------------------------------|:-----|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|------------|------------|:-----------|--------------------------------------|
 | **Geo-spatial file name**                                                   | Description                                                                  | Year | Link to download                                                                                                                                                                                                                                                                                 |
 | SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif | VIIRS night-time lights (global)                                             | 2015 | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/#v1)                                                                                                                                                                                                                            |
 | 2015_accessibility_to_cities_v1.0.tif                                       | MAP travel time to high-density urban centres (global)                       | 2015 | [Malaria Atlas - Accessibility to Cities](https://data.malariaatlas.org/maps?layers=Accessibility:201501_Global_Travel_Time_to_Cities,Malaria:202206_Global_Pf_Parasite_Rate)                                                                                                                    |
@@ -59,10 +61,10 @@ We will be working with the following data sets:
 | bgd_youth_15_24_2020.tif                                                    | Meta (Facebook) Population density -- Youths aged 15-24; BGD for 2020        | 2020 |                                                                                                                                                                                                                                                                                                  |
 | bgd_children_under_five_2020.tif                                            | Meta (Facebook) Population density -- Children under 5; BGD                  | 2020 |                                                                                                                                                                                                                                                                                                  |
 
-## WorldPop harmonised geo-spatial data sets
+### WorldPop harmonised geo-spatial data sets
 
 |                                           |                                                                         |           |                                                                |
-|-------------------------------------------|-------------------------------------------------------------------------|-----------|----------------------------------------------------------------|
+|---------------|-----------------------|---------------|--------------------|
 | **Geo-spatial File Name**                 | **Description**                                                         | **Year**  | **Link to Download**                                           |
 | bgd_srtm_topo_100m.tif                    | SRTM topography in BGD                                                  | 2000      | [World Pop](https://www.worldpop.org/project/categories?id=14) |
 | bgd_srtm_slope_100m.tif                   | SRTM slope (derivative of topography) in BGD                            | 2000      |                                                                |
@@ -81,7 +83,7 @@ We will be working with the following data sets:
 | bgd_esaccilc_dst130_100m_2014.tif         | Distance to ESA-CCI-LC shrub area edges in BGD                          | 2014      |                                                                |
 | bgd_dst_coastline_100m_2000_2020.tif      | Distance to open water coastline in BGD                                 | 2000-2020 |                                                                |
 
-## Libraries
+### Libraries
 
 Throughout this workflow, we will be using functions from the packages shown in the chunk below. Most of them allow for manipulation of spatial objects in R, others are used to enhance our data visualisations - such as nice colour schemes for maps. All the below packages need to be installed and loaded in order for the workflow to run smoothly. If you don't already have some of the below packages installed, you can do so by running: install.packages("your.package.name"). After that, you will be able to load the package using library("the.package.you.just.installed"). See below the dependencies we will need for this workflow:
 
@@ -104,7 +106,7 @@ library("dplyr")          # Data wrangling
 library("readr")          # read rectangular data
 ```
 
-## Step 1 - Load all data sets
+### Step 1 - Load all data sets
 
 Now we are equipped with the tools to start the processing of our geo-spatial datasets. We start by specifying the directory we will be working from and loading all of the data sets described above into our environment and saving them as raster objects. In this example, the geo-spatial files are organised into the following folders:
 
@@ -170,7 +172,7 @@ worldpop.rasters <- lapply(worldpop.list, raster)
 
 ```
 
-### Check the attributes of the base layer
+#### Check the attributes of the base layer
 
 As we will be harmonising all other datasets to our base layer, it is important to understand its attributes. Simply typing the name of our base layer raster object in the console will provide information on: class, dimensions, resolution, extent, crs, source, and names. At the end of the workflow, all of our geo-spatial covariates will have the same spatial resolution, CRS, extent, and shape as our base layer.
 
@@ -198,7 +200,7 @@ The output is telling us that our object of interest is a Raster Layer, with the
 
 We also produced our first map of Bangladesh! This is the raster layer we will be harmonising all our other data to.
 
-### Inspect the attributes of the shapefile with administrative level 3
+#### Inspect the attributes of the shapefile with administrative level 3
 
 Now that we have a raster file defining the national boundaries of Bangladesh, we are interested to know the boundaries of the administrative zones that we will estimate poverty for. In our case, this is administrative level 3, or upazila, in Bangladesh. Let's have a look at the shapefile that will outline those.
 
@@ -231,33 +233,44 @@ The output gives us the following information about the shape file:
 
 With our base layers defined, it's time to start the processing of geo-spatial data.
 
-## Step 2 - write functions for automated processing of geo-spatial covariates
+### Step 2 - write functions for automated processing of geo-spatial covariates
 
 In this step, we will provide two functions that will automate the processing of geo-spatial covariates.
 
 Function 1 can be applied to the Malaria Atlas accessibility data and Nightlights data. It automatically executes the following steps:
 
 1.  Crop your raster to the base layer so that they have the same extent
-2.  Change the spatial resolution of your raster to match that of the base layer using the nearest neighbor interpolation algortihm.
+2.  Change the spatial resolution of your raster to match that of the base layer using the nearest neighbor interpolation algorithm.
 3.  If appropriate, recode missing values to a specified value.
 4.  Mask the raster so that it has the same shape as your base layer.
+
+The function requires the following inputs:
+
+-   aux.raster - this is the raster that you are trying to transform/ harmonise to the base raster layer.
+
+-   base.raster - your base raster layer that has all the desired attributes. This is the layer we will be harmonising to.
+
+-   label - the name that you wish to assign to the transformed raster.
+
+-   value - (if appropriate) the value to which you want to recode NA (missing) values to.
+
+This process will output your transformed raster, ready to be used in the estimation of zonal statistics.
 
 ```{r function ngb}
 # Function for automating the processing of geo-spatial covariates for use in poverty modelling
 geo_process <- function(aux.raster, base.raster, label, value) {
 
-    # Crop to the base layer so they have the same extent
+    # 1. Crop to the base layer so they have the same extent
     r <- crop(aux.raster, base.raster)
 
-    # Change resolution to the resolution of the base layer using nearest neighbour interpolation
+    # 2. Change resolution to the resolution of the base layer using nearest neighbour interpolation
     r <- resample(r, base.raster, method = "ngb") 
     
-    # Replace NA with a specified value (if appropriate)
+    # 3. Replace NA with a specified value (if appropriate)
     r[is.na(r[])] <- value  
 
-    # Select only the shape of Bangladesh as defined by the base layer
+    # 4. Select only the shape of Bangladesh as defined by the base layer
     r <- mask(x = r, mask = base.raster)
-    
     
     # Assign a name to the raster
     names(r) <- label
@@ -266,7 +279,7 @@ geo_process <- function(aux.raster, base.raster, label, value) {
 }
 ```
 
-Function 2 is really similar, but applies the "sum" algorith instead of nearest neighbour interpolation when changing the spatial resolution, which is a more appropriate method when working with demographic maps from Meta that are of a higher resolution than our base layer. The demographic data from Meta are of a \~30m spatial resolution and require aggregation of the values in each cell when resampled to 100m. Using the nearest neighbour interpolation, we 'lose' people (because data is thrown away in the downsample). The'sum' algorithm instead provides a more accurate representation of population per each 100m grid cell.
+Function 2 is really similar, but applies the "sum" algorithm instead of nearest neighbour interpolation when changing the spatial resolution, which is a more appropriate method when working with demographic maps from Meta that are of a higher resolution than our base layer. The demographic data from Meta are of a \~30m spatial resolution and require aggregation of the values in each cell when resampled to 100m. Using the nearest neighbour interpolation, we 'lose' people (because data is thrown away in the downsample). The'sum' algorithm instead provides a more accurate representation of population per each 100m grid cell.
 
 Function 2 should therefore be applied to all demographic maps from Meta and will execute the following steps:
 
@@ -280,7 +293,7 @@ Function 2 should therefore be applied to all demographic maps from Meta and wil
 # Function for automating the processing of geo-spatial covariates for use in poverty modelling
 geo_process2 <- function(aux.raster, base.raster, label, value) {
   
-    # Get spatial resolutions of both rasters 
+    # 1. Get spatial resolutions of both rasters 
     res1 <- res(base.raster)
     res2 <- res(aux.raster)
     
@@ -288,18 +301,17 @@ geo_process2 <- function(aux.raster, base.raster, label, value) {
     factor.ratio <- res1/res2
     factor.ratio <- factor.ratio[[1]]
 
-    # Crop to the base layer so they have the same extent
+    # 2. Crop to the base layer so they have the same extent
     r <- crop(aux.raster, base.raster)
     
-    # Replace NA with a specified value (if appropriate)
+    # 3. Replace NA with a specified value (if appropriate)
     r[is.na(r[])] <- value  
 
-    # Change resolution to the resolution of the base layer using the "sum"        algorithm
+    # 4. Change resolution to the resolution of the base layer using the "sum"        algorithm
     r <- aggregate(r, fact=factor.ratio, fun=sum, na.rm=TRUE)
 
-    # Select only the shape of Bangladesh as defined by the base layer
+    # 5. Select only the shape of Bangladesh as defined by the base layer
     r <- mask(x = r, mask = base.raster)
-    
     
     # Assign a name to the raster
     names(r) <- label
@@ -308,135 +320,141 @@ geo_process2 <- function(aux.raster, base.raster, label, value) {
 }
 ```
 
-Process Malaria Atlas Datasets
+### Step 3 - process accessibility data from the Malaria Atlas
 
 ```{r}
 # See that all the files have loaded
-rlist
+matlas.rasters
 
 # Now apply this function to a list of rasters from the Malaria Atlas 
 
 # Make a list for storing the processed rasters 
-rlist_processed <- list()
+matlas.processed <- list()
 
 # Store the length of the list of rasters
-num_r <- 1:length(rlist)  
+num_r <- 1:length(matlas.rasters)  
 
 # Apply the geo-processing function to all rasters. Here there is no need to replace missing values as 0s (they are already coded as missing), so the parameter for value can stay at NA.
 for (i in num_r) { 
-rlist_processed[[i]] <- geo_process(aux.raster = rlist[[i]], base.raster = bgd_base_raster, label = rlist[[i]]@data@names, value = NA)
+matlas.processed[[i]] <- geo_process(aux.raster = matlas.rasters[[i]], base.raster = base.layer.raster, label = matlas.rasters[[i]]@data@names, value = NA)
 
 }
 
 # See the result
-rlist_processed
+matlas.processed
 
 # Plot results 
-plot(rlist_processed[[1]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Travel Time to Cities")
-plot(rlist_processed[[2]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Motorised Travel Time to Healthcare Facilities")
-plot(rlist_processed[[3]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Walking-Only Travel Time to Healthcare Facilities")
+plot(matlas.processed[[1]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Travel Time to Cities")
+plot(matlas.processed[[2]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Motorised Travel Time to Healthcare Facilities")
+plot(matlas.processed[[3]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Walking-Only Travel Time to Healthcare Facilities")
 
 # Create a high quality image 
-png(filename="BGD travel time city.png", res=400, width=2000, height=1500)
-plot(rlist_processed[[1]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Travel Time to Cities")
+png(filename="maps/BGD travel time city.png", res=400, width=2000, height=1500)
+plot(matlas.processed[[1]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Travel Time to Cities")
 dev.off()
 ```
 
-Process Meta demographic maps
+### Step 4 - process the demographic data from Meta
 
 ```{r}
 # Check that all the files were picked up by this 
-fb.list
+fb.rasters
 
 # Make a list for storing the processed rasters 
-fblist_processed <- list()
+fblist.processed <- list()
 
 # Store the length of the list of rasters
-num_fb <- 1:length(fb.list)  
+num_fb <- 1:length(fb.rasters)  
 
 # Apply the geo-processing function to all rasters. Here we need to recode missing values as 0s
 for (i in num_fb) { 
-fblist_processed[[i]] <- geo_process2(aux.raster = fb.list[[i]], base.raster = bgd_base_raster, label = fb.list[[i]]@data@names, value = 0)
+fblist.processed[[i]] <- geo_process2(aux.raster = fb.rasters[[i]], base.raster = base.layer.raster, label = fb.rasters[[i]]@data@names, value = 0)
 
 }
 
 # See the result
-fblist_processed
+fblist.processed
 
 # Plot results
-plot(fblist_processed[[1]], box=F, axes=F, main = "Bangladesh - Population density (children under 5)")
-plot(fblist_processed[[2]], box=F, axes=F, main = "Bangladesh - Population density (elderly 60+)")
-plot(fblist_processed[[3]], box=F, axes=F, main = "Bangladesh - Population density (general)")
-plot(fblist_processed[[4]], box=F, axes=F, main = "Bangladesh - Population density (men)")
-plot(fblist_processed[[5]], box=F, axes=F, main = "Bangladesh - Population density (women)")
-plot(fblist_processed[[6]], box=F, axes=F, main = "Bangladesh - Population density (women of reproductive age 15-49)")
-plot(fblist_processed[[7]], box=F, axes=F, main = "Bangladesh - Population density (youth 15-24)")
+plot(fblist.processed[[1]], box=F, axes=F, main = "Bangladesh - Population density (children under 5)")
+plot(fblist.processed[[2]], box=F, axes=F, main = "Bangladesh - Population density (elderly 60+)")
+plot(fblist.processed[[3]], box=F, axes=F, main = "Bangladesh - Population density (general)")
+plot(fblist.processed[[4]], box=F, axes=F, main = "Bangladesh - Population density (men)")
+plot(fblist.processed[[5]], box=F, axes=F, main = "Bangladesh - Population density (women)")
+plot(fblist.processed[[6]], box=F, axes=F, main = "Bangladesh - Population density (women of reproductive age 15-49)")
+plot(fblist.processed[[7]], box=F, axes=F, main = "Bangladesh - Population density (youth 15-24)")
 
 
 # Create a high quality image 
-png(filename="simple_graphic.png", res=400, width=2000, height=1500)
-plot(fblist_processed[[7]], box=F, axes=F, main = "Bangladesh - Population density (youth 15-24)")
+png(filename="maps/BGD_pop_density_youth.png", res=400, width=2000, height=1500)
+plot(fblist.processed[[7]], box=F, axes=F, main = "Bangladesh - Population density (youth 15-24)")
 dev.off()
 ```
 
-Process nightlights data
+### Step 5 - Process nightlights data
+
+Note: I'm having a One Drive issue so had to skip this step
 
 ```{r}
 # Apply the geo processing function
-nightlights_raster <- geo_process(aux.raster = nightlights_raster, base.raster = bgd_base_raster, label = nightlights_raster@data@names, value = 0)
+nightlights.raster.processed <- geo_process(aux.raster = nightlights.raster, base.raster = base.layer.raster, label = "Nightlights_data", value = 0)
 
 # Check raster
-nightlights_raster
+nightlights.raster.processed
 
 # Plot raster 
-plot(nightlights_raster, axes=F, box=F, main = "Nightlights data in Bangladesh", col=cividis(50))
+plot(nightlights.raster.processed, axes=F, box=F, main = "Nightlights data in Bangladesh", col=cividis(50))
 
 # Create a high quality image 
-png(filename="nightlights_BGD.png", res=400, width=2000, height=1500)
-plot(nightlights_raster, box=F, axes=F, main = "Nightlights data in Bangladesh", col=cividis(50))
+png(filename="maps/nightlights_BGD.png", res=400, width=2000, height=1500)
+plot(nightlights.raster.processed, box=F, axes=F, main = "Nightlights data in Bangladesh", col=cividis(50))
 dev.off()
 ```
 
-Pre-harmonised World Pop datasets
+### Step 6 - Inspect pre-harmonised World Pop datasets
 
 ```{r}
 # See that all the files have loaded
-worldpop.list
+worldpop.rasters
 
 #Plot examples of WorldPop datasets
-plot(worldpop.list[[11]], box = F, axes = F, main = "Distance to the closest road Bangladesh", col=viridis(50))
+plot(worldpop.rasters[[11]], box = F, axes = F, main = "Distance to the closest road Bangladesh", col=viridis(50))
 ```
 
-Convert shapefile to a raster
+### Step 7 - Convert shapefile to a raster
 
 ```{r}
 # Copy admin unit codes to new column in upazila shapefile attributes, in the process removing Bangladesh prefix from the integer code
-bgd_test@data$adm3_integer <- substr(bgd_test@data[["ADM3_PCODE"]], 3, 10)
+shapefile.zonal@data$adm3_integer <- substr(shapefile.zonal@data[["ADM3_PCODE"]], 3, 10)
 
 # Turn into numeric
-bgd_test@data[["adm3_integer"]] <- as.numeric(bgd_test@data[["adm3_integer"]])
+shapefile.zonal@data[["adm3_integer"]] <- as.numeric(shapefile.zonal@data[["adm3_integer"]])
 
 # Convert upazila shapefile to raster using the integer admin unit code, maintaining extent and cell size of L0 base layer
 ## Set up a raster "template" to use in rasterize()
-ext_base <-  extent(bgd_base_raster)
-ncol_base <- bgd_base_raster@ncols
-nrow_base <- bgd_base_raster@nrows
+ext_base <-  extent(base.layer.raster)
+ncol_base <- base.layer.raster@ncols
+nrow_base <- base.layer.raster@nrows
 
 xy <- abs(apply(as.matrix(bbox(ext_base)), 1, diff))
 r <- raster(ext_base, ncol=ncol_base, nrow=nrow_base)
 
 ## Rasterize the shapefile
-raster_admin3 <-rasterize(bgd_test, r, field=bgd_test$adm3_integer)
+raster_admin3 <-rasterize(shapefile.zonal, r, field=shapefile.zonal$adm3_integer)
 
 # Assign the same CRS as the base layer 
-crs_base <- crs(bgd_base_raster)
+crs_base <- crs(base.layer.raster)
 crs(raster_admin3) <- crs_base
 
 # Plot to see if values have been assigned to the raster
 plot(raster_admin3, box=F, axes=F)
+
+# Save the RData file (I only made it so far due to a One Drive issue with Nightlights data)
+save.image("C:/Users/idabr/OneDrive - Oxford Policy Management Limited/EMDI SAE/Geo-spatial Bangladesh data/Quarto github workspace.RData")
+
 ```
 
-Calculation of zonal statistics
+### Step 8 - Calculation of zonal statistics
 
 ```{r}
 # Make a list with all the rasters 
@@ -512,3 +530,5 @@ colnames(zonal.stats.all)[1] <- "upazila.code"
 # Save file 
 save(zonal.stats.all, file = "BGD.zonalstats.RData")
 ```
+
+## 4. Caveats, problems, things to look out for
