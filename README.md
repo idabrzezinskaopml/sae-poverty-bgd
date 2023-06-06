@@ -27,24 +27,25 @@ Audience:
 - Section A: Getting the data you need. 
   - Introduction: Non-technical description of what you do in this section. 
     -  Step by step diagram that explains the process. 
-ii.	The theory
-1.	Key concepts in geospatial analyses
-i.	The characteristics of geospatial datasets. 
-2.	(Step by step)
-iii.	Applying this
-1.	Data sources
-2.	Applying R transformations: This is commented code and output from R
-iv.	Caveats/problems/things to look out for. 
-c.	Section B: Producing high-resolution estimates. 
-i.	Introduction: Non-technical of what you do in this section
-1.	Diagram
-ii.	The theory
-1.	Key concepts, assumptions, approaches, references to papers etc. where people can read more. 
-iii.	Applying this 
-1.	Data sources  either use our data or do Section A
-2.	This is commented code and output from R
-i.	Step-by-step.
-iv.	Caveats/problems/things to look out for. 
+  - The theory
+    - Key concepts in geospatial analyses
+      -  The characteristics of geospatial datasets. 
+    - (Step by step)
+  - Applying this
+    - Data sources
+    - Applying R transformations: This is commented code and output from R
+  - Caveats/problems/things to look out for. 
+- Section B: Producing high-resolution estimates. 
+  - Introduction: Non-technical of what you do in this section
+    - Diagram
+  - The theory
+    - Key concepts, assumptions, approaches, references to papers etc. where people can read more. 
+  - Applying this 
+    - Data sources either use our data or do Section A
+    - This is commented code and output from R
+      - Step-by-step.
+  - Caveats/problems/things to look out for. 
+
 3.	Glossary
 4.	FAQ
 
