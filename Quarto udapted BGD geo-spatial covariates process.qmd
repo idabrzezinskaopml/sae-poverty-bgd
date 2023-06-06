@@ -1,0 +1,514 @@
+---
+title: "Guide to processing of geo-spatial covariates to be used in poverty modelling - an example of Bangladesh"
+author: "Ida Brzezinska"
+format: html
+editor: visual
+---
+
+## Co-variate sources - Bangladesh
+
+We will be working with the following data sets:
+
+1.  Base layer: WorldPop Administrative Level 0 mastergrid base layer for Bangladesh at \~100m spatial resolution. This mastergrid defines the administrative boundaries of the country, to which we will be harmonising all other geo-spatial datasets, i.e. matching the spatial resolution, CRS (geographical projection), extent, and shape.
+
+2.  Shape file: Subnational Administrative Boundaries for Bangladesh from the Humanitarian Data Exchange. This file contains the administrative boundaries of the zones for which we will be estimating poverty. In our case, this is done at administrative level 3 (upazila) in Bangladesh.
+
+3.  Malaria Atlas data on accessibility, including: travel time to cities and healthcare facilities.
+
+4.  Demographic maps from Meta at \~30m spatial resolution showing population density of different demographic groups (men, women, youth, elderly etc.).
+
+5.  Nightlights data at \~450m spatial resolution with almost global coverage.
+
+6.  Pre-harmonised geo-spatial datasets from World Pop, available for all countries. The datasets includes information on topography, slope, Open Street Map distance to closest road, waterway, and various land cover classes. Note that this data has already been harmonised to our base layer and hence will not require any processing in this script.
+
+    ::: callout-note
+    ## Quick glossary
+
+    CRS -
+
+    Extent -
+
+    Spatial resolution -
+
+    Shape file -
+
+    Raster -
+    :::
+
+## Base layers
+
+| Geo-spatial file name             | Description                                                          | Year | Link to download                                                                                                               |
+|:---------------|:---------------|:---------------|:-----------------------|
+| bgd_level0_100m_2000_2020.tif     | WorldPop Administrative Level 0 mastergrid base layer for Bangladesh | 2020 | [World Pop Hub - National boundaries](https://www.worldpop.org/geodata/summary?id=24282)                                       |
+| bgd_admbnda_adm3_bbs_20201113.shp | Administrative Level 3 (Upazila) Units in Bangladesh                 | 2015 | [Bangladesh - Subnational Administrative Boundaries - Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-bgd) |
+
+## Geo-spatial data sets to be harmonised
+
+|                                                                             |                                                                              |      |                                                                                                                                                                                                                                                                                                  |
+|---------------|---------------|:--------------|---------------------------|
+| **Geo-spatial file name**                                                   | Description                                                                  | Year | Link to download                                                                                                                                                                                                                                                                                 |
+| SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif | VIIRS night-time lights (global)                                             | 2015 | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/#v1)                                                                                                                                                                                                                            |
+| 2015_accessibility_to_cities_v1.0.tif                                       | MAP travel time to high-density urban centres (global)                       | 2015 | [Malaria Atlas - Accessibility to Cities](https://data.malariaatlas.org/maps?layers=Accessibility:201501_Global_Travel_Time_to_Cities,Malaria:202206_Global_Pf_Parasite_Rate)                                                                                                                    |
+| 2020_motorized_travel_time_to_healthcare.tif                                | MAP motorised only travel time to healthcare facilities (global)             | 2019 | [Malaria Atlas - Motorised Time Travel to Healthcare](https://data.malariaatlas.org/maps?layers=Accessibility:202001_Global_Motorized_Travel_Time_to_Healthcare,Malaria:202206_Global_Pf_Parasite_Rate&extent=-11815912.856289707,-6356003.33856192,28286163.259866484,14615055.359158086)       |
+| 2020_walking_only_travel_time_to_healthcare.tif                             | MAP walking only travel time to healthcare facilities (global)               | 2019 | [Malaria Atlas - Walking Only Time Travel to Healthcare](https://data.malariaatlas.org/maps?layers=Accessibility:202001_Global_Walking_Only_Travel_Time_To_Healthcare,Malaria:202206_Global_Pf_Parasite_Rate&extent=-11815912.856289707,-6356003.33856192,28286163.259866484,14615055.359158086) |
+| bgd_general_2020.tif                                                        | Meta (Facebook) Population density -- Overall; BGD                           | 2020 | [Humanitarian Data Exchange - Demographic Maps from Meta](https://data.humdata.org/dataset/bangladesh-high-resolution-population-density-maps-demographic-estimates)                                                                                                                             |
+| bgd_men_2020.tif                                                            | Meta (Facebook) Population density -- Men; BGD                               | 2020 |                                                                                                                                                                                                                                                                                                  |
+| bgd_elderly_60_plus_2020.tif                                                | Meta (Facebook) Population density -- Elderly (aged 60+); BGD                | 2020 |                                                                                                                                                                                                                                                                                                  |
+| bgd_women_of_reproductive_age_15_49_2020.tif                                | Meta (Facebook) Population density -- Women of reproductive age (15-49); BGD | 2020 |                                                                                                                                                                                                                                                                                                  |
+| bgd_women_2020.tif                                                          | Meta (Facebook) Population density -- Women; BGD                             | 2020 |                                                                                                                                                                                                                                                                                                  |
+| bgd_youth_15_24_2020.tif                                                    | Meta (Facebook) Population density -- Youths aged 15-24; BGD for 2020        | 2020 |                                                                                                                                                                                                                                                                                                  |
+| bgd_children_under_five_2020.tif                                            | Meta (Facebook) Population density -- Children under 5; BGD                  | 2020 |                                                                                                                                                                                                                                                                                                  |
+
+## WorldPop harmonised geo-spatial data sets
+
+|                                           |                                                                         |           |                                                                |
+|------------------|--------------------|------------------|------------------|
+| **Geo-spatial File Name**                 | **Description**                                                         | **Year**  | **Link to Download**                                           |
+| bgd_srtm_topo_100m.tif                    | SRTM topography in BGD                                                  | 2000      | [World Pop](https://www.worldpop.org/project/categories?id=14) |
+| bgd_srtm_slope_100m.tif                   | SRTM slope (derivative of topography) in BGD                            | 2000      |                                                                |
+| bgd_esaccilc_dst040_100m_2014.tif         | Distance to ESA-CCI-LC woody-tree area edges in BGD                     | 2014      |                                                                |
+| bgd_esaccilc_dst140_100m_2014.tif         | Distance to ESA-CCI-LC herbaceous area edges in BGD                     | 2014      |                                                                |
+| bgd_osm_dst_road_100m_2016.tif            | Distance to OSM major roads in BGD                                      | 2016      |                                                                |
+| bgd_esaccilc_dst150_100m_2014.tif         | Distance to ESA-CCI-LC sparse vegetation area edges in BGD              | 2014      |                                                                |
+| bgd_osm_dst_roadintersec_100m_2016.tif    | Distance to OSM major road intersections in BGD                         | 2016      |                                                                |
+| bgd_esaccilc_dst160_100m_2014.tif         | Distance to ESA-CCI-LC aquatic vegetation area edges in BGD             | 2014      |                                                                |
+| bgd_osm_dst_waterway_100m_2016.tif        | Distance to OSM waterways in BGD                                        | 2016      |                                                                |
+| bgd_esaccilc_dst190_100m_2014.tif         | Distance to ESA-CCI-LC artificial surface edges in BGD                  | 2014      |                                                                |
+| bgd_esaccilc_dst011_100m_2014.tif         | Distance to ESA-CCI-LC cultivated area edges in BGD                     | 2014      |                                                                |
+| bgd_esaccilc_dst200_100m_2014.tif         | Distance to ESA-CCI-LC bare area edges in BGD                           | 2014      |                                                                |
+| bgd_esaccilc_dst_water_100m_2000_2012.tif | Distance to ESA-CCI-LC inland water in BGD                              | 2012      |                                                                |
+| bgd_wdpa_dst_cat1_100m_2014.tif           | Distance to IUCN strict nature reserve and wilderness area edges in BGD | 2014      |                                                                |
+| bgd_esaccilc_dst130_100m_2014.tif         | Distance to ESA-CCI-LC shrub area edges in BGD                          | 2014      |                                                                |
+| bgd_dst_coastline_100m_2000_2020.tif      | Distance to open water coastline in BGD                                 | 2000-2020 |                                                                |
+
+## Libraries
+
+Throughout this workflow, we will be using functions from the packages shown in the chunk below. Most of them allow for manipulation of spatial objects in R, others are used to enhance our data visualisations - such as nice colour schemes for maps. All the below packages need to be installed and loaded in order for the workflow to run smoothly. If you don't already have some of the below packages installed, you can do so by running: install.packages("your.package.name"). After that, you will be able to load the package using library("the.package.you.just.installed"). See below the dependencies we will need for this workflow:
+
+```{r libraries}
+#| echo: true
+#| output: false
+
+library("tiff")           # opening geoTIFF files
+library("raster")         # raster manipulation
+library("sf")             # working with shapefiles
+library("ggplot2")        # plots
+library("RColorBrewer")   # funky graph colors 
+library("haven")          # opening stata files
+library("gsubfn")         # string operations
+library("viridis")        # colour palette for data visualisations
+library("rgdal")          # geospatial analysis
+library("sp")             # geo-spatial analysis
+library("plyr")           # Data wrangling
+library("dplyr")          # Data wrangling
+library("readr")          # read rectangular data
+```
+
+## Step 1 - Load all data sets
+
+Now we are equipped with the tools to start the processing of our geo-spatial datasets. We start by specifying the directory we will be working from and loading all of the data sets described above into our environment and saving them as raster objects. In this example, the geo-spatial files are organised into the following folders:
+
+1.  Base layer
+2.  Shape file with administrative level 3 boundaries
+3.  Malaria Atlas accessibility datasets
+4.  Demographic Maps from Meta
+5.  Nightlights Data
+6.  Pre-harmonised World Pop datasets
+
+We would recommend this structure as it allows us to automatically pull all the files from each folder based on their \*tif extension and makes the below workflow easy to follow. The user should select their corresponding working directory, based on where the geo-spatial data was saved.
+
+```{r load layers}
+# Set working directory - this is the base folder where we keep all the sub-folders with geo-spatial data organised by source. 
+setwd("C:/Users/idabr/OneDrive - Oxford Policy Management Limited/EMDI SAE/Geo-spatial Bangladesh data/")
+
+# 1. Base layer #
+
+# Load the WordPop Administrative Level 0 mastergrid base layer for Bangladesh 
+base.layer <- 'Base layers/bgd_level0_100m_2000_2020.tif'
+base.layer.raster=raster(base.layer)
+
+# 2. Shapefile with boundaries of zones #
+
+# Load the Shapefile with administrative level 3 (upazila in Bangladesh)
+shapefile.zonal <- readOGR("Base layers/admin 3 level/bgd_admbnda_adm3_bbs_20201113.shp")
+
+# Load the shapefile in a format that's nicer for plotting 
+shapefile.zone.plot <- st_read("Base layers/admin 3 level/bgd_admbnda_adm3_bbs_20201113.shp")
+
+# 3. Malaria Atlas accessibility datasets #
+
+#Make a list of all TIFF files from the Malaria Atlas Project and import those into a list 
+matlas.list <- list.files(path="Travel time - Malaria Atlas Project", pattern =".tiff", full.names=TRUE)
+
+# Turn all files into a raster and make a list of rasters
+matlas.rasters <- lapply(matlas.list, raster)
+
+# 4. Demographic maps from Meta #
+
+# Pull all TIFF files from Meta with demographic maps
+fb.list <- list.files(path="Demographic maps Facebook/", pattern =".tif", full.names=TRUE)
+
+# Turn all files into a raster and make a list of rasters
+fb.rasters <- lapply(fb.list, raster)
+
+# 5. Nightlights Data #
+
+# Import geoTIFF file on nightlights intensity
+nightlights <- 'Nightlights data/SVDNB_npp_20150101-20151231_75N0/SVDNB_npp_20150101-20151231_75N060E_v10_c201701311200/SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif'
+
+# Turn into a raster 
+nightlights.raster = raster(nightlights)
+
+# 6. Pre-harmonised World Pop datasets #
+
+# Make a list of all TIFF files from WorldPop and import those into a list 
+worldpop.list <- list.files(path="World Pop Harmonised Datasets", pattern =".tif", full.names=TRUE)
+
+# Turn all files into a raster and make a list of rasters
+worldpop.rasters <- lapply(worldpop.list, raster)
+
+
+```
+
+### Check the attributes of the base layer 
+
+As we will be harmonising all other datasets to our base layer, it is important to understand its attributes. Simply typing the name of our base layer raster object in the console will provide information on: class, dimensions, resolution, extent, crs, source, and names. At the end of the workflow, all of our geo-spatial covariates will have the same spatial resolution, CRS, extent, and shape as our base layer.
+
+```{r plot base raster}
+# Check attributes associated with the base layer 
+base.layer.raster
+
+# Plot raster
+plot(base.layer.raster, box=F, axes=F,legend=F, main = "Bangladesh base layer")
+```
+
+The output is telling us that our object of interest is a Raster Layer, with the following characteristics:
+
+-   7272 rows, 5596 columns, and 40694112 cells altogether.
+
+-   \~ 100m spatial resolution. This defines the size of each cell in the raster.
+
+-   The maximum and minimum values of longitude and latitude which define Bangladesh.
+
+-   The WGS 1984 datum (EPSG: 4326) geographical projection.
+
+-   It came from the GeoTIFF file named "bgd_level0_100m_2000_2020.tif" in our working directory.
+
+-   The naming convention is the same as the original GeoTIFF file (in this case bgd_level0_100m_2000_2020).
+
+We also produced our first map of Bangladesh! This is the raster layer we will be harmonising all our other data to.
+
+### Inspect the attributes of the shapefile with administrative level 3
+
+Now that we have a raster file defining the national boundaries of Bangladesh, we are interested to know the boundaries of the administrative zones that we will estimate poverty for. In our case, this is administrative level 3, or upazila, in Bangladesh. Let's have a look at the shapefile that will outline those.
+
+As before, we will start by simply typing the name of our spatial object into the console. This will provide information on: geometry, dimensions, extent, CRS, as well as give us a preview into the features.
+
+Plotting the shapefile will show us the upazilas (zones) for which we will be estimating poverty.
+
+```{r}
+# See metadata associated with the shapefile
+shapefile.zone.plot
+
+# Plot the shape file - this shows the zones for which we will estimate poverty
+ggplot() + 
+  geom_sf(data = shapefile.zone.plot, size = 3, color = "black", fill = "cyan1") + 
+  ggtitle("Administrative Level 3 Bangladesh") + 
+  coord_sf() + theme_minimal()
+```
+
+The output gives us the following information about the shape file:
+
+-   It has 544 features (upazilas) and 16 fields with information defining the features.
+
+-   The geometry type is multipolygon. Each multipolygon is a collection of spatial points that define an upazila.
+
+-   Bounding box shows the extent, i.e. maximum and minimum values of longitude and latitude that define Bangladesh.
+
+-   As in the case of our base layer, it uses the WGS 1984 datum (EPSG: 4326) geographical projection.
+
+-   A preview of the first 10 features tells us that for each multipolygon we have information on: administrative codes for the upazila, English name of the upazila, area covered by the shape, and codes as well as names for other administrative levels.
+
+With our base layers defined, it's time to start the processing of geo-spatial data.
+
+## Step 2 - write functions for automated processing of geo-spatial covariates
+
+In this step, we will provide two functions that will automate the processing of geo-spatial covariates.
+
+Function 1 can be applied to the Malaria Atlas accessibility data and Nightlights data. It automatically executes the following steps:
+
+1.  Crop your raster to the base layer so that they have the same extent
+2.  Change the spatial resolution of your raster to match that of the base layer using the nearest neighbor interpolation algortihm.
+3.  If appropriate, recode missing values to a specified value.
+4.  Mask the raster so that it has the same shape as your base layer.
+
+```{r function ngb}
+# Function for automating the processing of geo-spatial covariates for use in poverty modelling
+geo_process <- function(aux.raster, base.raster, label, value) {
+
+    # Crop to the base layer so they have the same extent
+    r <- crop(aux.raster, base.raster)
+
+    # Change resolution to the resolution of the base layer using nearest neighbour interpolation
+    r <- resample(r, base.raster, method = "ngb") 
+    
+    # Replace NA with a specified value (if appropriate)
+    r[is.na(r[])] <- value  
+
+    # Select only the shape of Bangladesh as defined by the base layer
+    r <- mask(x = r, mask = base.raster)
+    
+    
+    # Assign a name to the raster
+    names(r) <- label
+    return(r)
+    
+}
+```
+
+Function 2 is really similar, but applies the "sum" algorith instead of nearest neighbour interpolation when changing the spatial resolution, which is a more appropriate method when working with demographic maps from Meta that are of a higher resolution than our base layer. The demographic data from Meta are of a \~30m spatial resolution and require aggregation of the values in each cell when resampled to 100m. Using the nearest neighbour interpolation, we 'lose' people (because data is thrown away in the downsample). The'sum' algorithm instead provides a more accurate representation of population per each 100m grid cell.
+
+Function 2 should therefore be applied to all demographic maps from Meta and will execute the following steps:
+
+1.  Obtain the ratio of spatial resolutions of your layer of interest (from Meta) and the base layer.
+2.  Crops your raster to the base layer so that they have the same extent
+3.  If appropriate, recode missing values to a specified value.
+4.  Change the spatial resolution to match your base layer, on the basis of the ratio defined in Step 1. Note: we are going from a higher to a lower spatial resolution, hence the use of "aggregate".
+5.  Mask the raster so that it has the same shape as your base layer.
+
+```{r}
+# Function for automating the processing of geo-spatial covariates for use in poverty modelling
+geo_process2 <- function(aux.raster, base.raster, label, value) {
+  
+    # Get spatial resolutions of both rasters 
+    res1 <- res(base.raster)
+    res2 <- res(aux.raster)
+    
+    # Save as a factor of ratios 
+    factor.ratio <- res1/res2
+    factor.ratio <- factor.ratio[[1]]
+
+    # Crop to the base layer so they have the same extent
+    r <- crop(aux.raster, base.raster)
+    
+    # Replace NA with a specified value (if appropriate)
+    r[is.na(r[])] <- value  
+
+    # Change resolution to the resolution of the base layer using the "sum"        algorithm
+    r <- aggregate(r, fact=factor.ratio, fun=sum, na.rm=TRUE)
+
+    # Select only the shape of Bangladesh as defined by the base layer
+    r <- mask(x = r, mask = base.raster)
+    
+    
+    # Assign a name to the raster
+    names(r) <- label
+    return(r)
+    
+}
+```
+
+Process Malaria Atlas Datasets
+
+```{r}
+# See that all the files have loaded
+rlist
+
+# Now apply this function to a list of rasters from the Malaria Atlas 
+
+# Make a list for storing the processed rasters 
+rlist_processed <- list()
+
+# Store the length of the list of rasters
+num_r <- 1:length(rlist)  
+
+# Apply the geo-processing function to all rasters. Here there is no need to replace missing values as 0s (they are already coded as missing), so the parameter for value can stay at NA.
+for (i in num_r) { 
+rlist_processed[[i]] <- geo_process(aux.raster = rlist[[i]], base.raster = bgd_base_raster, label = rlist[[i]]@data@names, value = NA)
+
+}
+
+# See the result
+rlist_processed
+
+# Plot results 
+plot(rlist_processed[[1]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Travel Time to Cities")
+plot(rlist_processed[[2]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Motorised Travel Time to Healthcare Facilities")
+plot(rlist_processed[[3]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Walking-Only Travel Time to Healthcare Facilities")
+
+# Create a high quality image 
+png(filename="BGD travel time city.png", res=400, width=2000, height=1500)
+plot(rlist_processed[[1]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Travel Time to Cities")
+dev.off()
+```
+
+Process Meta demographic maps
+
+```{r}
+# Check that all the files were picked up by this 
+fb.list
+
+# Make a list for storing the processed rasters 
+fblist_processed <- list()
+
+# Store the length of the list of rasters
+num_fb <- 1:length(fb.list)  
+
+# Apply the geo-processing function to all rasters. Here we need to recode missing values as 0s
+for (i in num_fb) { 
+fblist_processed[[i]] <- geo_process2(aux.raster = fb.list[[i]], base.raster = bgd_base_raster, label = fb.list[[i]]@data@names, value = 0)
+
+}
+
+# See the result
+fblist_processed
+
+# Plot results
+plot(fblist_processed[[1]], box=F, axes=F, main = "Bangladesh - Population density (children under 5)")
+plot(fblist_processed[[2]], box=F, axes=F, main = "Bangladesh - Population density (elderly 60+)")
+plot(fblist_processed[[3]], box=F, axes=F, main = "Bangladesh - Population density (general)")
+plot(fblist_processed[[4]], box=F, axes=F, main = "Bangladesh - Population density (men)")
+plot(fblist_processed[[5]], box=F, axes=F, main = "Bangladesh - Population density (women)")
+plot(fblist_processed[[6]], box=F, axes=F, main = "Bangladesh - Population density (women of reproductive age 15-49)")
+plot(fblist_processed[[7]], box=F, axes=F, main = "Bangladesh - Population density (youth 15-24)")
+
+
+# Create a high quality image 
+png(filename="simple_graphic.png", res=400, width=2000, height=1500)
+plot(fblist_processed[[7]], box=F, axes=F, main = "Bangladesh - Population density (youth 15-24)")
+dev.off()
+```
+
+Process nightlights data
+
+```{r}
+# Apply the geo processing function
+nightlights_raster <- geo_process(aux.raster = nightlights_raster, base.raster = bgd_base_raster, label = nightlights_raster@data@names, value = 0)
+
+# Check raster
+nightlights_raster
+
+# Plot raster 
+plot(nightlights_raster, axes=F, box=F, main = "Nightlights data in Bangladesh", col=cividis(50))
+
+# Create a high quality image 
+png(filename="nightlights_BGD.png", res=400, width=2000, height=1500)
+plot(nightlights_raster, box=F, axes=F, main = "Nightlights data in Bangladesh", col=cividis(50))
+dev.off()
+```
+
+Pre-harmonised World Pop datasets
+
+```{r}
+# See that all the files have loaded
+worldpop.list
+
+#Plot examples of WorldPop datasets
+plot(worldpop.list[[11]], box = F, axes = F, main = "Distance to the closest road Bangladesh", col=viridis(50))
+```
+
+Convert shapefile to a raster
+
+```{r}
+# Copy admin unit codes to new column in upazila shapefile attributes, in the process removing Bangladesh prefix from the integer code
+bgd_test@data$adm3_integer <- substr(bgd_test@data[["ADM3_PCODE"]], 3, 10)
+
+# Turn into numeric
+bgd_test@data[["adm3_integer"]] <- as.numeric(bgd_test@data[["adm3_integer"]])
+
+# Convert upazila shapefile to raster using the integer admin unit code, maintaining extent and cell size of L0 base layer
+## Set up a raster "template" to use in rasterize()
+ext_base <-  extent(bgd_base_raster)
+ncol_base <- bgd_base_raster@ncols
+nrow_base <- bgd_base_raster@nrows
+
+xy <- abs(apply(as.matrix(bbox(ext_base)), 1, diff))
+r <- raster(ext_base, ncol=ncol_base, nrow=nrow_base)
+
+## Rasterize the shapefile
+raster_admin3 <-rasterize(bgd_test, r, field=bgd_test$adm3_integer)
+
+# Assign the same CRS as the base layer 
+crs_base <- crs(bgd_base_raster)
+crs(raster_admin3) <- crs_base
+
+# Plot to see if values have been assigned to the raster
+plot(raster_admin3, box=F, axes=F)
+```
+
+Calculation of zonal statistics
+
+```{r}
+# Make a list with all the rasters 
+full.raster.list <- c(rlist_processed, fblist_processed, worldpop.list)
+
+# Add nightlights data to the list - 27th element
+full.raster.list[[27]] <- nightlights_raster
+
+# Check rasters 
+full.raster.list
+
+# Create a raster stack
+raster.stack <- stack(full.raster.list)
+
+# Zonal statistics 
+
+# Mean
+zonal.stats.mean <- zonal(raster.stack, raster_admin3, fun='mean', digits=6, na.rm=TRUE)
+zonal.stats.mean <- as.data.frame(zonal.stats.mean)
+colnames_mean <- colnames(zonal.stats.mean)  # gather column names
+colnames_mean <- paste(colnames_mean, "mean", sep="_")  # add identifier for mean
+colnames_mean <- colnames_mean[2:28]  # exclude zone
+colnames(zonal.stats.mean)[2:28] <- colnames_mean  # rename columns
+ 
+
+# Min
+zonal.stats.min <- zonal(raster.stack, raster_admin3, fun='min', digits=6, na.rm=TRUE)
+zonal.stats.min <- as.data.frame(zonal.stats.min)
+colnames_min <- colnames(zonal.stats.min)
+colnames_min <- paste(colnames_min, "min", sep="_")
+colnames(zonal.stats.min)[2:28] <- colnames_min[2:28]
+
+# Max
+zonal.stats.max <- zonal(raster.stack, raster_admin3, fun='max', digits=6, na.rm=TRUE)
+zonal.stats.max <- as.data.frame(zonal.stats.max)
+colnames_max <- colnames(zonal.stats.max)
+colnames_max <- paste(colnames_max, "max", sep="_")
+colnames(zonal.stats.max)[2:28] <- colnames_max[2:28]
+
+# Sum
+zonal.stats.sum <- zonal(raster.stack, raster_admin3, fun='sum', digits=6, na.rm=TRUE)
+zonal.stats.sum <- as.data.frame(zonal.stats.sum)
+colnames_sum <- colnames(zonal.stats.sum)
+colnames_sum <- paste(colnames_sum, "sum", sep="_")
+colnames(zonal.stats.sum)[2:28] <- colnames_sum[2:28]
+
+# SD
+zonal.stats.sd <- zonal(raster.stack, raster_admin3, fun='sd', digits=6, na.rm=TRUE)
+zonal.stats.sd <- as.data.frame(zonal.stats.sd)
+colnames_sd <- colnames(zonal.stats.sd)
+colnames_sd <- paste(colnames_sd, "sd", sep="_")
+colnames(zonal.stats.sd)[2:28] <- colnames_sd[2:28]
+
+# Count
+zonal.stats.count <- zonal(raster.stack, raster_admin3, fun='count', digits=6, na.rm=TRUE)
+zonal.stats.count <- as.data.frame(zonal.stats.count)
+colnames_count <- colnames(zonal.stats.count)
+colnames_count <- paste(colnames_count, "count", sep="_")
+colnames(zonal.stats.count)[2:28] <- colnames_count[2:28]
+
+# Make a list of all dataframes that contain zonal statistics
+l.df <- lapply(ls(pattern="zonal.stats"), function(x) get(x))
+
+# Combine all zonal statistics into one data frame 
+zonal.stats.all <- bind_cols(l.df)
+
+# Delete repeated columns for zones - occurs every 28 variables 
+zonal.stats.all = subset(zonal.stats.all, select = -c(29, 57, 85, 113, 141)) 
+
+# Rename the colum with upazila codes
+colnames(zonal.stats.all)[1] <- "upazila.code"
+
+# Save file 
+save(zonal.stats.all, file = "BGD.zonalstats.RData")
+```
