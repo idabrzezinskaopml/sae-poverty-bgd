@@ -3,19 +3,21 @@ This is a repo for a guide to producing Small Area Estimates (SAE) of poverty us
 
 The main file is: Quarto updated BGD geo-spatial covariates process.qmd
 
-•	Audience: 
-o	Some statistical training
-o	Understanding of regression/statistical modelling. 
-o	Understanding, previous experience of R/RStudio. 
-o	We don’t assume people have any geospatial analysis knowledge/experience. 
+Proposed structure for the guide would be:
+
+Audience: 
+- Some statistical training
+-	Understanding of regression/statistical modelling. 
+-	Understanding, previous experience of R/RStudio. 
+-	We don’t assume people have any geospatial analysis knowledge/experience. 
 
 1.	Non-technical introduction to the problem
-a.	Relatively short 
-b.	Non-technical explanation of the problem. 
-c.	Exciting. 
-d.	Visual as much as possible. 
-e.	Explain the audience. 
-i.	Help decide the reader whether this is for them or not. 
+- Relatively short 
+- Non-technical explanation of the problem. 
+- Exciting. 
+- Visual as much as possible. 
+- Explain the audience. 
+  -  Help decide the reader whether this is for them or not. 
 f.	Explain technical pre-requisites
 i.	Computing power, etc.  
 2.	The ‘core’ guide
