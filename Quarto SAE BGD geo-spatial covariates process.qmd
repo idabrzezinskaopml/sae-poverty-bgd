@@ -5,13 +5,39 @@ format: html
 editor: visual
 ---
 
-# Section A: Geo-spatial 
+# Section A: Geo-spatial
 
-## 1. Introduction 
+## 1. Introduction
 
 ## 2. Theory - key concepts in Geo-spatial analysis
 
--   Vector vs. raster data
+Spatial data has a different structure to standard data frames that you may have worked with in the past, say a household survey. The two most common spatial data types are:
+
+1.  **Vector data** - represts structures on the Earth's surface that are defined by discrete locations (x,y) called vertices. Depending on how the vertices (x,y) are oragnised, we can divide vector data types into: **points, lines, and polygons**. You could think of: locations of hospitals, road networks, administrative boundaries.
+
+![](images/Geometry%20vector.png)
+
+Source: [National Ecological Observatory Network](https://www.neonscience.org/)
+
+Vector data comes in many formats, but in our case we will be working with the Shapefile format, which has the .shp extension. More specifically, we will download a shapefile containing multipolygons that define adminsitrative boundaries of upazilas (admin level 3) in Bangladesh. A shapefile stores the coordinates of vertices, as well as other metadata:
+
+-   Extent - the spatial extent that the shapefile covers, i.e. the maximum and minimum values of longitute and latitude that define the boundaries of our spatial structure.
+
+-   Object type - whether the shapefile contains points, lines, or polygons.
+
+-   Coordinate Referenec System (CRS)
+
+-   Other attributes - e.g. in our case the name of the upazila, its administrative code, area covered etc.
+
+::: callout-caution
+## Important
+
+When you download your shapefile, you might notice that in addition to the .shp file that we are expecting, there is a bunch of files with other extensions.
+
+![](images/Shapefile%20format.png)
+:::
+
+Vector vs. raster data
 
 -   Shapefile
 
@@ -156,7 +182,7 @@ fb.rasters <- lapply(fb.list, raster)
 # 5. Nightlights Data #
 
 # Import geoTIFF file on nightlights intensity
-nightlights <- 'Nightlights data/SVDNB_npp_20150101-20151231_75N0/SVDNB_npp_20150101-20151231_75N060E_v10_c201701311200/SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif'
+nightlights <- 'Nightlights data/SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif'
 
 # Turn into a raster 
 nightlights.raster = raster(nightlights)
@@ -447,10 +473,8 @@ crs_base <- crs(base.layer.raster)
 crs(raster_admin3) <- crs_base
 
 # Plot to see if values have been assigned to the raster
-plot(raster_admin3, box=F, axes=F)
+plot(raster_admin3, box=F, axes=F, legend=F)
 
-# Save the RData file (I only made it so far due to a One Drive issue with Nightlights data)
-save.image("C:/Users/idabr/OneDrive - Oxford Policy Management Limited/EMDI SAE/Geo-spatial Bangladesh data/Quarto github workspace.RData")
 
 ```
 
@@ -529,6 +553,14 @@ colnames(zonal.stats.all)[1] <- "upazila.code"
 
 # Save file 
 save(zonal.stats.all, file = "BGD.zonalstats.RData")
+```
+
+Save my Rdata
+
+```{r}
+# Save the RData file 
+save.image("C:/Users/idabr/OneDrive - Oxford Policy Management Limited/EMDI SAE/Geo-spatial Bangladesh data/Quarto github workspace.RData")
+
 ```
 
 ## 4. Caveats, problems, things to look out for
