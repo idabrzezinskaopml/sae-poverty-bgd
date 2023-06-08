@@ -482,10 +482,7 @@ plot(raster_admin3, box=F, axes=F, legend=F)
 
 ```{r}
 # Make a list with all the rasters 
-full.raster.list <- c(rlist_processed, fblist_processed, worldpop.list)
-
-# Add nightlights data to the list - 27th element
-full.raster.list[[27]] <- nightlights_raster
+full.raster.list <- c(matlas.processed, fblist.processed, worldpop.rasters, nightlights.raster.processed)
 
 # Check rasters 
 full.raster.list
@@ -552,7 +549,7 @@ zonal.stats.all = subset(zonal.stats.all, select = -c(29, 57, 85, 113, 141))
 colnames(zonal.stats.all)[1] <- "upazila.code"
 
 # Save file 
-save(zonal.stats.all, file = "BGD.zonalstats.RData")
+save(zonal.stats.all, file = "C:/Users/idabr/OneDrive - Oxford Policy Management Limited/EMDI SAE/Geo-spatial Bangladesh data/BGD.zonalstats.RData")
 ```
 
 Save my Rdata
