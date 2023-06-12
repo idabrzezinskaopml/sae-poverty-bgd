@@ -43,7 +43,7 @@ Online data is broad and includes all data shared online purposefully, including
 
 ### 2.2. Data structures
 
-Let us think about the two most common spatial data types, which we will be working with in our poverty mapping exercise, together with their attributes:
+Here I want to introduce the two most common spatial data types, which we will be working with in our poverty mapping exercise, together with their attributes:
 
 1.  **Raster data** - any gridded (or pixelated) data where each pixel represents a specific geographical location. The value can be continuous (e.g. temperature) or categorical (e.g. land use). If pixels sound familiar, it's because they are - in fact, this is how every digital image is represented. The only difference is that a raster additionally includes spatial information that connects data from the image to a particular location. The location is defined by the following attributes (these are important attributes to inspect when you first open your raster):
 
@@ -69,11 +69,11 @@ Source: [National Ecological Observatory Network](https://www.neonscience.org/)
 
 To illustrate this concept, below is a vector data set with lines showing the road network in Ghana, developed through Open Street Maps Ghana, downloadable via the Humanitarian Data Exchange website. Each line is determined by its vertices (think of them as the (x,y) points shown in the image above) and indexed geographically in space.
 
-![](images/Ghana%20road%20network.png)
+![](images/Ghana%20road%20network.png){width="648"}
 
 Source: [Humanitarian Data Exchange](https://data.humdata.org/dataset/hotosm_gha_roads)
 
-Vector data comes in many formats, but we will be working with the (very common) Shapefile format, which has the .shp extension. More specifically, we will download a shapefile containing multipolygons that define adminsitrative boundaries of upazilas (admin level 3) in Bangladesh. A shapefile stores the coordinates of vertices, as well as other metadata:
+Vector data comes in many formats, but we will be working with the (very common) Shapefile format, which has a .shp extension. More specifically, we will download a shapefile containing multipolygons that define adminsitrative boundaries of upazilas (admin level 3) in Bangladesh. A shapefile stores the coordinates of vertices, as well as other metadata:
 
 -   Extent
 
@@ -87,7 +87,7 @@ Could have a short quiz here showing different images and asking the audience wh
 
 ### 2.3. Layering geo-spatial data sets 
 
-Now that you are familiar with the basic types of geo-spatial datasets, we can start thinking about performing some simple analysis. Typically, rather than viewing each layer of data (such as your road network, elevation, temperature etc.) individually, it is valuable to overlay them on top of each other, so that we can view multiple geo-spatial layers at the same time. The diagram in Figure XX below demonstrates this concept: while we can inspect data on streets, buildings, and vegetation individually, a much more interesting way to look at these layers is by viewing the simultaneously, as in the "Integrated data" portion of the diagram at the very bottom.
+Now that you are familiar with the basic types of geo-spatial datasets, we can start thinking about performing some simple mapping. Typically, rather than viewing each layer of data (such as your road network, elevation, temperature etc.) individually, it is valuable to overlay them on top of each other, so that we can view multiple geo-spatial layers at the same time. The diagram in Figure XX below demonstrates this concept: while we can inspect data on streets, buildings, and vegetation individually, a much more interesting way to look at these layers is by viewing the simultaneously, as in the "Integrated data" portion of the diagram at the very bottom.
 
 ![](images/Data%20layers.jpg){width="555"}
 
@@ -96,20 +96,51 @@ Source: [National Geographic](https://education.nationalgeographic.org/resource/
 ::: callout-caution
 ## Caution
 
-Make sure that the CRS is the same for all of your objects before layering.
+Make sure that the CRS is the same for all of your objects before layering. The most standard CRS is the World Geodetic System 1984 (WGS 84), but you may encounter other ones when working with spatial data for specific regions of the world.
 :::
 
-Now, let's see some an example of visualising multiple raster layers from our project work under [Data & Evidence to End Extreme Poverty (DEEP)](https://povertyevidence.org/). In this case, we were interested to map the spatial distribution of climatic risks in Nigeria, looking at droughts and floods. Figure XX below shows the worst drought (defined as the Standardized Precipitation Evapotranspiration Index aka SPEI) and all flooded areas in the period 2010-2020 in Nigeria.
+Now, let's see an example of visualising multiple raster layers from our project work under [Data & Evidence to End Extreme Poverty (DEEP)](https://povertyevidence.org/). In this case, we wanted to map the spatial distribution of climatic risks in Nigeria, looking at droughts and floods. Figure XX below shows the worst drought (defined as Standardized Precipitation Evapotranspiration Index or SPEI below -1.5) and all flooded areas in the period 2010-2020 in Nigeria, on top of an Open Street Map background. Drought is captured by a continuous variable for a range of values of SPEI, while flood is a categorical variable (i.e. flood or no flood), with flooded areas shown in blue. We can see that the extent of these layers differs, i.e. drought is only defined within Nigeria (including bordering grid cells), while flood data extends beyond the borders of Nigeria and considers an entire river system, which is not necessarily bound by national borders.
 
 ![Rasters showing all floods and the worst droughts in Nigeria between 2010-2020](images/Nigeria%20flood%20drought%20.png)
+
+The two layers (drought and flood) also have different spatial resolutions. Here, drought data is of a lower spatial resolution, i.e. it comes up as big pixels of around 0.5 degrees (or \~30km), while flood data is extremely high resolution, with each pixel the size of \~250m x 250m, coming from the NASA MODIS satellite. Figure XX below shows a zoom into two grid cells of drought data, which contain numerous grid cells with flood data. The higher the spatial resolution, the smaller your grid cells!
 
 ![Zoom into pixels showing floods and droughts in Nigeria](images/Pixel%20zoom%20in%20.png)
 
 ### 2.4. Raster manipulation for poverty modelling
 
--   Operations to be performed on the raster data: crop, mask, resample, replace NA values.
+The previous section introduced the concept of working with multiple layers of geo-spatial information. In our example, the two layers, despite being displayed on top of each other, had very different attributes: spatial resolution, cell sizes, extent . However, there are cases, as in the poverty modelling exercise we are about to do, where we want to "harmonise" our raster objects, i.e. make sure all the attributes (CRS, extent, spatial resolution, cell size) are the same when rasters are overlaid on top of each other.
 
--   How (x,y) values are represented: longitude and latitude, positive and negative values
+Let's consider our problem at hand again: **We want to compute zonal poverty statistics at administrative level 3 (upazila) level in Bangladesh.** We will do so by using statistical modelling and a number of remote sensed covariates as our predictors. For this, we need some basic statistics (mean, min, max, standard deviation, count etc.) that describe our geo-spatial information for each upazila. For example, what is the mean Travel Time to Healthcare Facilities (in minutes) in the upazila of Abador? Or, what is the median nightlights intensity in that upazila? While R is smart enough to compute those statistics for us automatically, we need to provide it with a nicely harmonised set of rasters. We will use a "base layer", which contains all the attributes we are interested in, and harmonise all other remote sensing covariates to our base layer. That is: we will match the CRS, extent, spatial resolution, cell size of the base layer.
+
+With that in mind, I will introduce a few ways in which we will manipulate spatial data. This is a useful skill to have as we will soon discover that raw open source data can be a little messy and you may need to implement some of these steps to make sense of your data before any meaningful analysis.
+
+1.  **Cropping -** changing the extent of our spatial objects, i.e. the maximum and minimum values of longitude and latitude that define the object, to that of the base layer.
+2.  **Resampling** - changing the spatial resolution so that it matches that of the base layer.
+
+::: callout-caution
+## Caution
+
+There are many algorithms that can be used for changing the spatial resolution of a raster.
+:::
+
+3.  **Recoding missing values** - (only if appropriate) changing missing values to a specified value.
+
+::: callout-caution
+## Caution
+
+A note of caution on missing values in geo-spatial data. As with every data type, the treatment of missing values can be a source of philosophical discussions and should always be determined depending on the context and the specific problem at hand. The user should always ask themselves: can a missing value be interpreted as a zero or do we simply not have enough information to conclude? If it is a zero, missing values should be recoded accordingly.
+:::
+
+4.  **Masking** - cutting the exact "shape" of a raster layer. This is different from cropping, which would leave us with a chunky box that contains Bangladesh, but also some areas between the maximum and minimum values that fall outside of Bangladesh. We can use the mask function to examine only the country boundaries.
+
+These concepts may seem a little abstract for now, so let us consider visually what each of these processes will entail. Figure XX shows the example of processing geo-spatial data on nightlights intensity for Bangladesh - a process we will be implementing in Section 3. Night lights have been known to be a good proxy for economic development and will be one of our predictors of poverty.
+
+![](images/Nightlights%20data%20processing.png)
+
+![](images/FB%20data%20processing.png)
+
+### 2.5. Spatial Data in R
 
 ## 3. Applying this
 
@@ -475,7 +506,6 @@ plot(fblist.processed[[4]], box=F, axes=F, main = "Bangladesh - Population densi
 plot(fblist.processed[[5]], box=F, axes=F, main = "Bangladesh - Population density (women)")
 plot(fblist.processed[[6]], box=F, axes=F, main = "Bangladesh - Population density (women of reproductive age 15-49)")
 plot(fblist.processed[[7]], box=F, axes=F, main = "Bangladesh - Population density (youth 15-24)")
-
 
 # Create a high quality image 
 png(filename="maps/BGD_pop_density_youth.png", res=400, width=2000, height=1500)
