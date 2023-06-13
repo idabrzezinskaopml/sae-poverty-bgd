@@ -9,6 +9,8 @@ editor: visual
 
 ## 1. Introduction
 
+Nick's introduction here
+
 ## 2. Theory - key concepts in Geo-spatial analysis
 
 Spatial data has a slightly different structure to standard data frames that you may have worked with in the past, say a household survey, in that (as the name gives away) it is indexed to a specific geographical location in space. It still conatins data values, but a lot of the attributes of these spatial objects are used to describe its geographical location, so that we can position our data values adequately on the surface of the Earth (aside: while our analysis will be confined to objects on Earth, GIS analytics can very well be applied to other objects in Space, such as [NASA's Interactive GIS map of Mars](https://astrogeology.usgs.gov/facilities/mrctr/mars-online-map)).
@@ -21,7 +23,7 @@ Before digging into the structure and technicalities of how spatial objects are 
 
 Recall that geo-spatial data is simply a set of data values that are indexed to a geographical location on Earth. In that sense, traditional census or surveys are sources of geo-spatial data as long as they contain information on administrative units, GPS location, or any other geographical identifiers. They can even be more precise, for instance if we are interesetd in measuring a building and its properties.
 
-#### Remote sensing 
+#### Remote sensing
 
 Increasingly, **remote sensing** data collection is turning out to be a more efficient method than surveys. This includes satellite imagery and aircraft sensors that orbit the Earth and collect data continuously, at a high spatial resolution, and globally, including places that would be hard to reach with a survey (say the middle of the ocean or conflict-affected areas). In fact, due to the advantages of remote sensing data collection - space is becoming a crowded place, and increasingly more so in the last couple of years. Figure X below shows the time trend of the annual number of objects launched into space, which explodes upwards after around 2015. As of 2022, there were 6,905 active satellites in space. In this workflow, we will be working exclusively with remote sensing data, but let us briefly consider other sources of geo-spatial information.
 
@@ -37,7 +39,7 @@ For all the growing interest in fancy remote sensing data collection, it is wort
 
 Basic services provided by cell phone operators are routed by satellites, providing location information at various levels of precision (from GPS to cell phone tower), together with Call Detail Records (CDR). [Flowminder](https://www.flowminder.org/about-us) is an example of an organisation that leverages mobile operator data in development projects, for instance tracking population movements post the 2015 Nepal Earthquake.
 
-#### Online data 
+#### Online data
 
 Online data is broad and includes all data shared online purposefully, including Wikipedia, social media, online articles etc. Location and mobility tracking via social media can be another source of geographical information. App-based mobile phone location data is actually often of higher spatial resolution than that coming from cell phone data operators and is increasingly being used in mobility studies. In fact, we will be using high-resolution population density estimates from Meta (previously Facebook) in our poverty modelling exercise.
 
@@ -85,7 +87,7 @@ Vector data comes in many formats, but we will be working with the (very common)
 
 Could have a short quiz here showing different images and asking the audience whether this is a raster or a vector dataset.
 
-### 2.3. Layering geo-spatial data sets 
+### 2.3. Layering geo-spatial data sets
 
 Now that you are familiar with the basic types of geo-spatial datasets, we can start thinking about performing some simple mapping. Typically, rather than viewing each layer of data (such as your road network, elevation, temperature etc.) individually, it is valuable to overlay them on top of each other, so that we can view multiple geo-spatial layers at the same time. The diagram in Figure XX below demonstrates this concept: while we can inspect data on streets, buildings, and vegetation individually, a much more interesting way to look at these layers is by viewing the simultaneously, as in the "Integrated data" portion of the diagram at the very bottom.
 
