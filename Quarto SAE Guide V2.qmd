@@ -1,0 +1,491 @@
+---
+title: "Small Area Estimation Guide"
+format: html
+editor: visual
+---
+
+# **Guide to Carry Out Small Area Estimation in R**
+
+Oxford Policy Management 2023
+
+# Contents Page
+
+### Introduction
+
+Here I introduce the FH model as a tool in R to produce out of sample poverty estimates.
+
+Talk about why poverty estimates are useful for policy and poverty alleviation programs. The drawbacks of census data. Advantages of geospatial data. Briefly introduce FH and how the estimation procedure works. Talk about the ground truth wealth index household survey data from DHS. Talk about the geospatial data and where we get that. Talk briefly about each step of the procedure and where you will find the information on it.
+
+### Estimation
+
+In guide 1 this will run through the steps from having the initial dataframe to visualising and exporting the results. In guide 2 it also includes how to source your own geospatial data.
+
+This runs through the process of variable selection. Diagnostics and transformations. Model performance analytics. Visualising the results on a map and then exporting the results to excel etc
+
+Videos including how to carry out certain tasks if necessary
+
+### Conclusion / Caveats
+
+Potential drawbacks and caveats to SAE in general and the FH model in particular.
+
+### Glossary
+
+Define key terms from throughout the guide such as BIC selection criterion, EBP model, potentially even things such as why it is important to not violate normality assumptions in order to keep the actual steps in the guide as concise as possible. Quarto enables you to weave together content and executable code into a finished document.
+
+# Introduction
+
+**Why is it so important to learn more about the spatial distribution of poverty?**
+
+-   More than 700 million people or 9.3% of the population live on less than \$2.15 a day.
+-   Approximately half the world's population live on less than \$6.85 a day.
+-   Despite global inequality declining, inequality within countries is rising so it is increasingly important for policymakers to appreciate the spatial distribution of wealth across a whole country.
+
+Social protection programs and appropriate policy decisions are important drivers of poverty reduction but they need suitable data in order to effectively target those who need help the most. Policy makers therefore require the most current statistics as well as figures that give an idea of poverty distribution across the whole country. This method of small area estimation can help solve both of these issues.
+
+Poverty estimates are a crucial measure for policymakers and development practitioners to understand the extent of poverty in a country and design effective poverty alleviation programs. This guide will tell you how to produce these estimates.
+
+**The Fay-Herriot (FH) Model**
+
+The FH model in R can be used to produce out-of-sample poverty estimates.
+
+The FH model uses a combination of household data and geospatial data in order to generate estimates of poverty rates.
+
+It does this by fitting a model on the in-sample observations by using the household survey responses regarding poverty and learning which geospatial covariates have the most predictive power on the asset index. The model can then estimate the poverty rates for out of sample households using just the geospatial data.
+
+This technique is demonstrated by [Blumenstock et al., (2022)](https://pubmed.ncbi.nlm.nih.gov/35017299/), who develop relative wealth and poverty microestimates for all 135 low and middle income countries (LMICs). Furthermore,
+
+**Why do we use geospatial data rather than census data?**
+
+-   Previously, small area estimation poverty estimates were generated using a combination of household survey and census data, which is only collected every 10 years. However, a combination of household survey data and geospatial data allows you to generate poverty estimates much more frequently than was possible previously.
+-   Geospatial data is open source and can provide more precise and up-to-date information about covariates than census data.
+-   Geospatial data does not have a problem of finding statistics in rural areas which are often hard to reach in traditional surveys.
+
+**Geospatial has all these advantages whilst still offering sufficient predictive power**
+
+-   Geospatial data is available at a high spatial resolution, which can be matched with the geo-location of households in order to allow prediction of household welfare from the co-ordinates.
+-   This information can then be used to estimate poverty rates for that household by using geospatial information such as land use, population demographics and climatic variables.
+-   The FH model using geospatial data, when compared to ground-truth data in Togo using a nationally representative sample of 6,172 households found that the model explained 84% of the variation in wealth. This compares favourably to other state-of-the-art models.
+
+**The guide**
+
+In this guide, we will take you through the steps of using the Fay-Herriot model in R to carry out small area estimation to predict poverty rates. This will enable you to replicate this prediction in other developing countries using just geospatial data and a household survey that includes a wealth index such as the DHS household survey that includes data on over 90 different countries. We will explain how the model works, the data we use, and why we might choose to use this method over traditional approaches. By the end of this guide, you will be able to produce accurate and up-to-date poverty estimates for small areas in developing countries, which can inform policy decisions and improve poverty alleviation efforts.
+
+In this guide we use the Fay-Herriot model vs other predictive models since the FH model estimates poverty rates using the agglomerated average wealth index of each area (and is therefore known as an area-level model) rather than other models such as the EBP (empirical best predictor) which estimates the poverty rates by generating an estimate for every single household (known as unit-level). This makes the results easier to replicate in a large variety of countries since there is often a problem in obtaining unit-level data due to data protection laws.
+
+**Why we use the relative wealth index as our measure of poverty**
+
+We use the DHS "relative wealth index" as our ground-truth measure of wealth and poverty. This means that our machine-learning algorithms are being trained to reconstruct a specific, asset-based relative wealth index - albeit at a much finer spatial resolution and in areas where DHS surveys did not occur. This is because we believe the DHS version of a relative wealth index is the best publicly available instrument for consistently measuring wealth across a large number of developing countries.
+
+The wealth index is a composite measure of a household's cumulative living standard. The wealth index is calculated using easy-to-collect data on a household's ownership of selected assets, such as televisions and bicycles; materials used for housing construction; and types of water access and sanitation facilities. Generated with a statistical procedure known as principal components analysis, the wealth index places individual households on a continuous scale of relative wealth. However, it posits a specific, asset-based definition of wealth that does not necessarily capture a broader notion of human development.
+
+Our decision to focus on estimating asset-based wealth, rather than a different measure of socioeconomic status, was motivated by several considerations:
+
+-   In developing economies, where large portions of the population do not earn formal wages, measures of income are notoriously unreliable. Instead, researchers and policymakers rely on asset-based wealth indexes or measures of consumption expenditures.
+-   Between these two, wealth is much less time consuming to record in a survey. As a result, wealth data is more commonly collected in a standardized format for a large number of countries.
+-   This therefore lends itself to the FH method being easily replicated and reproduced in a wide variety of case studies in less developed economies around the world.
+
+### Steps of the guide
+
+Step 1:
+
+Pre-requisites for this step:
+
+\- Saved data frame of pre-processed geospatial co-ordinates to the working directory
+
+\- R and R studio downloaded to their computer
+
+You can either start with the pre-processed geospatial co-ordinates you generated in section A or use our pre-processed dataframe which is available [here.]{.underline} We then merge these datasets using the unique geospatial upazila (Bangladesh's equivalent to a county or district) code.
+
+Step 2:
+
+Pre-requisites for this step
+
+\- The resulting data frame coming from merging in step 1
+
+Since this dataframe is initially a large dataset with over 200 geospatial covariates we want to build a model with only the covariates with highest predictive power to prevent issues such as overfitting. We therefore perform a BIC stepwise selection criterion using all of the available geospatial covariates to see which 10-15 variables perform the best in predicting the level of wealth in an area.
+
+Step 3:
+
+We then assess the predictive power of our cursory model and carry out diagnostic checks to see if vital assumptions of the estimation procedure are violated. For example, the model assumes normality of the error terms which, if violated, introduces bias into the estimation so it is necessary to show that these assumptions hold. If the assumptions do not hold with the model in its current format then it is important to carry out a transformation on the target variable. Log transformations are traditionally popular with income data in order to mitigate issues such as skewed data. This transformation stabilises the variance and makes the relationship with other variables more linear. We use a variety of visual aids such as plots as well as regression tests to ensure that we are satisfied that these assumptions now hold.
+
+Step 4:
+
+We then have our cursory model of 10-15 variables and have carried out a transformation if necessary so that we are satisfied that our assumptions hold. We then trim down our model even further by carrying out another stepwise selection criterion.
+
+Step 5:
+
+This is then our final model and we carry out the FH model using just the variables selected from this regression to estimate wealth index for the out of sample observations.
+
+Step 6:
+
+We carry out comparison tests of FH estimates with the ground-truth wealth index from the DHS survey to the FH model estimates to ensure they are similar. This is done both graphically and with a Brown test.
+
+Step 7:
+
+Pre-requisites for this step
+
+\- We need the Bangladesh shapefile downloaded and saved to the working directory.
+
+We then visualise the results. To do this we have to download a Bangladesh shapefile from online which has the country co-ordinates and includes the polygon shape for each upazila. We merge the dataset using the unique upazila district code and then visualise the relative wealth in each domain by using a gradient colour scheme.
+
+# Estimation
+
+### Using the Fay Herriot model to predict poverty in Bangladesh
+
+First you need to install and load necessary packages for the estimation:
+
+```{r}
+library(survey)
+library(nlme)
+library(emdi)
+library(dplyr)
+library(sae)
+```
+
+### Step 1: How to combine your datasets. Getting your geospatial and survey data in the same dataframe.
+
+Now you load the necessary dataset from where you have it saved
+
+```{r}
+setwd("/Users/nicklindsay/Downloads")
+
+data_area_level <- get(load("final.cov.est.new-1.Rdata"))
+
+data_area_level = cbind(data_area_level, data_area_level$se.GVF^2)
+
+attach(data_area_level)
+
+```
+
+This also calculates the variance of the GVF (Generalised Variance Function) variable and attaches it to the dataset since it is an important element in the estimation.
+
+We use the column bind command to merge two dataframes together. This new dataframe now includes the variable for "vardir" which is standard errors squared.
+
+### Step 2: Covariate selection for initial model. The initial large dataframe with all variables from the geospatial and survey data is unwieldy and following the principle of parsimony we want fewer variables. We therefore initially trim the model to include fewer covariates.
+
+To do this we first create a new dataframe without the variables that were used to create the wealth index. Since these will clearly be highly correlated with our 'poorest' indicator of interest and we do not want these to be in the model. Also they are obviously not available for the out of sample data points.
+
+```{r}
+new_df2 <- data_area_level[, c(2:210, 223)]
+
+```
+
+We then fit a full linear regression model using the new dataframe
+
+```{r}
+full_model2 <- lm(poorest ~ ., data = new_df2)
+```
+
+We then perform stepwise selection based on BIC criterion to narrow down the number of variables from 200+ to around 15
+
+```{r}
+stepwise_model2 <- stepAIC(full_model2, direction = "both", trace = FALSE, k = log(nrow(new_df2)))
+```
+
+We can then view the selected variables which we will use in our cursory model.
+
+```{r}
+summary(stepwise_model2)
+```
+
+### Step 3: Model summary for cursory model. Assess the predictive power and note if normality assumptions are violated or if model point estimates are unsuitable.
+
+Now we estimate an initial cursory model using the variables selected by an initial AIC/BIC variable selection.
+
+```{r}
+new_fh_final <- fh(fixed = poorest ~ CHILU5.SUM + MEN.MEAN + WOMEN.MIN + WOMEN.SUM +
+          WOMENREP.MIN + WOMENREP.SUM + YOUTH1524.MIN + YOUTH1524.MEAN +
+          VIIRS.SUM + DSTWATWAY.MAX + DSTCOAST.MEAN, vardir = "data_area_level$se.GVF^2",
+          combined_data = data_area_level, domains = "upazila.code", method = "ml",
+          transformation = "arcsin", backtransformation = "bc", eff_smpsize = "nhog",
+          MSE = TRUE, mse_type = "boot", B = 50)
+
+summary(new_fh_final)
+```
+
+First of all we do direct estimation with no transformation on a raw scale to see if the model offers reasonable predictive power.
+
+This is just an illustrative example using only the variables that are later selected using the AIC/ BIC.
+
+You can then run a couple of model diagnostic regressions to see how the raw scale fits the data.
+
+```{r}
+fh_raw_scale <- fh(fixed = poorest ~
+                     CHILU5.SUM + MEN.MEAN +
+                     WOMEN.MIN + WOMEN.SUM +
+                     WOMENREP.MIN +
+                     WOMENREP.SUM +
+                     YOUTH1524.MIN +
+                     YOUTH1524.MEAN +
+                     VIIRS.SUM + DSTWATWAY.MAX +
+                     DSTCOAST.MEAN,
+                   vardir = "data_area_level$se.GVF^2",
+                   combined_data = data_area_level,
+                   domains = "upazila.code",
+                   method = "ml", MSE = TRUE,
+                   mse_type = "analytical")
+                   
+summary(fh_raw_scale)                   
+```
+
+When looking at the model summary the adjusted R-squared is 0.52. This might seem like reasonable predictive power.
+
+However, we also need to look at normal probability plots of residuals and random errors to see if there is a clear departure from normality which is carried out below.
+
+These commands give 2 output plots showing: 1. Normal Q-Q plot showing level 1 residuals 2. Normal Q-Q plot showing the random effects.
+
+```{r}
+lev1 = fh_raw_scale$model$real_residuals
+lev2 = fh_raw_scale$model$random_effects
+qqnorm(lev1)
+qqnorm(lev2)                   
+```
+
+Especially in output plot 1 this graph resembles more of an exponential growth function rather than a 45 degree line which we would hope for.
+
+The second model diagnostic model is important if we are going to use the model for predictive purposes.
+
+This next function will output direct and model-based point estimates and corresponding variances and MSEs provided that the MSE argument was set equal to TRUE when fitting the area- level model.
+
+```{r}
+est_raw = estimators(fh_raw_scale,
+                     MSE = TRUE)             
+summary(fh_raw_scale$ind$FH)
+```
+
+We notice that the model-based point estimates include negative predicted values despite the fact that we are modelling a proportion. This is a consequence of using a model that does not fit well and illustrates the importance of using model diagnostics.
+
+### Step 4: Estimate a new model with transformation in order to ensure all assumptions are satisfied (if necessary)
+
+As a result in order to better fit the data we use the arcsin transformation. This is common when using income data. Using this transformation requires additional arguments, namely the effective sample size defined by the sample size divided by the design effect and the type of backtransformation.
+
+```{r}
+fh_arcsin <- fh(fixed = poorest ~
+                  POP.MAX + CHILU5.STD +
+                  CHILU5.SUM +
+                  ELD60P.STD +
+                  MEN.MEAN + MEN.STD +
+                  WOMEN.MIN + WOMEN.MEAN +
+                  WOMEN.STD + WOMEN.SUM +
+                  WOMENREP.MIN +
+                  WOMENREP.STD +
+                  WOMENREP.SUM +
+                  YOUTH1524.MIN +
+                  YOUTH1524.MEAN +
+                  SLOPE.MAX + SLOPE.MEAN +
+                  SLOPE.SUM + SLOPE.MINORITY +
+                  VIIRS.MIN + VIIRS.MAX +
+                  VIIRS.MEAN +
+                  VIIRS.STD + VIIRS.SUM +
+                  TOPO.MEAN + DSTWATWAY.MAX +
+                  DSTCOAST.MEAN,
+                vardir = "data_area_level$se.GVF^2",
+                combined_data = data_area_level,
+                domains = "upazila.code",
+                method = "ml", transformation = "arcsin",
+                backtransformation = "bc",
+                eff_smpsize = "nhog",
+                MSE = FALSE, mse_type = "boot",
+                B = c(0,50)) 
+```
+
+NB We have initially have set MIC = FALSE above to in order to speed the model selection step up but we will be changing this later.
+
+We now use the step function using the BIC criterion to see if additional variables can be dropped from the mode. Note that this takes a long time to estimate
+
+```{r}
+step(fh_arcsin, criteria = "BIC") 
+```
+
+We then use the variables that are left by this selection process to create our final arcsin model
+
+```{r}
+fh_arcsin_final <- fh(fixed = poorest ~ CHILU5.SUM + MEN.MEAN + WOMEN.MIN + WOMEN.SUM +
+          WOMENREP.MIN + WOMENREP.SUM + YOUTH1524.MIN + YOUTH1524.MEAN +
+          VIIRS.SUM + DSTWATWAY.MAX + DSTCOAST.MEAN, vardir = "data_area_level$se.GVF^2",
+          combined_data = data_area_level, domains = "upazila.code", method = "ml",
+          transformation = "arcsin", backtransformation = "bc", eff_smpsize = "nhog",
+          MSE = TRUE, mse_type = "boot", B = 50)
+summary(fh_arcsin_final)
+```
+
+Note we use 50 bootstraps here but in real case study you may want to use 200 or even 250.
+
+The summary includes a lot of useful information. It also now gives the adjusted R-squared as 0.56. This shows the transformed model is an improvement compared to the raw model.
+
+We now estimate the model-based point estimates again.
+
+```{r}
+est = estimators(fh_arcsin_final)
+summary(est$ind$FH)
+```
+
+Unlike earlier, this estimation now shows that there are no negative predicted estimates of the proportion of the poorest households
+
+We now show graphically the results of this estimation. This function gives 4 output plots to help show that the normality assumption has not been violated. 1. Normal Q-Q plot of standardized residuals. We want these first two to be as close to a 45 degree line as possible. 2. Normal Q-Q plot of random effects 3. Kernel densities of distribution of standardized residuals. We want these next two to be close to the standard normal distribution. 4. Kernel densities of distribution of random effects.
+
+```{r}
+plot(fh_arcsin_final)
+```
+
+### Step 5: Comparison between direct estimates and model estimates
+
+Ideally, model-based point estimates should be consistent with direct estimates. We should also expect that the use of model-based methods will produce estimates with improved precision compared to direct estimates.
+
+This command gives the first 6 results just so you can get a general impression that there is an improved precision when using FH estimates vs direct estimates
+
+```{r}
+head(estimators(fh_arcsin_final,
+                MSE = TRUE))
+```
+
+We can now graphically compare direct estimates to model based estimates by using the plot command.
+
+The output below plots the direct against model-based point estimates. The results show that model-based estimates are correlated well with direct estimates.
+
+```{r}
+compare_plot(fh_arcsin_final) 
+```
+
+We can then carry out a Brown test to test this relationship computationally. This carries out a Brown test to test the Null hypothesis that EBLUP estimates do not differ significantly from the direct estimates
+
+```{r}
+compare(fh_arcsin_final)
+```
+
+The output of this command shows that the correlation between the two sets of point estimates is 0.73. In addition, this command performs a statistical test on the differences between the direct and model-based point estimates. The p-value of the test is 1 indicating that the null hypothesis of no difference between the two sets of estimates is not rejected.
+
+### Step 6: Benchmark the estimates if required. Good for statistical offices if they want estimates to sum to official figures for reporting
+
+### Step 7: Visualising the results on administrative level 3 (Upazila) scale:
+
+First install and load necessary packages
+
+```{r}
+library(ggplot2)
+library(maptools)
+library(rgeos)
+library(ggmap)
+library(scales)
+library(RColorBrewer)
+library(maps)
+library(sf)
+library(raster)
+```
+
+First of all we create a new variable named est which includes the both direct and FH estimates from our final model as selected above.
+
+```{r}
+est = estimators(fh_arcsin_final,
+                 MSE = FALSE)
+
+attach(est)
+```
+
+We know set our working directory to where we have downloaded our Bangladesh administrative level 3 shape file and download it to R. We also perform a diagnostic review to see a few key features of the shape file.
+
+```{r}
+setwd("/Users/nicklindsay/Downloads/bgd_adm_bbs_20201113_SHP")
+
+bgd_admin3 <- st_read("bgd_admbnda_adm3_bbs_20201113.shp")
+
+extent(bgd_admin3)
+```
+
+We then assign this shape file a name and use the fortify function in order to get it in to a format that can be used for data visualisation.
+
+```{r}
+setwd("/Users/nicklindsay/Downloads/bgd_adm_bbs_20201113_SHP")
+upazila.shp <- readShapeSpatial("bgd_admbnda_adm3_bbs_20201113.shp")
+upazila.shp.f <- fortify(upazila.shp)
+```
+
+We now need to prepare the data in order to merge the shape file and the estimates for the model so we need to find a common variable or order of the observations.
+
+We therefore create a new variable using the 'est' estimators and ordering it in order to match it with the arcsin_model
+
+```{r}
+est.maps <- data.frame(est) %>%
+  mutate(ADM3_CODE = Domain)
+```
+
+We then also order the list of upazilas by ADM3_CODE
+
+```{r}
+est.maps <- est.maps[order(est.maps$ADM3_CODE),]
+                    
+est.maps$id <- seq(1,
+                   nrow(est.maps), 1)                      
+
+```
+
+Note that now there is a column called ADM3_CODE, the observations are arranged in order of this variable. And then they have been assigned an ID number relative to this order
+
+We now just need to merge the shape file with the data frame which indludes both the direct and FH estimates
+
+```{r}
+est.shp.coef <- merge(upazila.shp.f,
+                      est.maps, by = "id",
+                      all.x = TRUE)
+
+final.est.plot <- est.shp.coef[order(est.shp.coef$order),]
+```
+
+**Map of direct estimates**
+
+To create the visualisation for the direct estimates you use the command fill = Direct
+
+```{r}
+ggplot() + geom_polygon(data = final.est.plot,
+                        aes(x = long, y = lat,
+                            group = group,
+                            fill = Direct),
+                        color = "black",
+                        linewidth = 0.25) + coord_map() +
+  scale_fill_distiller(name = "Poorest",
+                       palette = "Greens",
+                       direction = 1,
+                       breaks = pretty_breaks(n = 5)) +
+  theme_nothing(legend = TRUE)
+```
+
+**Map of FH estimates**
+
+To create the visualisation for the FH estimates you use the command fill = FH
+
+```{r}
+ggplot() + geom_polygon(data = final.est.plot,
+                        aes(x = long, y = lat,
+                            group = group,
+                            fill = FH), color = "black",
+                        linewidth = 0.25) + coord_map() +
+  scale_fill_distiller(name = "Poorest",
+                       palette = "Greens",
+                       direction = 1,
+                       breaks = pretty_breaks(n = 5)) +
+  theme_nothing(legend = TRUE)
+```
+
+### Step 8: Export the results to your medium of choice
+
+# Conclusion / Caveats
+
+**Sample size:** The Fay-Herriot model assumes a large sample size for both the target and auxiliary variables. If the sample size in the small area is small, the model's assumptions may be violated, leading to unreliable estimates.
+
+**Model specification:** Choosing an appropriate model specification is crucial. The Fay-Herriot model assumes a linear relationship between the small area and auxiliary variables. If this assumption is not met, the model may provide biased estimates. It's important to assess the linearity assumption and consider alternative model specifications if needed.
+
+**Auxiliary variable availability:** The Fay-Herriot model relies on accurate and relevant auxiliary variables that are correlated with the small area variable of interest. If suitable auxiliary variables are not available or are not strongly correlated with the target variable, the model's effectiveness may be limited.
+
+**Assumption of homoscedasticity:** The Fay-Herriot model assumes that the variance of the small area random effects is constant across all areas. If there are substantial differences in the variance between areas, the model may not capture the heterogeneity adequately, leading to biased estimates.
+
+**Spatial correlation:** The model does not explicitly account for spatial correlation among the small areas. If there is spatial dependence present in the data, the model's estimates may be inefficient or biased. Including spatial random effects or using spatial small area estimation methods may be more appropriate in such cases.
+
+**Model extrapolation:** The Fay-Herriot model relies on borrowing strength from neighboring areas to estimate small area parameters. However, if the small area is significantly different from the neighboring areas, the model's estimates may not accurately reflect the true values.
+
+**Model diagnostics:** It is essential to assess the goodness-of-fit and model diagnostics to evaluate the appropriateness of the Fay-Herriot model. Failure to perform proper diagnostics may lead to incorrect inferences.
+
+It's important to carefully consider these caveats and assess the suitability of the Fay-Herriot model in the specific context of your small area estimation problem. Alternative methods should be explored if the assumptions of the Fay-Herriot model are not met or if there are specific considerations unique to your data.
+
+# Glossary
+
+BIC selection criterion Homoskedasticity GVF Linearity assumptions Normality assumptions
