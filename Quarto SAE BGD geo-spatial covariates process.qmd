@@ -33,7 +33,7 @@ Source: [Our World in Data](https://ourworldindata.org/space-exploration-satelli
 
 #### Crowdsourcing
 
-For all the growing interest in fancy remote sensing data collection, it is worth acknowledging that highly valuable geo-spatial information often comes from humans on the ground! Crowdsourcing geo-spatial data is often done via informal social networks and does not require any formal training in geo-spatial technologies. Perhaps one of the most notable examples is [Open Street Map](https://www.openstreetmap.org/about) (OSM), a community of mappers with local knowledge that produce open source maps. The [Humanitarian team at OSM](https://www.hotosm.org/) produces community-developed maps in areas such as Disasters & Climate Resilience or Public Health - [for example](https://www.hotosm.org/projects/integrating-openstreetmap-data-into-caribbean-disaster-response-efforts-geocris/), OSM is working with the World Bank and the Caribbean Disaster Emergency Management Agency (CDEMA) to integrate their maps into official disaster risk response.
+For all the growing interest in remote sensing data collection, it is worth acknowledging that highly valuable geo-spatial information often comes from humans on the ground! Crowdsourcing geo-spatial data is often done via informal social networks and does not require any formal training in geo-spatial technologies. Perhaps one of the most notable examples is [Open Street Map](https://www.openstreetmap.org/about) (OSM), a community of mappers with local knowledge that produce open source maps. The [Humanitarian team at OSM](https://www.hotosm.org/) produces community-developed maps in areas such as Disasters & Climate Resilience or Public Health - [for example](https://www.hotosm.org/projects/integrating-openstreetmap-data-into-caribbean-disaster-response-efforts-geocris/), OSM is working with the World Bank and the Caribbean Disaster Emergency Management Agency (CDEMA) to integrate their maps into official disaster risk response.
 
 #### Cell phone data
 
@@ -45,7 +45,7 @@ Online data is broad and includes all data shared online purposefully, including
 
 ### 2.2. Data structures
 
-Here I want to introduce the two most common spatial data types, which we will be working with in our poverty mapping exercise, together with their attributes:
+I want to introduce the two most common spatial data types, which we will be working with in our poverty mapping exercise, together with their attributes:
 
 1.  **Raster data** - any gridded (or pixelated) data where each pixel represents a specific geographical location. The value can be continuous (e.g. temperature) or categorical (e.g. land use). If pixels sound familiar, it's because they are - in fact, this is how every digital image is represented. The only difference is that a raster additionally includes spatial information that connects data from the image to a particular location. The location is defined by the following attributes (these are important attributes to inspect when you first open your raster):
 
@@ -172,7 +172,7 @@ Given that our entire workflow will be carried out in R to make it accessible, o
 2.  The `raster` package for raster data
 3.  The `rgdal` package for manipulation of geo-spatial data using the GDAL library.
 
-#### 2.5.1. `sp` package
+#### 2.5.1. Vector data with `sp` package
 
 Recently spatial data in R has been standardised using the base package `sp`. Although a better version of this package exists, called `sf` , it is useful to understand basic data structures under `sp`. Let's have a look at the spatial data classes by running the chunk below:
 
@@ -185,17 +185,26 @@ A basic `sp` object will have two "slots": a bounding box `bbox` containing a ma
 
 ![](images/spatial%20objects%20in%20R.png)
 
-#### 2.5.2 `sf` package
+#### 2.5.2 Vector data with `sf` package
+
+The sf package includes all the basic geometry types within vector data, and even allows for more complex sets that conatin multiple geometries, as seen below:
 
 ![](images/sf%20objects-01.png)
 
-Source: CRAN project, sf vignette
+Source: [CRAN project, sf vignette](https://cran.r-project.org/web/packages/sf/vignettes/sf1.html)
+
+![](images/multipolygon%20feature%20.png)
+
+#### 2.5.3. Raster data with `raster` package
 
 ### 2.6 Homework
 
-Potential homework: Visualising Spatial Data in R at DataCamp
+1.   [Visualising Spatial Data in R at DataCamp](https://app.datacamp.com/learn/courses/visualizing-geospatial-data-in-r) OR [Spatial Objects in R](https://cengel.github.io/rspatial/2_spDataTypes.nb.html)
+2.  Download all geo-spatial datasets from Section 3 and save them in this folder structure:
 
-OR: Spatial Objects in R
+![](images/folder%20structure%20vol%202.png)
+
+Keeping this structure will make it easy to run your code in Section 3 as you will only need to replace the base Working Directory with your own and everything else should run from there!
 
 ## 3. Applying this
 
@@ -218,14 +227,14 @@ We will be working with the following data sets:
 ### Base layers
 
 | Geo-spatial file name             | Description                                                          | Year | Link to download                                                                                                               |
-|:--------------|:--------------|:--------------|:--------------------------|
+|:---------------|:---------------|:---------------|:------------------------|
 | bgd_level0_100m_2000_2020.tif     | WorldPop Administrative Level 0 mastergrid base layer for Bangladesh | 2020 | [World Pop Hub - National boundaries](https://www.worldpop.org/geodata/summary?id=24282)                                       |
 | bgd_admbnda_adm3_bbs_20201113.shp | Administrative Level 3 (Upazila) Units in Bangladesh                 | 2015 | [Bangladesh - Subnational Administrative Boundaries - Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-bgd) |
 
 ### Geo-spatial data sets to be harmonised
 
 |                                                                             |                                                                              |      |                                                                                                                                                                                                                                                                                                  |
-|--------------|--------------|:-------------|-------------------------------|
+|---------------|---------------|:--------------|---------------------------|
 | **Geo-spatial file name**                                                   | Description                                                                  | Year | Link to download                                                                                                                                                                                                                                                                                 |
 | SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif | VIIRS night-time lights (global)                                             | 2015 | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/#v1)                                                                                                                                                                                                                            |
 | 2015_accessibility_to_cities_v1.0.tif                                       | MAP travel time to high-density urban centres (global)                       | 2015 | [Malaria Atlas - Accessibility to Cities](https://data.malariaatlas.org/maps?layers=Accessibility:201501_Global_Travel_Time_to_Cities,Malaria:202206_Global_Pf_Parasite_Rate)                                                                                                                    |
@@ -242,7 +251,7 @@ We will be working with the following data sets:
 ### WorldPop harmonised geo-spatial data sets
 
 |                                           |                                                                         |           |                                                                |
-|-----------------|---------------------|-----------------|------------------|
+|------------------|--------------------|------------------|------------------|
 | **Geo-spatial File Name**                 | **Description**                                                         | **Year**  | **Link to Download**                                           |
 | bgd_srtm_topo_100m.tif                    | SRTM topography in BGD                                                  | 2000      | [World Pop](https://www.worldpop.org/project/categories?id=14) |
 | bgd_srtm_slope_100m.tif                   | SRTM slope (derivative of topography) in BGD                            | 2000      |                                                                |
@@ -298,6 +307,9 @@ Now we are equipped with the tools to start the processing of our geo-spatial da
 We would recommend this structure as it allows us to automatically pull all the files from each folder based on their \*tif extension and makes the below workflow easy to follow. The user should select their corresponding working directory, based on where the geo-spatial data was saved.
 
 ```{r load layers}
+#| echo: true
+#| output: false
+
 # Set working directory - this is the base folder where we keep all the sub-folders with geo-spatial data organised by source. 
 setwd("C:/Users/idabr/OneDrive - Oxford Policy Management Limited/EMDI SAE/Geo-spatial Bangladesh data/")
 
