@@ -5,17 +5,45 @@ format: html
 editor: visual
 ---
 
+# Introduction
+
+Nick - you can paste your introduction here.
+
 # Section A: Geo-spatial
+
+::: callout-note
+## Glossary
+
+**Raster data** refers to any gridded (or pixelated) data where each pixel represents a specific geographical location. The value can be continuous (e.g. temperature) or categorical (e.g. land use).
+
+V**ector data** represents structures on the Earth's surface that are defined by discrete locations (x,y) called vertices. Depending on how the vertices (x,y) are oragnised, we can divide vector data types into: **points, lines, and polygons**.
+
+**Extent**: the maximum and minimum values of longitude and latitude that define the boundaries of our spatial structure.
+
+**Map projections** try to portray the surface of the earth or a portion of the earth on a flat piece of paper or computer screen. 
+
+**Coordinate Reference System (CRS)** - defines, with the help of coordinates, how the two-dimensional projected map in our GIS is related to real places on Earth.
+
+**Geographic Information System (GIS)** - a system that creates, manages, analyses, and maps data. GIS connects data to a map, integrating location data (where things are), with all types of descriptive information (what things are like there).
+
+**Spatial resolution** of a raster describes the area that each pixel covers. For example, a 1km x 1km spatial resolution will be a grid where each grid cell covers and area of 1km x 1km. The smaller the area covered, the higher the spatial resolution (i.e. the more we "zoom in").
+
+**Nearest neighbour interpolation**
+:::
 
 ## 1. Introduction
 
-Nick's introduction here
+A brief description of what I will do in Section A.
+
+![](images/diagram%20vol%202.png)
 
 ## 2. Theory - key concepts in Geo-spatial analysis
 
-Spatial data has a slightly different structure to standard data frames that you may have worked with in the past, say a household survey, in that (as the name gives away) it is indexed to a specific geographical location on Earth. It still conatins data values, but a lot of the attributes of these spatial objects are used to describe its geographical location, so that we can position our data values adequately on the surface of the Earth (aside: while our analysis will be confined to objects on Earth, GIS analytics can very well be applied to other objects in Space, such as [NASA's Interactive GIS map of Mars](https://astrogeology.usgs.gov/facilities/mrctr/mars-online-map)).
+Let us start with the two most burning questions: What is geo-spatial data and what is a GIS?
 
-Before digging into the structure and technicalities of how spatial objects are organised - let us consider briefly the most common sources of geo-spatial data.
+**Geo-spatial data** in the simplest terms is any type of data referenced to a specific location on Earth. It consists broadly of two elements: **1) location data** (where things are) and **2) attributes data** (what things are like there). Location data allows us to position our data values adequately on the surface of the Earth. Attributes data describes any features of that specific location (temperature, elevation, road type, a bridge, demographic information and so on).
+
+**Geographic Information System (GIS)** is a system that creates, manages, analyses, and maps data. GIS connects data to a map, integrating location data , with all types of descriptive information.
 
 ### 2.1. Geo-spatial data sources
 
@@ -45,11 +73,19 @@ Online data is broad and includes all data shared online purposefully, including
 
 ### 2.2. Data structures
 
-I want to introduce the two most common spatial data types, which we will be working with in our poverty mapping exercise, together with their attributes:
+I want to introduce the two most common spatial data types, which we will be working with in our poverty mapping exercise, together with their attributes.
 
-1.  **Raster data** - any gridded (or pixelated) data where each pixel represents a specific geographical location. The value can be continuous (e.g. temperature) or categorical (e.g. land use). If pixels sound familiar, it's because they are - in fact, this is how every digital image is represented. The only difference is that a raster additionally includes spatial information that connects data from the image to a particular location. The location is defined by the following attributes (these are important attributes to inspect when you first open your raster):
+::: callout-important
+## Important
 
--   Extent: the maximum and minimum values of longitute and latitude that define the boundaries of our spatial structure.
+An important note on the naming conventions and structures of geographical coordinates in geo-spatial data. A set of coordinates will typically be expressed as **(x,y), where x relates to longitude and y to latitude**. Latitude has a range (-90, 90), while longitude has a range (-180, 180). Negative values of longitude refer to the Western hemisphere and positive values to the Eastern hemisphere. Similarly, negative values of latitude refer to the Southern hemisphere and positive values refer to the Northern hemisphere.
+:::
+
+#### 2.2.1. Raster data 
+
+**Raster data** refers to any gridded (or pixelated) data where each pixel represents a specific geographical location. The value can be continuous (e.g. temperature) or categorical (e.g. land use). If pixels sound familiar, it's because they are - in fact, this is how every digital image is represented. The only difference is that a raster additionally includes spatial information that connects data from the image to a particular location. The location is defined by the following attributes (these are important attributes to inspect when you first open your raster):
+
+-   Extent
 
 -   Cell size (spatial resoluton or size of each pixel)
 
@@ -65,7 +101,9 @@ Source: [National Ecological Observatory Network](https://www.neonscience.org/)
 
 Mention file extensions of raster data?
 
-2.  **Vector data** - represents structures on the Earth's surface that are defined by discrete locations (x,y) called vertices. Depending on how the vertices (x,y) are oragnised, we can divide vector data types into: **points, lines, and polygons**. You could think of: locations of hospitals, road networks, administrative boundaries.
+#### 2.2.2. Vector data
+
+**Vector data** represents structures on the Earth's surface that are defined by discrete locations (x,y) called vertices. Depending on how the vertices (x,y) are oragnised, we can divide vector data types into: **points, lines, and polygons**. You could think of: locations of hospitals, road networks, administrative boundaries.
 
 ![](images/Geometry%20vector.png){width="568"}
 
@@ -125,7 +163,7 @@ With that in mind, I will introduce a few ways in which we will manipulate spati
 ::: callout-caution
 ## Caution
 
-There are many algorithms that can be used for changing the spatial resolution of a raster.
+There are many algorithms that can be used for changing the spatial resolution of a raster. For accessibility and nightlights data, we will use the nearest neighbour interpolation. However, for harmonising demographic data that is of a higher spatial resolution than our base layer, the use of the "sum" algorithm is more appropriate. Otherwise we "lose people" in a downsample. To illustrate the issue, let's imagine we have 9 high resolution pixels (3x3). The sum algorithm will add up all the values from those pixels when aggregating, while the nearest neighbour interpolation
 :::
 
 3.  **Recoding missing values** - (only if appropriate) changing missing values to a specified value.
@@ -174,37 +212,80 @@ Given that our entire workflow will be carried out in R to make it accessible, o
 
 #### 2.5.1. Vector data with `sp` package
 
-Recently spatial data in R has been standardised using the base package `sp`. Although a better version of this package exists, called `sf` , it is useful to understand basic data structures under `sp`. Let's have a look at the spatial data classes by running the chunk below:
+Recently spatial data in R has been standardised using the base package `sp`. Although a newer version of this package exists, called `sf` , it is useful to understand basic data structures under `sp`. Let's have a look at the spatial data classes by running the chunk below:
 
 ```{r}
 library(sp)
 getClass("Spatial")
 ```
 
-A basic `sp` object will have two "slots": a bounding box `bbox` containing a matrix of longitude and latitude values (or, using the language we introduced earlier, the extent of an object) and `proj4string`, which is the CRS. These parameters will help us locate our object in space. The basis of all the spatial objects is a matrix or data frame with latitude and longitude values - this is what we need to make our existing objects in R "spatial". From the output above, we can also see that objects build on each other. This is illustrated in Figure XX below. For example, taking our matrix or data frame with latitude and longitude, we can create a `SpatialPoints` object, which would simply be a collection of spatial points. We can build on this and create a `SpatialPointsDataFram`e by adding a data frame with attributes associated with these points. The same can be done for lines and polygons.
+A basic `sp` object will have two "slots": a bounding box `bbox` containing a matrix of longitude and latitude values (or, using the language we introduced earlier, the extent of an object) and `proj4string`, which is the CRS. These parameters will help us locate our object in space. **The basis of all the spatial objects is a matrix or data frame with latitude and longitude values - this is what we need to make our existing objects in R "spatial".** From the output above, we can also see that objects build on each other. This is illustrated in Figure XX below. For example, taking our matrix or data frame with latitude and longitude, we can create a `SpatialPoints` object, which would simply be a collection of spatial points. We can build on this and create a `SpatialPointsDataFram`e by adding a data frame with attributes associated with these points. The same can be done for lines and polygons.
 
 ![](images/spatial%20objects%20in%20R.png)
 
 #### 2.5.2 Vector data with `sf` package
 
-The sf package includes all the basic geometry types within vector data, and even allows for more complex sets that conatin multiple geometries, as seen below:
+The `sf` package implements [Simple Features](https://en.wikipedia.org/wiki/Simple_Features), which is a set of standards that specify storage and model of geographic features used in geographic information systems. It is famous enough to have its [Wikipedia page](https://en.wikipedia.org/wiki/Simple_Features) and is endorsed by the Open Geospatial Consortium. It works only with vector data and does not accommodate rasters. Common geometry types are shown in Figure XX below. Among the primitive ones, we have `Points`, `LineStrings`, and `Polygons` (the same as simple vector geometry types discussed in Section 2.2.) The `sf` package allows for multipart geometries, essentially a collection of primitive geometries, such as: `MultiPoints`, `MultiLineString`, and `MultiPolygons`. The coordinates in brackets specify each vertex that defines the geometry.
 
-![](images/sf%20objects-01.png)
+![](images/sf%20package%20primitive%20geometries.png)
 
-Source: [CRAN project, sf vignette](https://cran.r-project.org/web/packages/sf/vignettes/sf1.html)
+![](images/multipart%20geometries.png)
+
+Source: [Wikipedia](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry)
+
+`sf` objects are organised into three features (see Figure XX below):
+
+1.  `sf`, the data frame with feature attributes (for example, administrative codes) and feature geometries (green box).
+2.  `sfc,` the simple feature geometry list-column (red box).
+3.  `sfg`, the simple feature geometry (blue box). In this case, a multipolygon.
 
 ![](images/multipolygon%20feature%20.png)
 
+Source: [CRAN project, sf vignette](https://cran.r-project.org/web/packages/sf/vignettes/sf1.html)
+
 #### 2.5.3. Raster data with `raster` package
+
+This is the main geo-spatial data type we will be working with for our poverty modelling exercise. The `raster` package provides functions that allow us to read and write any raster object and perform raster operations such as those described in Section 2.4. (resampling, masking, cropping, recoding NAs etc.). It supports three classes of objects: `RasterLayer` (a single raster), `RasterStack`(multiple rasters stacked on top of each other that can still be viewed as individual files), `RasterBrick` (similar to `RasterStack` but in a single file).
+
+To explore the structure of raster data let us create en empty (no data values) raster from scratch by running the code below. We will specify the following parameters:
+
+-   Number of rows and columns.
+
+-   Extent (minimum and maximum values of longitude and latitude).
+
+```{r}
+library(raster)
+r <- raster(ncol=10, nrow = 10, xmx=-116,xmn=-126,ymn=42,ymx=46)
+r
+```
+
+Note that just specifying the number of rows and column and extent was sufficient to create a `RasterLayer` object. The number of rows and columns defined our spatial resolution of the raster. In addition, the standard CRS `+proj=longlat +datum=WGS84 +no_defs` was automatically assigned. At the moment, our raster is empty, i.e. it is simply a grid with no data values. Let us generate some data to populate the raster by assigning random values from the unit distribution to each grid cell.
+
+```{r}
+r[] <- runif(n=ncell(r))
+r
+```
+
+Now the summary of our RasterLayer object includes minimum and maximum values of our randomly generated data. Let's visualise this!
+
+```{r}
+plot(r)
+```
 
 ### 2.6 Homework
 
-1.   [Visualising Spatial Data in R at DataCamp](https://app.datacamp.com/learn/courses/visualizing-geospatial-data-in-r) OR [Spatial Objects in R](https://cengel.github.io/rspatial/2_spDataTypes.nb.html)
-2.  Download all geo-spatial datasets from Section 3 and save them in this folder structure:
+1.  [Visualising Spatial Data in R at DataCamp](https://app.datacamp.com/learn/courses/visualizing-geospatial-data-in-r) OR [Spatial Objects in R](https://cengel.github.io/rspatial/2_spDataTypes.nb.html) (optional for those that wish to become familiar with spatial objects in R and creating those from scratch).
+2.  **Download the "Geo-spatial Bangladesh data" zip file, unzip it, and save it in your working directory. Your folder structure after unzipping should look like this:**
 
-![](images/folder%20structure%20vol%202.png)
+![](images/folder%20structure%20vol%202-01.png)
 
-Keeping this structure will make it easy to run your code in Section 3 as you will only need to replace the base Working Directory with your own and everything else should run from there!
+I would recommend not rearranging the files across folders. Keeping this structure will make it easy to run your code in Section 3 as you will only need to replace the base Working Directory with your own and everything else should run from there!
+
+::: callout-warning
+## Warning
+
+Just a heads up that the files we will be working with are very large. The .zip file itself is is 5GB, while all the files after unzipping will take up around 34GB of space. Please make sure you have sufficient memory on your machine. If you are using an online storage solution, you might want to temporarily offload other files you are not currently using to the cloud.
+:::
 
 ## 3. Applying this
 
@@ -212,13 +293,13 @@ Keeping this structure will make it easy to run your code in Section 3 as you wi
 
 We will be working with the following data sets:
 
-1.  **Base layer**: WorldPop Administrative Level 0 mastergrid base layer for Bangladesh at \~100m spatial resolution. This mastergrid defines the administrative boundaries of the country, to which we will be harmonising all other geo-spatial datasets, i.e. matching the spatial resolution, CRS (geographical projection), extent, and shape.
+1.  **Base layer**: WorldPop Administrative Level 0 mastergrid base layer for Bangladesh at \~100m spatial resolution. This mastergrid defines the administrative boundaries of the country, to which we will be harmonising all other geo-spatial datasets, i.e. matching the spatial resolution, CRS, extent, and shape.
 
 2.  **Shape file**: Subnational Administrative Boundaries for Bangladesh from the Humanitarian Data Exchange. This file contains the administrative boundaries of the zones for which we will be estimating poverty. In our case, this is done at administrative level 3 (upazila) in Bangladesh.
 
 3.  **Malaria Atlas data on accessibilit**y, including: travel time to cities and healthcare facilities.
 
-4.  **Demographic maps from Meta** at \~30m spatial resolution showing population density of different demographic groups (men, women, youth, elderly etc.).
+4.  **Demographic maps from Meta** at \~30m spatial resolution raster showing population density of different demographic groups (men, women, youth, elderly etc.).
 
 5.  **Nightlights data** at \~450m spatial resolution with almost global coverage.
 
@@ -227,14 +308,14 @@ We will be working with the following data sets:
 ### Base layers
 
 | Geo-spatial file name             | Description                                                          | Year | Link to download                                                                                                               |
-|:---------------|:---------------|:---------------|:------------------------|
+|:----------------|:----------------|:----------------|:----------------------|
 | bgd_level0_100m_2000_2020.tif     | WorldPop Administrative Level 0 mastergrid base layer for Bangladesh | 2020 | [World Pop Hub - National boundaries](https://www.worldpop.org/geodata/summary?id=24282)                                       |
 | bgd_admbnda_adm3_bbs_20201113.shp | Administrative Level 3 (Upazila) Units in Bangladesh                 | 2015 | [Bangladesh - Subnational Administrative Boundaries - Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-bgd) |
 
 ### Geo-spatial data sets to be harmonised
 
 |                                                                             |                                                                              |      |                                                                                                                                                                                                                                                                                                  |
-|---------------|---------------|:--------------|---------------------------|
+|----------------|----------------|:---------------|-------------------------|
 | **Geo-spatial file name**                                                   | Description                                                                  | Year | Link to download                                                                                                                                                                                                                                                                                 |
 | SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif | VIIRS night-time lights (global)                                             | 2015 | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/#v1)                                                                                                                                                                                                                            |
 | 2015_accessibility_to_cities_v1.0.tif                                       | MAP travel time to high-density urban centres (global)                       | 2015 | [Malaria Atlas - Accessibility to Cities](https://data.malariaatlas.org/maps?layers=Accessibility:201501_Global_Travel_Time_to_Cities,Malaria:202206_Global_Pf_Parasite_Rate)                                                                                                                    |
@@ -251,7 +332,7 @@ We will be working with the following data sets:
 ### WorldPop harmonised geo-spatial data sets
 
 |                                           |                                                                         |           |                                                                |
-|------------------|--------------------|------------------|------------------|
+|------------------|-------------------|------------------|------------------|
 | **Geo-spatial File Name**                 | **Description**                                                         | **Year**  | **Link to Download**                                           |
 | bgd_srtm_topo_100m.tif                    | SRTM topography in BGD                                                  | 2000      | [World Pop](https://www.worldpop.org/project/categories?id=14) |
 | bgd_srtm_slope_100m.tif                   | SRTM slope (derivative of topography) in BGD                            | 2000      |                                                                |
@@ -280,7 +361,7 @@ Throughout this workflow, we will be using functions from the packages shown in 
 
 library("tiff")           # opening geoTIFF files
 library("raster")         # raster manipulation
-library("sf")             # working with vector data
+library("sf")             # Simple Features vector data
 library("ggplot2")        # plots
 library("RColorBrewer")   # funky graph colors 
 library("haven")          # opening stata files
@@ -295,16 +376,9 @@ library("readr")          # read rectangular data
 
 ### Step 1 - Load all data sets
 
-Now we are equipped with the tools to start the processing of our geo-spatial datasets. We start by specifying the directory we will be working from and loading all of the data sets described above into our environment and saving them as raster objects. In this example, the geo-spatial files are organised into the following folders:
+Now we are equipped with the tools to start the processing of our geo-spatial datasets. We start by specifying the directory we will be working from and loading all of the data sets described above into our environment and saving them as raster objects.
 
-1.  Base layer
-2.  Shape file with administrative level 3 boundaries
-3.  Malaria Atlas accessibility datasets
-4.  Demographic Maps from Meta
-5.  Nightlights Data
-6.  Pre-harmonised World Pop datasets
-
-We would recommend this structure as it allows us to automatically pull all the files from each folder based on their \*tif extension and makes the below workflow easy to follow. The user should select their corresponding working directory, based on where the geo-spatial data was saved.
+The code below will automatically pull all the files from each folder based on their \*tif extension. The user should select their corresponding working directory, based on where the geo-spatial data was saved.
 
 ```{r load layers}
 #| echo: true
