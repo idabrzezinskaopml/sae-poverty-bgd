@@ -28,12 +28,45 @@ V**ector data** represents structures on the Earth's surface that are defined by
 
 **Spatial resolution** of a raster describes the area that each pixel covers. For example, a 1km x 1km spatial resolution will be a grid where each grid cell covers and area of 1km x 1km. The smaller the area covered, the higher the spatial resolution (i.e. the more we "zoom in").
 
-**Nearest neighbour interpolation - tbc**
+**Nearest neighbour interpolation -** a method for resampling, i.e. changing the spatial resolution of rasters used in remote sensing, where each "corrected" pixel is assigned a data value of the "uncorrected" pixel that is closest to it in terms of coordinate location.
+
+**Resampling using the "sum" algorithm** - a method for resampling, i.e. changing the spatial resolution of a raster used in remote sensing. This is considered the appropriate method when aggregating high-resolution *demographic* data to a coarser grid.
 :::
 
 ## 1. Introduction
 
-A brief description of what I will do in Section A.
+Section A is our first step into poverty modelling in Bangladesh. Here, we will obtain and transform various geo-spatial datasets (such as accessiblity, nightlights intensity, demographic maps, and topography) into predictors of poverty rates. Geo-spatial datasets can be important inputs in poverty estimation, particularly in context where other data such as census is unavailable and household survey samples are too small to produce reliable statistics at a disaggregated zonal level. Geo-spatial data has many advantages: it is open source, has wide coverage, high spatial resolution, and is frequently updated (in theory you could have a dynamic poverty map which updates itself as new geo-spatial data becomes available!).
+
+The main goal of Section A will be to produce a "**harmonised geo-spatial covariate raster for poverty modelling**". In other words, layers of geo-spatial information in a raster format (a collection of pixels) for each upazila that we can use to predict poverty. Imagine that each upazila is divided into pixels. Each pixel will contain some geo-spatial information: slope, travel time to healthcare facilities, distance to nearest water source etc. Harmonising them means that all of our geo-spatial layers are in the same format: CRS, extent, spatial resolution, and shape. Why is this necessary? Short answer: so that each pixel with values of geo-spatial data describes the same location across all our geo-spatial datasets.
+
+Long anwer: In order to predict poverty rates for upazilas, we need to know some basic statistics (mean, max, min, sd etc.) for the values of our geo-spatial variables at upazila level. For example: what is the mean population density of women and nightlights intensity in each upazila in Bangladesh? We would only be able to answer this question if our layers showing population density for women and nightlights were aligned: they had the same CRS (projection), extent (maximum and minimum values of geographical coordinates), spatial resolution (size of pixels), and shape of Bangladesh. That is, we need comparable pixels with data values that can be assigned to upazilas.
+
+Finally, we will need a shapefile that defines the boundaries of each administrative zone and turn it into a raster (again, a collection of pixels) - so that we can assign each pixel with geo-spatial information to the right upazila.
+
+Figure XX below demonstrates the process in seven steps:
+
+**Step 1**: Load all datasets. I have divided those into 6 categories:
+
+1.  Base raster layer - this raster contains the target values of parameters, such as: CRS, extent, spatial resolution, and shape. We will be harmonising to this base layer, i.e. we want all our other layers to look like this one.
+2.  Shapefile with zonal boundaries - we need this to define the administrative boundaries of upazilas in Bangladesh.
+3.  Nightlights intensity data
+4.  Malaria Atlas data on accessibility
+5.  Meta Demographic Maps
+6.  WorldPop Harmonised data on Topography.
+
+Datasets no. 3-5 will need harmonising, while the World Pop datasets are pre-harmonised and do not need any processing from us.
+
+**Step 2**: Set extent the same as the Base Layer. We want our layers to cover just Bangladesh (as opposed to, for example, the entirety of South-East Asia). Setting the extent will ensure that we are working within the same range of coordinates.
+
+**Step 3**: Change the spatial resolution to that of the Base Layer (\~100m). This means all our data will be organised into pixels covering an area of 100m x 100m.
+
+**Step 4**: (only for Meta Demographic Maps): recode missing values as 0s.
+
+**Step 5**: Mask to obtain the "shape" of Bangladesh.
+
+**Step 6**: Convert the shapefile with administrative boundaries of upazilas in Bangladesh to a raster (a collection of pixels each indexed to the correct upazila).
+
+**Step 7**: Estimate zonal statistics (mean, max, min, sd etc.) for each geo-spatial dataset for each upazila.
 
 ![](images/diagram%20vol%202.png)
 
