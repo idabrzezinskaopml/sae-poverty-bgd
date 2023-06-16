@@ -28,7 +28,7 @@ V**ector data** represents structures on the Earth's surface that are defined by
 
 **Spatial resolution** of a raster describes the area that each pixel covers. For example, a 1km x 1km spatial resolution will be a grid where each grid cell covers and area of 1km x 1km. The smaller the area covered, the higher the spatial resolution (i.e. the more we "zoom in").
 
-**Nearest neighbour interpolation**
+**Nearest neighbour interpolation - tbc**
 :::
 
 ## 1. Introduction
@@ -81,7 +81,7 @@ I want to introduce the two most common spatial data types, which we will be wor
 An important note on the naming conventions and structures of geographical coordinates in geo-spatial data. A set of coordinates will typically be expressed as **(x,y), where x relates to longitude and y to latitude**. Latitude has a range (-90, 90), while longitude has a range (-180, 180). Negative values of longitude refer to the Western hemisphere and positive values to the Eastern hemisphere. Similarly, negative values of latitude refer to the Southern hemisphere and positive values refer to the Northern hemisphere.
 :::
 
-#### 2.2.1. Raster data 
+#### 2.2.1. Raster data
 
 **Raster data** refers to any gridded (or pixelated) data where each pixel represents a specific geographical location. The value can be continuous (e.g. temperature) or categorical (e.g. land use). If pixels sound familiar, it's because they are - in fact, this is how every digital image is represented. The only difference is that a raster additionally includes spatial information that connects data from the image to a particular location. The location is defined by the following attributes (these are important attributes to inspect when you first open your raster):
 
@@ -308,14 +308,14 @@ We will be working with the following data sets:
 ### Base layers
 
 | Geo-spatial file name             | Description                                                          | Year | Link to download                                                                                                               |
-|:----------------|:----------------|:----------------|:----------------------|
+|:----------------|:----------------|:----------------|:--------------------|
 | bgd_level0_100m_2000_2020.tif     | WorldPop Administrative Level 0 mastergrid base layer for Bangladesh | 2020 | [World Pop Hub - National boundaries](https://www.worldpop.org/geodata/summary?id=24282)                                       |
 | bgd_admbnda_adm3_bbs_20201113.shp | Administrative Level 3 (Upazila) Units in Bangladesh                 | 2015 | [Bangladesh - Subnational Administrative Boundaries - Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-bgd) |
 
 ### Geo-spatial data sets to be harmonised
 
 |                                                                             |                                                                              |      |                                                                                                                                                                                                                                                                                                  |
-|----------------|----------------|:---------------|-------------------------|
+|-----------------|-----------------|:----------------|-----------------------|
 | **Geo-spatial file name**                                                   | Description                                                                  | Year | Link to download                                                                                                                                                                                                                                                                                 |
 | SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif | VIIRS night-time lights (global)                                             | 2015 | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/#v1)                                                                                                                                                                                                                            |
 | 2015_accessibility_to_cities_v1.0.tif                                       | MAP travel time to high-density urban centres (global)                       | 2015 | [Malaria Atlas - Accessibility to Cities](https://data.malariaatlas.org/maps?layers=Accessibility:201501_Global_Travel_Time_to_Cities,Malaria:202206_Global_Pf_Parasite_Rate)                                                                                                                    |
@@ -497,7 +497,7 @@ The output gives us the following information about the shape file:
 
 With our base layers defined, it's time to start the processing of geo-spatial data.
 
-### Step 2 - write functions for automated processing of geo-spatial covariates
+### Steps 2-5 - Write functions for automated processing of geo-spatial covariates 
 
 In this step, we will provide two functions that will automate the processing of geo-spatial covariates.
 
@@ -584,7 +584,7 @@ geo_process2 <- function(aux.raster, base.raster, label, value) {
 }
 ```
 
-### Step 3 - process accessibility data from the Malaria Atlas
+### Steps 2-5 - process accessibility data from the Malaria Atlas
 
 ```{r}
 # See that all the files have loaded
@@ -618,7 +618,7 @@ plot(matlas.processed[[1]], box=F, axes=F, col=viridis(50), main = "Bangladesh -
 dev.off()
 ```
 
-### Step 4 - process the demographic data from Meta
+### Steps 2-5 - process the demographic data from Meta
 
 ```{r}
 # Check that all the files were picked up by this 
@@ -654,7 +654,7 @@ plot(fblist.processed[[7]], box=F, axes=F, main = "Bangladesh - Population densi
 dev.off()
 ```
 
-### Step 5 - Process nightlights data
+### Steps 2-5 - Process nightlights data
 
 ```{r}
 # Apply the geo processing function
@@ -672,7 +672,7 @@ plot(nightlights.raster.processed, box=F, axes=F, main = "Nightlights data in Ba
 dev.off()
 ```
 
-### Step 6 - Inspect pre-harmonised World Pop datasets
+### Steps 2-5  - Inspect pre-harmonised World Pop datasets
 
 ```{r}
 # See that all the files have loaded
@@ -682,7 +682,7 @@ worldpop.rasters
 plot(worldpop.rasters[[11]], box = F, axes = F, main = "Distance to the closest road Bangladesh", col=viridis(50))
 ```
 
-### Step 7 - Convert shapefile to a raster
+### Step 6 - Convert shapefile to a raster
 
 ```{r}
 # Copy admin unit codes to new column in upazila shapefile attributes, in the process removing Bangladesh prefix from the integer code
@@ -713,7 +713,7 @@ plot(raster_admin3, box=F, axes=F, legend=F)
 
 ```
 
-### Step 8 - Calculation of zonal statistics
+### Step 7 - Calculation of zonal statistics
 
 ```{r}
 # Make a list with all the rasters 
