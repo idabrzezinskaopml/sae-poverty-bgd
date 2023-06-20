@@ -8,29 +8,23 @@ editor: visual
 
 Oxford Policy Management 2023
 
-# Contents Page  
+# Contents Page
 
-### Introduction
+### Introduction:
 
-Here I introduce the FH model as a tool in R to produce out of sample poverty estimates.
+Page number:
 
-Talk about why poverty estimates are useful for policy and poverty alleviation programs. The drawbacks of census data. Advantages of geospatial data. Briefly introduce FH and how the estimation procedure works. Talk about the ground truth wealth index household survey data from DHS. Talk about the geospatial data and where we get that. Talk briefly about each step of the procedure and where you will find the information on it.
+### Estimation:
 
-### Estimation
+Page number:
 
-In guide 1 this will run through the steps from having the initial dataframe to visualising and exporting the results. In guide 2 it also includes how to source your own geospatial data.
+### Conclusion / Caveats:
 
-This runs through the process of variable selection. Diagnostics and transformations. Model performance analytics. Visualising the results on a map and then exporting the results to excel etc
-
-Videos including how to carry out certain tasks if necessary
-
-### Conclusion / Caveats
-
-Potential drawbacks and caveats to SAE in general and the FH model in particular.
+Page number:
 
 ### Glossary
 
-Define key terms from throughout the guide such as BIC selection criterion, EBP model, potentially even things such as why it is important to not violate normality assumptions in order to keep the actual steps in the guide as concise as possible. Quarto enables you to weave together content and executable code into a finished document.
+Page number:
 
 # Introduction
 
@@ -57,7 +51,7 @@ This technique is demonstrated by [Blumenstock et al., (2022)](https://pubmed.nc
 **Why do we use geospatial data rather than census data?**
 
 -   Previously, small area estimation poverty estimates were generated using a combination of household survey and census data, which is only collected every 10 years. However, a combination of household survey data and geospatial data allows you to generate poverty estimates much more frequently than was possible previously.
--   Geospatial data is open source and can provide more precise and up-to-date information about covariates than census data.
+-   Geospatial data is open source and can provide more precise and up-to-date information about covariates than census data. This also makes the estimation process cheaper if you use geospatial data.
 -   Geospatial data does not have a problem of finding statistics in rural areas which are often hard to reach in traditional surveys.
 
 **Geospatial has all these advantages whilst still offering sufficient predictive power**
@@ -68,7 +62,7 @@ This technique is demonstrated by [Blumenstock et al., (2022)](https://pubmed.nc
 
 **The guide**
 
-In this guide, we will take you through the steps of using the Fay-Herriot model in R to carry out small area estimation to predict poverty rates. This will enable you to replicate this prediction in other developing countries using just geospatial data and a household survey that includes a wealth index such as the DHS household survey that includes data on over 90 different countries. We will explain how the model works, the data we use, and why we might choose to use this method over traditional approaches. By the end of this guide, you will be able to produce accurate and up-to-date poverty estimates for small areas in developing countries, which can inform policy decisions and improve poverty alleviation efforts.
+In this guide, we will take you through the steps of using the Fay-Herriot model in R to carry out small area estimation to predict poverty rates. This will enable you to replicate this prediction in other developing countries using just geospatial data and a household survey that includes a wealth index. We use the DHS household survey that includes data on over 90 different countries for ease of replication in other countries for the user. We will explain how the model works, the data we use, and why we might choose to use this method over traditional approaches. By the end of this guide, you will be able to produce accurate and up-to-date poverty estimates for small areas in developing countries, which can inform policy decisions and improve poverty alleviation efforts.
 
 In this guide we use the Fay-Herriot model vs other predictive models since the FH model estimates poverty rates using the agglomerated average wealth index of each area (and is therefore known as an area-level model) rather than other models such as the EBP (empirical best predictor) which estimates the poverty rates by generating an estimate for every single household (known as unit-level). This makes the results easier to replicate in a large variety of countries since there is often a problem in obtaining unit-level data due to data protection laws.
 
@@ -86,45 +80,41 @@ Our decision to focus on estimating asset-based wealth, rather than a different 
 
 ### Steps of the guide
 
-Step 1:
+Step 1: Gathering the geospatial data and compiling into a harmonised dataset.
 
-Pre-requisites for this step:
+You can either start with the geospatial co-ordinates you generated in section A or use our pre-processed dataframe which is available [here.]{.underline} Part 1 of our guide explains how to gather the geospatial data in detail.
 
-\- Saved data frame of pre-processed geospatial co-ordinates to the working directory
+Step 2: Generating the direct estimates of the wealth index and their sampling variance for the in-sample estimates.
 
-\- R and R studio downloaded to their computer
+Surveys often employ complex sampling designs, with elements of stratification and multistage sampling with unequal probabilities. In order to account for this, we need to calculate direct estimates and estimates of their variances for the wealth index in the DHS household dataset. This is in order to prevent bias being introduced into the estimation.
 
-You can either start with the pre-processed geospatial co-ordinates you generated in section A or use our pre-processed dataframe which is available [here.]{.underline} We then merge these datasets using the unique geospatial upazila (Bangladesh's equivalent to a county or district) code.
+For this we use the rsurvey() package in R.
 
-Step 2:
+Step 3: Merging the geospatial data, the household data and your direct estimates.
 
-Pre-requisites for this step
+Now we need to combine the geospatial data from part 1 of the guide, the DHS household survey and the direct estimates and their variances that you generated in step 2 of the process. In order to combine this information into one big dataset we need a unique common identifier and for the we use the unique domain identifier and merge the observations using this.
 
-\- The resulting data frame coming from merging in step 1
+Step 4: Selecting the geospatial covariates with the most predictive power
 
-Since this dataframe is initially a large dataset with over 200 geospatial covariates we want to build a model with only the covariates with highest predictive power to prevent issues such as overfitting. We therefore perform a BIC stepwise selection criterion using all of the available geospatial covariates to see which 10-15 variables perform the best in predicting the level of wealth in an area.
+Since this dataframe is initially a large dataset with over 200 geospatial covariates we apply the 'principle of parsimony' and slim this model down to prevent issues such as overfitting. For this we use a selection criterion (AIC/BIC/KIC) to find only the geospatial covariates with the highest predictive power on predicting the wealth estimates.
 
-Step 3:
+We perform a BIC stepwise selection criterion using all of the available geospatial covariates to see which 10-15 variables perform the best in predicting the level of wealth in an area.
 
-We then assess the predictive power of our cursory model and carry out diagnostic checks to see if vital assumptions of the estimation procedure are violated. For example, the model assumes normality of the error terms which, if violated, introduces bias into the estimation so it is necessary to show that these assumptions hold. If the assumptions do not hold with the model in its current format then it is important to carry out a transformation on the target variable. Log transformations are traditionally popular with income data in order to mitigate issues such as skewed data. This transformation stabilises the variance and makes the relationship with other variables more linear. We use a variety of visual aids such as plots as well as regression tests to ensure that we are satisfied that these assumptions now hold.
+Step 5: Generating the model and checking model assumptions.
 
-Step 4:
+We now use the geospatial covariates selected in step 4 by the selection criterion in a cursory model in order to test the key assumptions of the model and assess the predictive power of the model. For example, the model assumes normality of the error terms which, if violated, introduces bias into the estimation so it is necessary to show that all the necessary assumptions hold.
 
-We then have our cursory model of 10-15 variables and have carried out a transformation if necessary so that we are satisfied that our assumptions hold. We then trim down our model even further by carrying out another stepwise selection criterion.
+If the assumptions do not hold with the model in its current format then it is important to carry out a transformation on the target variable. Log transformations are traditionally popular with income data in order to mitigate issues such as skewed data. This transformation stabilises the variance and makes the relationship with other variables more linear. We use a variety of visual aids such as plots as well as regression tests to ensure that we are satisfied that these assumptions now hold.
 
-Step 5:
+Step 6: Carry out the FH model prediciton for our out of sample estimates.
 
-This is then our final model and we carry out the FH model using just the variables selected from this regression to estimate wealth index for the out of sample observations.
+In this step we carry out the FH modelling procedure in order to generate our out of sample wealth estimates. The FH model adopts a bootstrap approach in order to predict out of sample estimates. This is an iterative resampling method which provides estimates of variability and uncertainty without requiring strong assumptions about the data distribution.
 
-Step 6:
+Step 7: Comparison of FH model estimates with the ground-truth direct estimates.
 
-We carry out comparison tests of FH estimates with the ground-truth wealth index from the DHS survey to the FH model estimates to ensure they are similar. This is done both graphically and with a Brown test.
+In this step we compare the direct point poverty estimates we generated in step 2 using the ground-truth data with the FH model estimates that we generated in step 6. This is done both graphically and with a Brown test. This gives some indication of the precision of the model. If we are satisfied with the similarity of the estimates, we can move on to the final stage.
 
-Step 7:
-
-Pre-requisites for this step
-
-\- We need the Bangladesh shapefile downloaded and saved to the working directory.
+Step 8: Visualisation of the results.
 
 We then visualise the results. To do this we have to download a Bangladesh shapefile from online which has the country co-ordinates and includes the polygon shape for each upazila. We merge the dataset using the unique upazila district code and then visualise the relative wealth in each domain by using a gradient colour scheme.
 
