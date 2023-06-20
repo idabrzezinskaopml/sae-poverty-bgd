@@ -96,7 +96,7 @@ Now we need to combine the geospatial data from part 1 of the guide, the DHS hou
 
 Step 4: Selecting the geospatial covariates with the most predictive power
 
-Since this dataframe is initially a large dataset with over 200 geospatial covariates we apply the 'principle of parsimony' and slim this model down to prevent issues such as overfitting. For this we use a selection criterion (AIC/BIC/KIC) to find only the geospatial covariates with the highest predictive power on predicting the wealth estimates.
+The initial large dataframe with over 200 geospatial variables is unwieldy and following the 'principle of parsimony' we want fewer variables. We therefore initially trim the model to include fewer covariates. This helps to prevent issues such as overfitting. For this we use a selection criterion (AIC/BIC/KIC) to find only the geospatial covariates with the highest predictive power on predicting the wealth estimates.
 
 We perform a BIC stepwise selection criterion using all of the available geospatial covariates to see which 10-15 variables perform the best in predicting the level of wealth in an area.
 
@@ -131,8 +131,16 @@ library(emdi)
 library(dplyr)
 library(sae)
 ```
+### Step 1: Gathering your geospatial data]
 
-### Step 1: How to combine your datasets. Getting your geospatial and survey data in the same dataframe.
+This step is covered extensively in part 1 of the guide. Ensure to save this dataset to your working directory since it is used throughout the process. 
+
+Alternatively, for practice, you can use our pre-processed estimates downloadable *here*.
+
+### Step 2: Generating direct estimates and their sampling estimates
+
+
+### Step 3: How to combine your datasets. Getting your geospatial data, direct estimates and survey data in the same dataframe.
 
 Now you load the necessary dataset from where you have it saved
 
@@ -151,7 +159,7 @@ This also calculates the variance of the GVF (Generalised Variance Function) var
 
 We use the column bind command to merge two dataframes together. This new dataframe now includes the variable for "vardir" which is standard errors squared.
 
-### Step 2: Covariate selection for initial model. The initial large dataframe with all variables from the geospatial and survey data is unwieldy and following the principle of parsimony we want fewer variables. We therefore initially trim the model to include fewer covariates.
+### Step 4: Covariate selection for initial model. 
 
 To do this we first create a new dataframe without the variables that were used to create the wealth index. Since these will clearly be highly correlated with our 'poorest' indicator of interest and we do not want these to be in the model. Also they are obviously not available for the out of sample data points.
 
@@ -178,7 +186,7 @@ We can then view the selected variables which we will use in our cursory model.
 summary(stepwise_model2)
 ```
 
-### Step 3: Model summary for cursory model. Assess the predictive power and note if normality assumptions are violated or if model point estimates are unsuitable.
+### Step 5: Fitting the model
 
 Now we estimate an initial cursory model using the variables selected by an initial AIC/BIC variable selection.
 
@@ -245,8 +253,6 @@ summary(fh_raw_scale$ind$FH)
 
 We notice that the model-based point estimates include negative predicted values despite the fact that we are modelling a proportion. This is a consequence of using a model that does not fit well and illustrates the importance of using model diagnostics.
 
-### Step 4: Estimate a new model with transformation in order to ensure all assumptions are satisfied (if necessary)
-
 As a result in order to better fit the data we use the arcsin transformation. This is common when using income data. Using this transformation requires additional arguments, namely the effective sample size defined by the sample size divided by the design effect and the type of backtransformation.
 
 ```{r}
@@ -289,6 +295,8 @@ step(fh_arcsin, criteria = "BIC")
 
 We then use the variables that are left by this selection process to create our final arcsin model
 
+### Step 6: FH model prediction for out of sample estimates
+
 ```{r}
 fh_arcsin_final <- fh(fixed = poorest ~ CHILU5.SUM + MEN.MEAN + WOMEN.MIN + WOMEN.SUM +
           WOMENREP.MIN + WOMENREP.SUM + YOUTH1524.MIN + YOUTH1524.MEAN +
@@ -318,7 +326,7 @@ We now show graphically the results of this estimation. This function gives 4 ou
 plot(fh_arcsin_final)
 ```
 
-### Step 5: Comparison between direct estimates and model estimates
+### Step 7: Comparison between direct estimates and model estimates
 
 Ideally, model-based point estimates should be consistent with direct estimates. We should also expect that the use of model-based methods will produce estimates with improved precision compared to direct estimates.
 
@@ -345,9 +353,11 @@ compare(fh_arcsin_final)
 
 The output of this command shows that the correlation between the two sets of point estimates is 0.73. In addition, this command performs a statistical test on the differences between the direct and model-based point estimates. The p-value of the test is 1 indicating that the null hypothesis of no difference between the two sets of estimates is not rejected.
 
-### Step 6: Benchmark the estimates if required. Good for statistical offices if they want estimates to sum to official figures for reporting
+**Benchmark the estimates if required**
 
-### Step 7: Visualising the results on administrative level 3 (Upazila) scale:
+Good for statistical offices if they want estimates to sum to official figures for reporting
+
+### Step 8: Visualising the results on administrative level 3 (Upazila) scale:
 
 First install and load necessary packages
 
@@ -456,7 +466,7 @@ ggplot() + geom_polygon(data = final.est.plot,
   theme_nothing(legend = TRUE)
 ```
 
-### Step 8: Export the results to your medium of choice
+### Exporting the results to your medium of choice
 
 # Conclusion / Caveats
 
