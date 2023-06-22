@@ -139,6 +139,148 @@ Alternatively, for practice, you can use our pre-processed estimates downloadabl
 
 ### Step 2: Generating direct estimates and their sampling estimates
 
+First of all you have to generate the unique domain identifier for each observation so that you are able to identify each observation by both its cluster and its upazila.
+
+This new dataframe is represented by Ida's HH + Geospatial data.
+
+It is then merged with the sampling weights from the household data.
+
+```{r}
+
+setwd("C:/Users/nickl/iCloudDrive/Desktop/Oxford Policy Management/Bang_Rep")
+
+library(readr)
+Ida_s_HH_Geospatial_Data <- read_csv("Ida's HH + Geospatial Data.csv")
+View(Ida_s_HH_Geospatial_Data)
+
+library(haven)
+BDHR7RFL <- read_dta("BDHR7RFL.DTA")
+View(BDHR7RFL)
+
+Ban_data <- cbind(Ida_s_HH_Geospatial_Data, hv022 = BDHR7RFL$hv022)
+
+View(Ban_data)
+
+```
+
+
+Next we want to generate our variable of interest. In our case we use the variable 'prop_wealth_1'. This is the probability that a household will be in the lowest quintile of wealth across the whole survey. This means that areas with higher poverty rates will have a higher probability and areas with lower incidence of poverty will have lower values.
+
+```{r}
+
+## Making the poorest variable 
+
+install.packages("dplyr")
+library(dplyr)
+
+## Calculating our version of the poorest variable "prop_wealth_1"
+
+proportion <- Ban_data %>%
+  group_by(ADM3_PCODE) %>%
+  summarize(prop_wealth_1 = sum(Wealth_quint_rank == 1) / n())
+
+summary(proportion)
+Ban_data <- left_join(Ban_data, proportion,by = "ADM3_PCODE")
+
+View(Ban_data)
+```
+
+We now look at creating variables to determine how many clusters are in each upazila because depending on this, the estimates will be more or less precise.
+
+```{r}
+
+## How many clusters are in each upazila 
+
+Ban_data <- Ban_data %>%
+  group_by(ADM3_PCODE) %>%
+  mutate(num_clusters = n_distinct(DHSCLUST))
+
+
+frequency_table <- table(Ban_data$num_clusters)
+
+print(frequency_table)
+
+# Calculate the count of clusters per Upazila
+upazila_cluster_count <- Ban_data %>%
+  group_by(ADM3_PCODE) %>%
+  summarize(num_clusters = n_distinct(DHSCLUST))
+
+# View the summary table
+print(upazila_cluster_count)
+
+# Summarize the count of clusters per Upazila
+cluster_summary <- table(upazila_cluster_count$num_clusters)
+
+# View the summary table
+print(cluster_summary)
+```
+
+Finally we can generate the direct estimates and the sampling variances
+
+```{r}
+library(survey)
+DHS.design <- svydesign(ids = ~ DHSCLUST,
+                        weights = ~ Sample_Weight,
+                        strata = ~ hv022,
+                        data = Ban_data)
+
+
+de <- svyby(~ prop_wealth_1,
+            by = ~ADM3_PCODE,
+            design = DHS.design,
+            svymean)
+
+summary(de)
+
+### Estimation of the
+### design effect for
+### upazilas with only one
+### cluster
+
+library(nlme)
+
+fit.rs <- lme(prop_wealth_1 ~
+                1, random = ~1 |
+                DHSCLUST, method = "ML",
+              data = Ban_data[Ban_data$num_clusters ==
+                                1, ])
+
+plot(fit.rs)
+vcomp <- as.numeric(VarCorr(fit.rs))
+
+print(VarCorr(fit.rs))
+
+
+deff.1clus <- 1 + (4 -
+                     1) * vcomp[1]/(vcomp[1] +
+                                      vcomp[2])
+print(deff.1clus)
+
+
+### Estimation of the
+### standard error for
+### upazilas with one
+### cluster
+
+
+design.STSRS <- svydesign(id = ~1,
+                          weights = ~weight,
+                          strata = ~strat.se,
+                          data = dhs.data)
+de.STSRS <- svyby(~poorest,
+                  by = ~upazila.code,
+                  design = design.STSRS,
+                  svymean)
+de.STSRS <- dplyr::select(de.STSRS,
+                          upazila.code, se.STSRS = se)
+de <- merge(de, sizes,
+            by = "upazila.code") %>%
+  merge(de.STSRS, by = "upazila.code") %>%
+  mutate(se.imp = ifelse(nclus ==
+                           1, se.STSRS *
+                           sqrt(deff.1clus),
+                         se))
+```
 
 ### Step 3: How to combine your datasets. Getting your geospatial data, direct estimates and survey data in the same dataframe.
 
