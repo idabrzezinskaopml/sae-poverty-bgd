@@ -80,6 +80,10 @@ Our decision to focus on estimating asset-based wealth, rather than a different 
 
 ### Steps of the guide
 
+Using the Fay-Herriot model as a method to produce out of sample estimates of poverty initially seems like quite an involved process. However, the main steps are quite simple. You first gather your geospatial data and download the DHS household survey responses from online. You then calculate the direct estimates of poverty in the country using the DHS household survey. The reason you cannot simply use the numbers in the survey is because DHS employs a sampling strategy to gather their data and this needs to be accounted for and the numbers need to be adjusted in order to make the estimates as precise as possible. You then select the most significant geospatial covariates at predicting poverty and use them in a Fay-Herriot model to generate your out of sample poverty estimates. These estimates are then used to visualise the spatial distribution of poverty in the country.
+
+The remainder of the steps in the process are used to ensure the robustness and precision of the estimates. The FH model has a few assumptions that you need to check are not violated, especially if you are using the model to predict out of sample estimates. It is therefore key that these steps are followed if the statistics you produce are intended to be used to guide policy decisions in the future.
+
 Step 1: Gathering the geospatial data and compiling into a harmonised dataset.
 
 You can either start with the geospatial co-ordinates you generated in section A or use our pre-processed dataframe which is available [here.]{.underline} Part 1 of our guide explains how to gather the geospatial data in detail.
@@ -88,7 +92,7 @@ Step 2: Generating the direct estimates of the wealth index and their sampling v
 
 Surveys often employ complex sampling designs, with elements of stratification and multistage sampling with unequal probabilities. In order to account for this, we need to calculate direct estimates and estimates of their variances for the wealth index in the DHS household dataset. This is in order to prevent bias being introduced into the estimation.
 
-For this we use the rsurvey() package in R.
+For this we use the survey() package in R.
 
 Step 3: Merging the geospatial data, the household data and your direct estimates.
 
@@ -131,15 +135,18 @@ library(emdi)
 library(dplyr)
 library(sae)
 ```
-### Step 1: Gathering your geospatial data]
 
-This step is covered extensively in part 1 of the guide. Ensure to save this dataset to your working directory since it is used throughout the process. 
+### Step 1: Gathering your geospatial data\]
+
+This step is covered extensively in part 1 of the guide. Ensure to save this dataset to your working directory since it is used throughout the process.
 
 Alternatively, for practice, you can use our pre-processed estimates downloadable *here*.
 
 ### Step 2: Generating direct estimates and their sampling estimates
 
-First of all you have to generate the unique domain identifier for each observation so that you are able to identify each observation by both its cluster and its upazila.
+This step is necessary in order to generate our poverty estimates for the in sample areas. Since the DHS survey employs a sampling strategy we cannot take the values they produce at face-value and first have to adjust them to make them more representative of the whole sample.
+
+First of all you have to generate the unique domain identifier for each observation so that you are able to identify each observation by both its upazila as well as its cluster.
 
 This new dataframe is represented by Ida's HH + Geospatial data.
 
@@ -163,8 +170,7 @@ View(Ban_data)
 
 ```
 
-
-Next we want to generate our variable of interest. In our case we use the variable 'prop_wealth_1'. This is the probability that a household will be in the lowest quintile of wealth across the whole survey. This means that areas with higher poverty rates will have a higher probability and areas with lower incidence of poverty will have lower values.
+Next we want to generate our variable of interest. In our case we use the variable 'prop_wealth_1'. This is the probability that a household will be in the lowest quintile of wealth across the whole survey. By definition 20% of households across the country will be in this bottom quantile but you will be able to see which areas are poorer by seeing which areas have a higher probability of a household being in this bottom quintile of wealth.
 
 ```{r}
 
@@ -185,7 +191,7 @@ Ban_data <- left_join(Ban_data, proportion,by = "ADM3_PCODE")
 View(Ban_data)
 ```
 
-We now look at creating variables to determine how many clusters are in each upazila because depending on this, the estimates will be more or less precise.
+We now look at creating variables to determine how many clusters are in each upazila because depending on this, the estimates will be more or less precise. The number of clusters in each upazila is necessary so that we know which method we will use to calculate our direct estimates in the next step.
 
 ```{r}
 
@@ -215,7 +221,7 @@ cluster_summary <- table(upazila_cluster_count$num_clusters)
 print(cluster_summary)
 ```
 
-Finally we can generate the direct estimates and the sampling variances
+Finally we can generate the direct estimates and the sampling variances. The method is different if there is 1 cluster per upazila since by definition there will be the same variation in the cluster as in the upazila as a whole. Therefore we use a design effect if there is only one upazila in the cluster, if there is more than 1 cluster in the upazila we are able to calculate using the survey() package.
 
 ```{r}
 library(survey)
@@ -284,7 +290,7 @@ de <- merge(de, sizes,
 
 ### Step 3: How to combine your datasets. Getting your geospatial data, direct estimates and survey data in the same dataframe.
 
-Now you load the necessary dataset from where you have it saved
+First you load the necessary dataset from where you have it saved.
 
 ```{r}
 setwd("/Users/nicklindsay/Downloads")
@@ -301,9 +307,9 @@ This also calculates the variance of the GVF (Generalised Variance Function) var
 
 We use the column bind command to merge two dataframes together. This new dataframe now includes the variable for "vardir" which is standard errors squared.
 
-### Step 4: Covariate selection for initial model. 
+### Step 4: Covariate selection for initial model.
 
-To do this we first create a new dataframe without the variables that were used to create the wealth index. Since these will clearly be highly correlated with our 'poorest' indicator of interest and we do not want these to be in the model. Also they are obviously not available for the out of sample data points.
+This step follows the principle of parsimony in order to slim down the model to find only the geospatial covariates that have the highest predictive power. To do this we first create a new dataframe without the variables that were used to create the wealth index. Since these will clearly be highly correlated with our 'poorest' indicator of interest and we do not want these to be in the model. Also they are obviously not available for the out of sample data points.
 
 ```{r}
 new_df2 <- data_area_level[, c(2:210, 223)]
@@ -343,7 +349,7 @@ new_fh_final <- fh(fixed = poorest ~ CHILU5.SUM + MEN.MEAN + WOMEN.MIN + WOMEN.S
 summary(new_fh_final)
 ```
 
-First of all we do direct estimation with no transformation on a raw scale to see if the model offers reasonable predictive power.
+First of all we carry out the estimation with no transformation on a raw scale to see if the model offers reasonable predictive power.
 
 This is just an illustrative example using only the variables that are later selected using the AIC/ BIC.
 
@@ -383,7 +389,7 @@ qqnorm(lev2)
 
 Especially in output plot 1 this graph resembles more of an exponential growth function rather than a 45 degree line which we would hope for.
 
-The second model diagnostic model is important if we are going to use the model for predictive purposes.
+The second diagnostic model is important if we are going to use the model for predictive purposes.
 
 This next function will output direct and model-based point estimates and corresponding variances and MSEs provided that the MSE argument was set equal to TRUE when fitting the area- level model.
 
@@ -435,7 +441,7 @@ We now use the step function using the BIC criterion to see if additional variab
 step(fh_arcsin, criteria = "BIC") 
 ```
 
-We then use the variables that are left by this selection process to create our final arcsin model
+We then use the variables that are left by this selection process to create our final arcsin model. This is the model we use to produce our out of sample estimates of poverty.
 
 ### Step 6: FH model prediction for out of sample estimates
 
@@ -449,7 +455,7 @@ fh_arcsin_final <- fh(fixed = poorest ~ CHILU5.SUM + MEN.MEAN + WOMEN.MIN + WOME
 summary(fh_arcsin_final)
 ```
 
-Note we use 50 bootstraps here but in real case study you may want to use 200 or even 250.
+Note we use 50 bootstraps here but in a real case study you may want to use 200 or even 250.
 
 The summary includes a lot of useful information. It also now gives the adjusted R-squared as 0.56. This shows the transformed model is an improvement compared to the raw model.
 
@@ -462,7 +468,15 @@ summary(est$ind$FH)
 
 Unlike earlier, this estimation now shows that there are no negative predicted estimates of the proportion of the poorest households
 
-We now show graphically the results of this estimation. This function gives 4 output plots to help show that the normality assumption has not been violated. 1. Normal Q-Q plot of standardized residuals. We want these first two to be as close to a 45 degree line as possible. 2. Normal Q-Q plot of random effects 3. Kernel densities of distribution of standardized residuals. We want these next two to be close to the standard normal distribution. 4. Kernel densities of distribution of random effects.
+We now show graphically the results of this estimation. This function gives 4 output plots to help show that the normality assumption has not been violated.
+
+1\. Normal Q-Q plot of standardized residuals. We want these first two to be as close to a 45 degree line as possible.
+
+2\. Normal Q-Q plot of random effects
+
+3\. Kernel densities of distribution of standardized residuals. We want these next two to be close to the standard normal distribution.
+
+4\. Kernel densities of distribution of random effects.
 
 ```{r}
 plot(fh_arcsin_final)
@@ -470,7 +484,7 @@ plot(fh_arcsin_final)
 
 ### Step 7: Comparison between direct estimates and model estimates
 
-Ideally, model-based point estimates should be consistent with direct estimates. We should also expect that the use of model-based methods will produce estimates with improved precision compared to direct estimates.
+Ideally, model-based point estimates should be consistent with the direct estimates we calculated in step 2. We should also expect that the use of model-based methods will produce estimates with improved precision compared to direct estimates.
 
 This command gives the first 6 results just so you can get a general impression that there is an improved precision when using FH estimates vs direct estimates
 
