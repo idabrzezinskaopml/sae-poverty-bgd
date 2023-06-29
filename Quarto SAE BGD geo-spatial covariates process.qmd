@@ -322,6 +322,8 @@ Just a heads up that the files we will be working with are very large. The .zip 
 
 ## 3. Applying this
 
+In Section 2 we covered key theoretical concepts in geo-spatial analysis, including the sources of such data, most common structures, data manipulation and types of spatial objects you might encounter in R. In this section we are going to apply this to a practical problem: **we will prepare the geo-spatial covariates (on accessibility, nightlights, topograhy, and demography) that will be used for poverty estimation in Section B**. Recall that there are two main types of geo-spatial data: vector and raster. We will primarily be working with raster data and performing what we will call a "harmonisation" - that is, bringing all the rasters to the same extent, shape, spatial resolution, and projection as the base raster layer. Let's begin with exploring the data sources we will use in this exercise.
+
 ### Data sources - Bangladesh
 
 We will be working with the following data sets:
@@ -341,14 +343,14 @@ We will be working with the following data sets:
 ### Base layers
 
 | Geo-spatial file name             | Description                                                          | Year | Link to download                                                                                                               |
-|:----------------|:----------------|:----------------|:--------------------|
+|:----------------|:----------------|:----------------|:-------------------|
 | bgd_level0_100m_2000_2020.tif     | WorldPop Administrative Level 0 mastergrid base layer for Bangladesh | 2020 | [World Pop Hub - National boundaries](https://www.worldpop.org/geodata/summary?id=24282)                                       |
 | bgd_admbnda_adm3_bbs_20201113.shp | Administrative Level 3 (Upazila) Units in Bangladesh                 | 2015 | [Bangladesh - Subnational Administrative Boundaries - Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-bgd) |
 
 ### Geo-spatial data sets to be harmonised
 
 |                                                                             |                                                                              |      |                                                                                                                                                                                                                                                                                                  |
-|-----------------|-----------------|:----------------|-----------------------|
+|-----------------|-----------------|:----------------|---------------------|
 | **Geo-spatial file name**                                                   | Description                                                                  | Year | Link to download                                                                                                                                                                                                                                                                                 |
 | SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif | VIIRS night-time lights (global)                                             | 2015 | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/#v1)                                                                                                                                                                                                                            |
 | 2015_accessibility_to_cities_v1.0.tif                                       | MAP travel time to high-density urban centres (global)                       | 2015 | [Malaria Atlas - Accessibility to Cities](https://data.malariaatlas.org/maps?layers=Accessibility:201501_Global_Travel_Time_to_Cities,Malaria:202206_Global_Pf_Parasite_Rate)                                                                                                                    |
@@ -386,7 +388,7 @@ We will be working with the following data sets:
 
 ### Libraries
 
-Throughout this workflow, we will be using functions from the packages shown in the chunk below. Most of them allow for manipulation of spatial objects in R, others are used to enhance our data visualisations - such as nice colour schemes for maps. All the below packages need to be installed and loaded in order for the workflow to run smoothly. If you don't already have some of the below packages installed, you can do so by running: install.packages("your.package.name"). After that, you will be able to load the package using library("the.package.you.just.installed"). See below the dependencies we will need for this workflow:
+Throughout this workflow, we will be using functions from the packages shown in the chunk below. Most of them allow for manipulation of spatial objects in R, others are used to enhance our data visualisations. All the below packages need to be installed and loaded in order for the workflow to run smoothly. If you don't already have some of the below packages installed, you can do so by running: install.packages("your.package.name"). After that, you will be able to load the package using library("the.package.you.just.installed"). See below the dependencies we will need for this workflow:
 
 ```{r libraries}
 #| echo: true
@@ -409,9 +411,11 @@ library("readr")          # read rectangular data
 
 ### Step 1 - Load all data sets
 
-Now we are equipped with the tools to start the processing of our geo-spatial datasets. We start by specifying the directory we will be working from and loading all of the data sets described above into our environment and saving them as raster objects.
+Our first step will simply be loading all the datasets that we will work with into our environment. The only step that the user needs to complete here is to specify the working directory where the .zip file "Geo-spatial Bangladesh data.zip" is saved (and unzipped). As a reminder, your folder structure should look like this after unzipping:
 
-The code below will automatically pull all the files from each folder based on their \*tif extension. The user should select their corresponding working directory, based on where the geo-spatial data was saved.
+![](images/folder%20structure%20vol%202-02.png)
+
+If this looks right, you are ready to run your first chunk of code below.
 
 ```{r load layers}
 #| echo: true
@@ -530,7 +534,7 @@ The output gives us the following information about the shape file:
 
 With our base layers defined, it's time to start the processing of geo-spatial data.
 
-### Steps 2-5 - Write functions for automated processing of geo-spatial covariates 
+### Steps 2-5 - Write functions for automated processing of geo-spatial covariates
 
 In this step, we will provide two functions that will automate the processing of geo-spatial covariates.
 
@@ -705,7 +709,7 @@ plot(nightlights.raster.processed, box=F, axes=F, main = "Nightlights data in Ba
 dev.off()
 ```
 
-### Steps 2-5  - Inspect pre-harmonised World Pop datasets
+### Steps 2-5 - Inspect pre-harmonised World Pop datasets
 
 ```{r}
 # See that all the files have loaded
