@@ -225,7 +225,8 @@ print(cluster_summary)
 
 Finally we can generate the direct estimates and the sampling variances. The method is different if there is 1 cluster per upazila since by definition there will be the same variation in the cluster as in the whole upazila. Therefore we use a design effect if there is only one upazila in the cluster, if there is more than 1 cluster in the upazila we are able to calculate using the survey() package.
 
-First of all we calculate the direct estimates and the sampling variances for every upazila using the survey package, regardless of how many clusters are in the area. We will then overwrite the direct estimates and variances for the upazilas which have only one cluster of observations within them. 
+First of all we calculate the direct estimates and the sampling variances for every upazila using the survey package, regardless of how many clusters are in the area. We will then overwrite the direct estimates and variances for the upazilas which have only one cluster of observations within them.
+
 ```{r}
 library(survey)
 DHS.design <- svydesign(ids = ~ DHSCLUST,
@@ -242,11 +243,12 @@ de <- svyby(~ prop_wealth_1,
 summary(de)
 ```
 
-We now look at the direct estimates and sampling variances if there is only one cluster in an upazila. We use a design effect to do this. The design effect of a single-stage cluster sample, assuming equal selection probabilities and clusters of size M, is given by design effect(henceforth deff or de) = 1 + (M - 1)* ICC where ICC is the intra-cluster correlation coefficient for the variable of interest. ICC is estimated by the variance of the poorest variable in the cluster divided by the variance of the poorest variable of the cluster added to the variance of the household. 
+We now look at the direct estimates and sampling variances if there is only one cluster in an upazila. We use a design effect to do this. The design effect of a single-stage cluster sample, assuming equal selection probabilities and clusters of size M, is given by design effect(henceforth deff or de) = 1 + (M - 1)\* ICC where ICC is the intra-cluster correlation coefficient for the variable of interest. ICC is estimated by the variance of the poorest variable in the cluster divided by the variance of the poorest variable of the cluster added to the variance of the household.
 
-The DHS design involves a second stage of selection of a group of 30 households out of those in the cluster (113 on average) therefore we have set M = 4. 
- 
+The DHS design involves a second stage of selection of a group of 30 households out of those in the cluster (113 on average) therefore we have set M = 4.
+
 We fit the model using the lme function from the package nlme. STRS stands for stratified simple random sampling.
+
 ```{r}
 
 ### Estimation of the
@@ -637,6 +639,26 @@ ggplot() + geom_polygon(data = final.est.plot,
 
 # Conclusion / Caveats
 
+This guide has run through how to produce poverty estimates for out of sample areas using the Fay-Herriot model in R. Part 1 of the guide details how to collect the geospatial data from various online sources and harmonise the information into one single dataset. Part 2 explains the estimation procedure and the steps that must be taken to ensure precise, robust estimates. The combination of household data and geospatial data rather than census data (which is the method that has traditionally been used) enables the user to produce poverty estimates with more frequency and at a lower cost. Furthermore the public availability of geospatial data ensures that this method is available to a wider audience of agencies which should add valuable momentum to the poverty reduction conversation.
+
+**The motivation for this guide is therefore twofold:**
+
+1.  From an academic standpoint:
+
+    -   Closing data gaps by providing estimates for previously hard to reach out of sample areas.
+
+    -   Integrating data by showing how to combine geospatial and household data.
+
+    -   Improving precision of estimates by providing methodology to produce a robust model that compares favourably to other previous estimation techniques
+
+2.  From a policy standpoint:
+
+    -   Lowering costs for government agencies, NGOs and thinktanks.
+
+    -   Influencing and improving policy decisions and social protection programs in order to drive poverty reduction. This is done by providing more frequent statistics at higher precision than previously available which allows policy makers to make more informed decisions.
+
+Despite these clear benefits, small area estimation is not a panacea. The out of sample estimates are only as good as your model, the assumptions the model makes and the underlying data that goes into the model. As a result these are some of the key considerations you need to take into account before undertaking small area estimation.
+
 **Sample size:** The Fay-Herriot model assumes a large sample size for both the target and auxiliary variables. If the sample size in the small area is small, the model's assumptions may be violated, leading to unreliable estimates.
 
 **Model specification:** Choosing an appropriate model specification is crucial. The Fay-Herriot model assumes a linear relationship between the small area and auxiliary variables. If this assumption is not met, the model may provide biased estimates. It's important to assess the linearity assumption and consider alternative model specifications if needed.
@@ -645,11 +667,9 @@ ggplot() + geom_polygon(data = final.est.plot,
 
 **Assumption of homoscedasticity:** The Fay-Herriot model assumes that the variance of the small area random effects is constant across all areas. If there are substantial differences in the variance between areas, the model may not capture the heterogeneity adequately, leading to biased estimates.
 
-**Spatial correlation:** The model does not explicitly account for spatial correlation among the small areas. If there is spatial dependence present in the data, the model's estimates may be inefficient or biased. Including spatial random effects or using spatial small area estimation methods may be more appropriate in such cases.
-
 **Model extrapolation:** The Fay-Herriot model relies on borrowing strength from neighboring areas to estimate small area parameters. However, if the small area is significantly different from the neighboring areas, the model's estimates may not accurately reflect the true values.
 
-**Model diagnostics:** It is essential to assess the goodness-of-fit and model diagnostics to evaluate the appropriateness of the Fay-Herriot model. Failure to perform proper diagnostics may lead to incorrect inferences.
+It is therefore vitally important to perform model diagnostics throughout the process such as assessing the goodness-of-fit and assessing the predictive power of the model in order to evaluate the appropriateness of the Fay-Herriot model. Failure to perform proper diagnostics may lead to incorrect inferences.
 
 It's important to carefully consider these caveats and assess the suitability of the Fay-Herriot model in the specific context of your small area estimation problem. Alternative methods should be explored if the assumptions of the Fay-Herriot model are not met or if there are specific considerations unique to your data.
 
