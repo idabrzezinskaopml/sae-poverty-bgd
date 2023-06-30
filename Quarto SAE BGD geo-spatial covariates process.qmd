@@ -192,13 +192,6 @@ With that in mind, I will introduce a few ways in which we will manipulate spati
 
 1.  **Cropping -** changing the extent of our spatial objects, i.e. the maximum and minimum values of longitude and latitude that define the object, to that of the base layer.
 2.  **Resampling** - changing the spatial resolution so that it matches that of the base layer.
-
-::: callout-caution
-## Caution
-
-There are many algorithms that can be used for changing the spatial resolution of a raster. For accessibility and nightlights data, we will use the nearest neighbour interpolation. However, for harmonising demographic data that is of a higher spatial resolution than our base layer, the use of the "sum" algorithm is more appropriate. Otherwise we "lose people" in a downsample. To illustrate the issue, let's imagine we have 9 high resolution pixels (3x3). The sum algorithm will add up all the values from those pixels when aggregating, while the nearest neighbour interpolation
-:::
-
 3.  **Recoding missing values** - (only if appropriate) changing missing values to a specified value.
 
 ::: callout-caution
@@ -343,14 +336,14 @@ We will be working with the following data sets:
 ### Base layers
 
 | Geo-spatial file name             | Description                                                          | Year | Link to download                                                                                                               |
-|:----------------|:----------------|:----------------|:-------------------|
+|:-----------------|:-----------------|:-----------------|:------------------|
 | bgd_level0_100m_2000_2020.tif     | WorldPop Administrative Level 0 mastergrid base layer for Bangladesh | 2020 | [World Pop Hub - National boundaries](https://www.worldpop.org/geodata/summary?id=24282)                                       |
 | bgd_admbnda_adm3_bbs_20201113.shp | Administrative Level 3 (Upazila) Units in Bangladesh                 | 2015 | [Bangladesh - Subnational Administrative Boundaries - Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-bgd) |
 
 ### Geo-spatial data sets to be harmonised
 
 |                                                                             |                                                                              |      |                                                                                                                                                                                                                                                                                                  |
-|-----------------|-----------------|:----------------|---------------------|
+|------------------|------------------|:-----------------|--------------------|
 | **Geo-spatial file name**                                                   | Description                                                                  | Year | Link to download                                                                                                                                                                                                                                                                                 |
 | SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif | VIIRS night-time lights (global)                                             | 2015 | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/#v1)                                                                                                                                                                                                                            |
 | 2015_accessibility_to_cities_v1.0.tif                                       | MAP travel time to high-density urban centres (global)                       | 2015 | [Malaria Atlas - Accessibility to Cities](https://data.malariaatlas.org/maps?layers=Accessibility:201501_Global_Travel_Time_to_Cities,Malaria:202206_Global_Pf_Parasite_Rate)                                                                                                                    |
@@ -415,7 +408,7 @@ Our first step will simply be loading all the datasets that we will work with in
 
 ![](images/folder%20structure%20vol%202-02.png)
 
-If this looks right, you are ready to run your first chunk of code below.
+If this looks right, you are ready to run your first chunk of code below. This will load all the data we will need for this exercise into your environment. Whenever a .tif extension is used, we will import the file and convert it to a raster (recall this is the main format we will be working with). Some folders will have multiple files saved inside them (for example, there are three datasets from the Malaria Atlas Project). In this case, the code will pull all the files that have a .tif extension and save them in a list - so no need to import them individually!
 
 ```{r load layers}
 #| echo: true
@@ -473,6 +466,8 @@ worldpop.rasters <- lapply(worldpop.list, raster)
 
 ```
 
+You should now be able to view all the data in your environment. Most objects are of the class `RasterLayer`, which we discussed in Section 2.5.3. Let's have a closer look at how these objects are structured in practice and the information they contain by inspecting our base layer.
+
 #### Check the attributes of the base layer
 
 As we will be harmonising all other datasets to our base layer, it is important to understand its attributes. Simply typing the name of our base layer raster object in the console will provide information on: class, dimensions, resolution, extent, crs, source, and names. At the end of the workflow, all of our geo-spatial covariates will have the same spatial resolution, CRS, extent, and shape as our base layer.
@@ -485,33 +480,32 @@ base.layer.raster
 plot(base.layer.raster, box=F, axes=F,legend=F, main = "Bangladesh base layer")
 ```
 
-The output is telling us that our object of interest is a Raster Layer, with the following characteristics:
+The output is telling us that our object of interest is a `RasterLayer`, with the following characteristics:
 
--   7272 rows, 5596 columns, and 40694112 cells altogether.
+-   7272 rows, 5596 columns, and 40694112 cells altogether - these are the dimensions of our grid.
 
--   \~ 100m spatial resolution. This defines the size of each cell in the raster.
+-   A spatial resolution of 0.0008333333 by 0.0008333333 (in degrees). This is equivalent to \~ 100m spatial resolution and defines the size of each cell in the raster.
 
--   The maximum and minimum values of longitude and latitude which define Bangladesh.
+-   Extent, i.e. the maximum and minimum values of longitude and latitude which define Bangladesh.
 
--   The WGS 1984 datum (EPSG: 4326) geographical projection.
+-   The WGS 1984 datum (EPSG: 4326) geographical projection - this is the most standard global projection.
 
--   It came from the GeoTIFF file named "bgd_level0_100m_2000_2020.tif" in our working directory.
+-   It came from the GeoTIFF file named "bgd_level0_100m_2000_2020.tif" in our working directory and is named after that file.
 
--   The naming convention is the same as the original GeoTIFF file (in this case bgd_level0_100m_2000_2020).
-
-We also produced our first map of Bangladesh! This is the raster layer we will be harmonising all our other data to.
+We also produced our first map of Bangladesh! This is the raster layer we will be harmonising all our other data to. Note that since this layer simply gives us the administrative national boundaries of Bangladesh, it does not contain any data values. While most of our objects are raster data, we will use one vector dataset: a shapefile containing the boundaries of administrative level 3 (upazilas) in Bangladesh. There are multiple ways of storing vector data in R , as discusses in Section 2.5 - let's have a look.
 
 #### Inspect the attributes of the shapefile with administrative level 3
 
-Now that we have a raster file defining the national boundaries of Bangladesh, we are interested to know the boundaries of the administrative zones that we will estimate poverty for. In our case, this is administrative level 3, or upazila, in Bangladesh. Let's have a look at the shapefile that will outline those.
+Apart from the raster file defining the national boundaries of Bangladesh, we are interested to know the boundaries of the administrative zones that we will estimate poverty for. In our case, this is administrative level 3, or upazila, in Bangladesh. This information is provided by a shapefile, which is a *vector* dataset - and has different properties than raster data.
 
-As before, we will start by simply typing the name of our spatial object into the console. This will provide information on: geometry, dimensions, extent, CRS, as well as give us a preview into the features.
-
-Plotting the shapefile will show us the upazilas (zones) for which we will be estimating poverty.
+As before, we will start by simply typing the name of our spatial object into the console. This will provide information on: geometry, dimensions, extent, CRS, as well as give us a preview into the features. To demonstrate this, I saved our shapefile in two formats: 1) an `sf` object called `multipolygon`, and 2) a `sp` object called `SpatialPolygonsDataFrame`.
 
 ```{r}
-# See metadata associated with the shapefile
+# Inspect the sf multipolygon object with admin 3 boundaries
 shapefile.zone.plot
+
+# Inspect the sp SpatialPolygonsDataFrame object with admin 3 boundaries
+shapefile.zonal
 
 # Plot the shape file - this shows the zones for which we will estimate poverty
 ggplot() + 
@@ -522,7 +516,7 @@ ggplot() +
 
 The output gives us the following information about the shape file:
 
--   It has 544 features (upazilas) and 16 fields with information defining the features.
+-   It has 544 features (upazilas) and 16 fields (variables) with information defining the features.
 
 -   The geometry type is multipolygon. Each multipolygon is a collection of spatial points that define an upazila.
 
@@ -532,30 +526,42 @@ The output gives us the following information about the shape file:
 
 -   A preview of the first 10 features tells us that for each multipolygon we have information on: administrative codes for the upazila, English name of the upazila, area covered by the shape, and codes as well as names for other administrative levels.
 
-With our base layers defined, it's time to start the processing of geo-spatial data.
+The plot shows a visualisation of the boundaries of each upazila in Bangladesh. They are essentially a collection of multipolygons (i.e. each upazila is bound by a multipolygon object). We will be estimating poverty for each upazila. This illustrates our issue quite nicely - it would be prohibitively costly for a survey like the DHS to travel to each upazila and obtain a sufficient sample size to generate reliable poverty statistics. By using open-source high-resolution geo-spatial data, we can model poverty for each zone, including out-of-sample areas, i.e. areas where the DHS did not reach.
+
+We now turn to Steps 2-5, which will process our raster layers of geo-spatial information.
 
 ### Steps 2-5 - Write functions for automated processing of geo-spatial covariates
 
-In this step, we will provide two functions that will automate the processing of geo-spatial covariates.
+Steps 2-5 all refer to the harmonisation of raster layers that conatin geo-spatial covariates. The goal is for all our datasets (accessibility, demographic maps, night lights) to have the same: extent, spatial resolution, and shape as the base layer. In some cases, we may need to additionally address missing values. A detailed description of Steps 2-5 can be found in Section 1.
 
-Function 1 can be applied to the Malaria Atlas accessibility data and Nightlights data. It automatically executes the following steps:
+The reason that all steps are grouped together into one section is that all of those will be performed in a single automated function. We will write two functions, one for accessibility and nightlights data and the second one for demographic maps from Facebook. The only difference between them is the algorithm used for changing the spatial resolution of rasters.
 
-1.  Crop your raster to the base layer so that they have the same extent
+::: callout-caution
+## Caution
+
+There are many algorithms that can be used for changing the spatial resolution of a raster. For accessibility and nightlights data, we will use the nearest neighbour interpolation, where each "corrected" pixel is assigned a data value of the "uncorrected" pixel that is closest to it in terms of coordinate location. However, for harmonising demographic data that is of a higher spatial resolution than our base layer, the use of the "sum" algorithm is more appropriate. Otherwise we "lose people" in a downsample. To illustrate the issue, let's imagine we have 9 high resolution pixels (3x3). The sum algorithm will add up values from all those pixels when aggregating, while the nearest neighbour interpolation will select the value that falls closest to the "corrected" pixel, and not count any other ones.
+:::
+
+To automate the processing, we will write the first function for processing geo-spatial covariates and call it `geo_process`. We will use it for the Malaria Atlas accessibility and Nightlights data. It automatically executes the following steps:
+
+1.  Crop your raster to the base layer so that they have the same extent.
 2.  Change the spatial resolution of your raster to match that of the base layer using the nearest neighbor interpolation algorithm.
 3.  If appropriate, recode missing values to a specified value.
 4.  Mask the raster so that it has the same shape as your base layer.
 
 The function requires the following inputs:
 
--   aux.raster - this is the raster that you are trying to transform/ harmonise to the base raster layer.
+-   `aux.raster` - this is the raster that you are trying to transform/ harmonise to the base raster layer.
 
--   base.raster - your base raster layer that has all the desired attributes. This is the layer we will be harmonising to.
+-   `base.raster` - your base raster layer that has all the desired attributes. This is the layer we will be harmonising to.
 
--   label - the name that you wish to assign to the transformed raster.
+-   `label` - the name that you wish to assign to the transformed raster.
 
--   value - (if appropriate) the value to which you want to recode NA (missing) values to.
+-   `value` - (if appropriate) the value to which you want to recode NA (missing) values to.
 
-This process will output your transformed raster, ready to be used in the estimation of zonal statistics.
+This process will output your transformed raster, ready to be used in the calculation of zonal statistics.
+
+Running the chunk below will create the first function `geo_process`, which will show up under "Functions" in you environment.
 
 ```{r function ngb}
 # Function for automating the processing of geo-spatial covariates for use in poverty modelling
@@ -580,15 +586,17 @@ geo_process <- function(aux.raster, base.raster, label, value) {
 }
 ```
 
-Function 2 is really similar, but applies the "sum" algorithm instead of nearest neighbour interpolation when changing the spatial resolution, which is a more appropriate method when working with demographic maps from Meta that are of a higher resolution than our base layer. The demographic data from Meta are of a \~30m spatial resolution and require aggregation of the values in each cell when resampled to 100m. Using the nearest neighbour interpolation, we 'lose' people (because data is thrown away in the downsample). The'sum' algorithm instead provides a more accurate representation of population per each 100m grid cell.
+The second function, called `geo_process2` is really similar, but applies the `sum` algorithm instead of nearest neighbour interpolation when changing the spatial resolution, which is the appropriate method when working with demographic maps from Meta that are of a higher resolution than our base layer. The demographic data from Meta are of a \~30m spatial resolution and require aggregation of the values in each cell when resampled to 100m. Using the nearest neighbour interpolation, we 'lose' people (because data is thrown away in the downsample). The'sum' algorithm instead provides a more accurate representation of population per each 100m grid cell.
 
-Function 2 should therefore be applied to all demographic maps from Meta and will execute the following steps:
+Function 2 should be applied to all demographic maps from Meta and will execute the following steps:
 
-1.  Obtain the ratio of spatial resolutions of your layer of interest (from Meta) and the base layer.
-2.  Crops your raster to the base layer so that they have the same extent
+1.  Obtain the ratio of spatial resolutions of your layer of interest (from Meta) and the base layer, save those as a `factor.ratio`.
+2.  Crop your raster to the base layer so that they have the same extent.
 3.  If appropriate, recode missing values to a specified value.
 4.  Change the spatial resolution to match your base layer, on the basis of the ratio defined in Step 1. Note: we are going from a higher to a lower spatial resolution, hence the use of "aggregate".
 5.  Mask the raster so that it has the same shape as your base layer.
+
+Running the chunk below will create the second function `geo_process2` and it will show up under "Functions" in you environment.
 
 ```{r}
 # Function for automating the processing of geo-spatial covariates for use in poverty modelling
@@ -621,7 +629,17 @@ geo_process2 <- function(aux.raster, base.raster, label, value) {
 }
 ```
 
+Now that we have two automated functions for processing geo-spatial data: `geo_process` and `geo_process2`, we can apply it to our raster datasets and create our first visualisations!
+
 ### Steps 2-5 - process accessibility data from the Malaria Atlas
+
+In the chunk below, we will process accessibility data from the Malaria Atlas. Those are stored in a list of rasters named `matlas.rasters`. Simply typing the name of the object tells us more information about each raster in the list, including its class, dimensions, resolution, extent, crs etc. There are three datasets we will be using:
+
+1.  Travel Time to Cities for Bangladesh in 2015
+2.  Motorised Travel Time to Healthcae Facilities for Bangladesh in 2020
+3.  Walking Only Travel Time to Healthcare Facilities for Bangladesh in 2020.
+
+We will create a new list to store our processed datasets called `matlas.processed`, then use a loop to apply our `geo_process` function to all three Malaria Atlas datasets.
 
 ```{r}
 # See that all the files have loaded
@@ -655,7 +673,23 @@ plot(matlas.processed[[1]], box=F, axes=F, col=viridis(50), main = "Bangladesh -
 dev.off()
 ```
 
+Viewing the ready `matlas.processed` objects, we can see that the dimensions as well as the extent have changed - they are now the same as our base layer.
+
+The three plots show visualisations of travel time (in minutes) using the viridis colour palette.
+
 ### Steps 2-5 - process the demographic data from Meta
+
+To process the demographic data from Meta, we will apply the second function geo_process2, which relies on the sum algorithm for resampling rather than nearest neighbour interpolation, as discussed before. As before, we will begin by typing the name of the objects that stores a list with all raster files from Meta, fb.rasters. This will allow us to view the properties of the following seven datasets for Bangladesh:
+
+1.  Population Density - Children under 5
+2.  Population Density - Elderly 60+
+3.  Population Density - General
+4.  Population Density - Men
+5.  Population Density - Women
+6.  Population Density - Women of Reproductive Age 15-49
+7.  Population Density - Youth 15-24
+
+Just a note that these datasets use population density per pixel as their unit of measurement.
 
 ```{r}
 # Check that all the files were picked up by this 
