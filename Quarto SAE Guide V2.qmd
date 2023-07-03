@@ -657,7 +657,7 @@ This guide has run through how to produce poverty estimates for out of sample ar
 
     -   Influencing and improving policy decisions and social protection programs in order to drive poverty reduction. This is done by providing more frequent statistics at higher precision than previously available which allows policy makers to make more informed decisions.
 
-Despite these clear benefits, small area estimation is not a panacea. The out of sample estimates are only as good as your model, the assumptions the model makes and the underlying data that goes into the model. As a result these are some of the key considerations you need to take into account before undertaking small area estimation.
+Despite these clear benefits, small area estimation is not a panacea. The out of sample estimates are only as good as your model, the assumptions the model makes and the underlying data that goes into the model. As a result these are some of the key considerations you need to take into account before undertaking small area estimation:
 
 **Sample size:** The Fay-Herriot model assumes a large sample size for both the target and auxiliary variables. If the sample size in the small area is small, the model's assumptions may be violated, leading to unreliable estimates.
 
@@ -675,4 +675,36 @@ It's important to carefully consider these caveats and assess the suitability of
 
 # Glossary
 
-BIC selection criterion Homoskedasticity GVF Linearity assumptions Normality assumptions
+**BIC selection criterion:** BIC stands for Bayesian Information Criterion, which is a statistical measure used for model selection. It balances the goodness of fit of a model with its complexity to find the most appropriate model. The BIC selection criterion penalizes models with more parameters, helping to avoid overfitting and select simpler models.   
+
+**Homoskedasticity:** Homoskedasticity refers to a statistical assumption that the variance of the error term in a regression model is constant across all levels of the predictor variables. In the context of small area estimation using the Fay-Herriot model, homoskedasticity assumes that the variance of the random effects (unobserved area-specific effects) is constant across different small areas.
+
+**Generalised Variance Functions (GVF):** Generalized Variance Functions are statistical functions used to estimate the variance of a variable, if it is not available in the survey.
+
+**Linearity assumptions:** Linearity assumptions refer to the assumption that the relationship between the predictor variables and the response variable is linear. In the context of the Fay-Herriot model, linearity assumptions imply that the small area estimation model assumes a linear relationship between the auxiliary variables (used for prediction) and the variable being estimated in each small area.
+
+**Normality assumptions:** Normality assumptions refer to the assumption that the error term in a statistical model follows a normal distribution. In small area estimation using the Fay-Herriot model, normality assumptions imply that the random effects and the residuals in the model are normally distributed. This assumption allows for valid statistical inference and accurate estimation of confidence intervals for small area estimates.
+
+**Principal Components Analysis (PCA):** In the context of creating a wealth index using survey questions, Principal Components Analysis (PCA) is a statistical technique used to derive a composite score that represents the underlying dimension of wealth or socioeconomic status.
+
+**Overfitting:** Overfitting refers to a situation in statistical modeling where a model fits the training data too closely, capturing random noise and idiosyncrasies of the data rather than the underlying true relationship. Overfitting can lead to poor generalization and inaccurate predictions when the model is applied to out of sample data.
+
+**Bootstrap:** Bootstrapping is a resampling technique used for estimating the sampling distribution of a statistic by repeatedly sampling with replacement from the original dataset. In small area estimation, the bootstrap is used to estimate the variance of small area estimates and construct confidence intervals.
+
+**Brown Test:** The Brown Test is a statistical test used to assess the adequacy of a model in small area estimation. It examines whether the model assumptions, such as linearity and homoscedasticity, hold reasonably well. The Brown Test helps ensure the validity of the model and the reliability of the small area estimates.
+
+**Upazila:** Upazila is a geographical administrative unit used in Bangladesh. It is a sub-district-level division.
+
+**Design Effect:** Design Effect is a measure used to quantify the effect of clustering or stratification in sample surveys. It accounts for the correlation among observations within the same cluster or stratum and affects the precision of the estimates. A higher design effect indicates a less efficient sample design.
+
+**Intra-Cluster Correlation Coefficient (ICC):** The Intra-Cluster Correlation Coefficient measures the degree of similarity or correlation among observations within the same cluster. In small area estimation, ICC helps capture the variation within clusters and is crucial for estimating the sampling variance and designing efficient surveys.
+
+**Principle of Parsimony:** The Principle of Parsimony, also known as Occam's Razor, suggests that when multiple models can explain the data equally well, the simplest model should be preferred. In small area estimation, the principle of parsimony encourages selecting models with fewer parameters to avoid overfitting.
+
+**Q-Q Plot:** Q-Q Plot, short for Quantile-Quantile Plot, is a graphical tool used to assess the distributional similarity between two datasets. In small area estimation, a Q-Q plot can be used to compare the observed quantiles of the small area estimates with the quantiles expected under a theoretical distribution, such as the normal distribution.
+
+**MSE (Mean Squared Error):** Mean Squared Error is a measure of the average squared difference between the estimated values and the true values. In small area estimation, MSE is used to assess the accuracy and precision of the small area estimates, with lower MSE indicating better performance.
+
+**R-squared:** R-squared, also known as the coefficient of determination, measures the proportion of the variance in the response variable that is explained by the predictors in a regression model. 
+
+**EBLUP Estimates:** Empirical Best Linear Unbiased Prediction estimates. EBLUP estimates strike a balance between the sample data and the auxiliary information to generate reliable estimates at the small area level.
