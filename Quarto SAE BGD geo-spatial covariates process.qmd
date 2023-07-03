@@ -387,16 +387,13 @@ library("RColorBrewer")   # funky graph colors
 library("haven")          # opening stata files
 library("gsubfn")         # string operations
 library("viridis")        # colour palette for data visualisations
-devtools::install_github("marcosci/cividis")
-library("devtools")       # User-developed packages
-library("cividis")        # Another colour palette
 library("rgdal")          # RGDAL functions
 library("sp")             # spatial objects in R
 library("plyr")           # Data wrangling
 library("dplyr")          # Data wrangling
 library("readr")          # read rectangular data
 library("leaflet")        # Interactive maps
-library("htmlwidgets")              # HTML widgets
+library("htmlwidgets")    # HTML widgets
 library("scales")
 ```
 
@@ -732,8 +729,6 @@ Just a note that these datasets use population density per pixel as their unit o
 
 As before, we create a list `fblist.processed`, where we will store all the harmonised rasters with demographic information, and apply a loop to process all the seven raster layers with population density for Bangladesh.
 
-pal2 \<- leaflet::colorNumeric(cividis_pal(option = "C")(2), domain = values(fblist.processed\[\[1\]\]), na.color = "transparent")
-
 ```{r}
 # Check that all the files were picked up by this 
 fb.rasters
@@ -775,13 +770,11 @@ dev.off()
 
 The output from simply typing `fb.processed` into your console should show you the attributes of harmonised rasters with demographic data from Meta. The dimensions, resolution, extent, CRS should all be the same as the base layer. In addition, we can see the range of minimum and maximum values for each population density raster.
 
-Visualisations show the population density (per pixel) for 7 population groups for Bangladesh. In all cases, we can see that population density increases around urban areas, such as Dhaka or Chattogram.
+Visualisations show the population density (per pixel) for 7 population groups for Bangladesh. In all cases, we can see that population density increases around urban areas, such as Dhaka or Chattogram. Unfortunately, the size of this raster image is so large that it does not allow us to visualise it using `leaflet`.
 
 ### Steps 2-5 - Process nightlights data
 
 The final dataset that requires harmonisation is the Nightlights Intensity raster from the VIIRS satellite. It contains codified values of radiance per pixel. We will follow the same procedure as with the Malaria Atlas datasets and simply apply our `geo_process` function. In this case, there is no need to recode missing values. The output, `nightlights.raster.processed` should again show dimensions, resolution, extent, CRS that are the same as the base layer. In addition, we can see the range of minimum and maximum values of nightlights intensity.
-
-show_col(cividis_pal()(10))
 
 ```{r}
 # Apply the geo processing function
@@ -794,15 +787,16 @@ nightlights.raster.processed
 base.layer.raster
 
 # Plot raster 
-plot(nightlights.raster.processed, axes=F, box=F, main = "Nightlights data in Bangladesh", ccol=cividis(50))
+plot(nightlights.raster.processed, axes=F, box=F, main = "Nightlights data in Bangladesh", col=cividis(50))
 
 # Create a high quality image 
 png(filename="maps/nightlights_BGD.png", res=400, width=2000, height=1500)
 plot(nightlights.raster.processed, box=F, axes=F, main = "Nightlights data in Bangladesh", col=cividis(50))
 dev.off()
 
-# First create a colour palette - let's go with viridis, and supply the values of our raster into domain
+# Create a colour palette
 
+# View colours from the YlOrRd palette
 display.brewer.pal(n = 9, name = 'YlOrRd')
 
 # Hexadecimal color specification 
@@ -816,7 +810,7 @@ pal2 <- colorNumeric(c("#1A1A1A", "#FD8D3C", "#FED976", "#FFEDA0", "#FFFFCC"), v
 # Create an interactive leaflet map
 map_night <- leaflet() %>%
  addProviderTiles(providers$CartoDB.Positron) %>%
-  addRasterImage(nightlights.raster.processed,  colors = pal2, opacity=1, project = FALSE)%>%
+  addRasterImage(nightlights.raster.processed,  colors = pal2, opacity=1)%>%
   addLegend(pal = pal2, values = values(nightlights.raster.processed), title = "Nightlights intensity")
 
 # Let's have a look
@@ -827,19 +821,35 @@ saveWidget(map_night, file="html widgets/BGD_nightlights.html")
 
 ```
 
-The visualisation, though a little difficult to see in R's standard plot resolution, shows that urban areas such as Dhaka appear to have a higher radiance of nightlights.
+A simple base R plot shows a visualisation of nightlights intensity (measured as radiance per pixel) for Bangladesh using the `cividis` colour palette. Urban areas such as Dhaka appear to have a higher radiance of nightlights, though it is a little difficult to see given the low default resolution of plots in R. Exporting the plot as a higher-quality image allows for a better visual result.
+
+This could be a good opportunity to introduce custom-made colour palettes into our plots. Instead of using the `cividis` palette, let's say I have a very specific idea of how I want to portray my data: black for complete absence of night lights (intuitively, areas that would appear dark in a satellite image), and gradually building shades of yellow that could indicate the presence of lights at night. [R Color's Brewer](https://r-graph-gallery.com/38-rcolorbrewers-palettes) offers quite versatile palettes for representing all sorts of data: sequential, diverging, and qualitative - and we can construct our own palettes based on these colour schemes. Using the `display.brewer.pal` command, I can view the colours associated with each palette and using `brewer.pal` I can obtain their codings. In this case, I want to see the `YlOrRd` palette and extract the yellow shades, while setting black as my first colour. I save this scheme in the `pal2` object and supply it to `leaflet`. The end result, an interactive html map with my custom colour palette, displays nightlights more clearly.
+
+This concludes our harmonisation of geo-spatial covariates - we now have three lists of rasters that are ready to produce zonal statistics: `matlas.processed`, `fblist.processed`, `nightlights.raster.processed`. As the WorldPop datasets on topography have already been harmonised, there is no need to process them. But we can still play around with some visualisations.
 
 ### Steps 2-5 - Inspect pre-harmonised World Pop datasets
+
+The WorldPop datasets already have the same spatial resolution, extent, and dimensions as our base layer. They are ready to produce zonal statistics. Typing the list of raster objects, `worldpop.rasters`, will show that we have 16 raster objects, with the same attributes as the base layer, all showing distances to different types of Land Cover classes in Bangladesh. We don't need to further process this geodata in any way - but let's inspect it by creating simple plots.
+
+As an example, let's produce a simple base R plot of the 11th raster object from that list, which shows distance to the closest road. Even without any processing, the plot comes out nicely formatted, as World Pop has pre-harmonised this data. Coastal areas are clearly the furthest away from any road. Unfortunately, the raster object is too large to create an interactive map using `leaflet`.
 
 ```{r}
 # See that all the files have loaded
 worldpop.rasters
 
+# Check they match the base layer
+base.layer.raster
+
 #Plot examples of WorldPop datasets
 plot(worldpop.rasters[[11]], box = F, axes = F, main = "Distance to the closest road Bangladesh", col=viridis(50))
+
 ```
 
 ### Step 6 - Convert shapefile to a raster
+
+Now, we have all the raster images with geo-spatial data that we will use in poverty estimation: `matlas.processed`, `fblist.processed`, `nightlights.raster.processed`, and `worldpop.rasters`. The next step is to calculate zonal statistics (min, max, mean, sd, etc.) for each upazila. For example: what is the mean distance to the closest road for each upazila? However, before we can do that - we need a file that will allocate each pixel in the raster data to the appropriate upazila. That is, we need to use the shapefile which contains administrative boundaries of upazilas and convert it to a raster of the same spatial resolution, extent, and CRS as the base layer. This newly created raster will assign the correct administrative upazila code to each pixel - and so, will allow us to assign geo-spatial information to the upazila.
+
+First, we want to keep admin codes as numerics. We will create a new column in the shapefile data that will subtract "BD" from the upazila code. So, instead of "BD552769", we will keep simply "552769". This is now saved in the `adm3_integer` column. Next, we will create an empty raster object from scratch and assign the extent, dimensions, and CRS of the base layer. Then, using the `rasterize` function, we will transform values of the admin 3 codes from the shapefile into each pixel of the raster object. A simple plot of the resulting `raster_admin3` shows that values have been assigned to each pixel.
 
 ```{r}
 # Copy admin unit codes to new column in upazila shapefile attributes, in the process removing Bangladesh prefix from the integer code
