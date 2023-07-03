@@ -212,19 +212,11 @@ The next step in the process is to resample the raster, i.e. change the spatial 
 
 ![](images/Nightlights%20data%20processing.png)
 
-See a zoomed in version of our final raster with nightlights in Figure XX below. We can see urban areas of Dhaka and Chattogram in lighter shades of blue and yellow - indicating higher luminosity.
-
-![](images/nightlight%20zoom.png)
-
 Note that the nightlights raster did not contain missing values and any location with no radiance was coded as having a value of zero nightlights intensity. There are cases, however, where we should be more careful about the interpretation of missing values vs. zeros. In our next example, we will go through the processing of high-resolution demographic maps from Meta, specifically the population density of youth aged 15-24 - a process we will be implementing in Step 4 of Section 3. The left hand side of Figure XX below shows the result from simply plotting the raster from the original TIFF file. We can see a few colour-coded values of population density, but most of the raster is empty (NAs shown in white). Here, the user should consider: are the values missing because there are no people in this location? Or is it because we haven't collected data on those locations? In our case, the documentation tells us that missing values are equivalent to there being no people aged 15-24. After recoding NA values as 0s, we see that the raster layer is now populated with values (zeros shown in grey).
 
 As in the example of nightlights, we want to crop our raster so that it has the extent of Bangladesh. Afterwards, we will change the spatial resolution to \~100m. Note that the population density data is originally of a higher spatial resolution (of around \~30m), so in this case we are resampling to a coarser grid. This process is called aggregation. Since we are deploying the "sum" algorithm, we can observe that the legend beside the plot has changed - we now have larger density of people per pixel (since our pixels just got bigger as a result of aggregation). The final step is to mask our raster with demographic data to the base layer - and we end up with a nice shape of Bangladesh.
 
 ![](images/FB%20data%20processing.png)
-
-And a higher resolution image of our final result below:
-
-![](images/Population%20density%20youth-02.png)
 
 These are exactly the processing steps that we will be carrying out in our next session, although they will all be automated with a single function for ease of application.
 
@@ -336,14 +328,14 @@ We will be working with the following data sets:
 ### Base layers
 
 | Geo-spatial file name             | Description                                                          | Year | Link to download                                                                                                               |
-|:-----------------|:-----------------|:-----------------|:------------------|
+|:------------|:---------------|:------------|:-------------------------------|
 | bgd_level0_100m_2000_2020.tif     | WorldPop Administrative Level 0 mastergrid base layer for Bangladesh | 2020 | [World Pop Hub - National boundaries](https://www.worldpop.org/geodata/summary?id=24282)                                       |
 | bgd_admbnda_adm3_bbs_20201113.shp | Administrative Level 3 (Upazila) Units in Bangladesh                 | 2015 | [Bangladesh - Subnational Administrative Boundaries - Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-bgd) |
 
 ### Geo-spatial data sets to be harmonised
 
 |                                                                             |                                                                              |      |                                                                                                                                                                                                                                                                                                  |
-|------------------|------------------|:-----------------|--------------------|
+|------------|------------|:-----------|--------------------------------------|
 | **Geo-spatial file name**                                                   | Description                                                                  | Year | Link to download                                                                                                                                                                                                                                                                                 |
 | SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif | VIIRS night-time lights (global)                                             | 2015 | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/#v1)                                                                                                                                                                                                                            |
 | 2015_accessibility_to_cities_v1.0.tif                                       | MAP travel time to high-density urban centres (global)                       | 2015 | [Malaria Atlas - Accessibility to Cities](https://data.malariaatlas.org/maps?layers=Accessibility:201501_Global_Travel_Time_to_Cities,Malaria:202206_Global_Pf_Parasite_Rate)                                                                                                                    |
@@ -360,7 +352,7 @@ We will be working with the following data sets:
 ### WorldPop harmonised geo-spatial data sets
 
 |                                           |                                                                         |           |                                                                |
-|------------------|-------------------|------------------|------------------|
+|---------------|-----------------------|---------------|--------------------|
 | **Geo-spatial File Name**                 | **Description**                                                         | **Year**  | **Link to Download**                                           |
 | bgd_srtm_topo_100m.tif                    | SRTM topography in BGD                                                  | 2000      | [World Pop](https://www.worldpop.org/project/categories?id=14) |
 | bgd_srtm_slope_100m.tif                   | SRTM slope (derivative of topography) in BGD                            | 2000      |                                                                |
@@ -400,6 +392,8 @@ library("sp")             # spatial objects in R
 library("plyr")           # Data wrangling
 library("dplyr")          # Data wrangling
 library("readr")          # read rectangular data
+library("leaflet")        # Interactive maps
+library("htmlwidgets")              # HTML widgets
 ```
 
 ### Step 1 - Load all data sets
@@ -662,20 +656,61 @@ matlas.processed[[i]] <- geo_process(aux.raster = matlas.rasters[[i]], base.rast
 # See the result
 matlas.processed
 
-# Plot results 
-plot(matlas.processed[[1]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Travel Time to Cities")
-plot(matlas.processed[[2]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Motorised Travel Time to Healthcare Facilities")
-plot(matlas.processed[[3]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Walking-Only Travel Time to Healthcare Facilities")
+# Compare to base layer
+base.layer.raster
 
-# Create a high quality image 
-png(filename="maps/BGD travel time city.png", res=400, width=2000, height=1500)
-plot(matlas.processed[[1]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Travel Time to Cities")
-dev.off()
 ```
 
 Viewing the ready `matlas.processed` objects, we can see that the dimensions as well as the extent have changed - they are now the same as our base layer.
 
-The three plots show visualisations of travel time (in minutes) using the viridis colour palette.
+Now let's visualise our results! In the code chunk below, I'll present three ways of visualising geo-spatial layers of information in R:
+
+1.  A simple plot
+2.  A high-quality plot image (same as point 1 but manually changing R's default plot resolution to improve quality)
+3.  An interactive html widget using the `leaflet` package
+
+```{r}
+# Three ways of visualising our data:
+
+## 1. Simple plot ##
+
+# Plot results - with no bounding box or axes, using the viridis colour palette, and adding a main plot title
+plot(matlas.processed[[1]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Travel Time to Cities")
+plot(matlas.processed[[2]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Motorised Travel Time to Healthcare Facilities")
+plot(matlas.processed[[3]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Walking-Only Travel Time to Healthcare Facilities")
+
+## 2. A high-quality plot image ##
+
+# Create a high quality image - manually changing the resolution of base R plots
+png(filename="maps/BGD travel time city.png", res=400, width=2000, height=1500)
+plot(matlas.processed[[1]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Travel Time to Cities")
+dev.off()
+
+## 3. An interactive html widget ##
+
+# First create a colour palette - let's go with viridis, and supply the values of our raster into domain
+pal <- leaflet::colorNumeric(viridis_pal(option = "C")(2), domain = values(matlas.processed[[1]]), na.color = "transparent")
+
+# Create an interactive leaflet map
+map_access <- leaflet() %>%
+ addProviderTiles(providers$CartoDB.Positron) %>%
+  addRasterImage(matlas.processed[[1]],  colors = pal, opacity=0.9, project = FALSE)%>%
+  addLegend(pal = pal, values = values(matlas.processed[[1]]), title = "Travel Time to Cities in Minutes")
+
+# Let's have a look
+map_access
+
+# Save map as widget
+saveWidget(map_access, file="html widgets/BGD_access_map.html")
+```
+
+Let's start with simple plots. The three plots show visualisations of travel time (in minutes) using the `viridis` colour palette. Coastal areas as well as western parts of the Chittagong division appear to be least connected to urban areas and healthcare facilities. While this is informative at first glance, a closer zoom in will typically appear quite pixelated. This is because R's default plot resolution is quite low for high-resolution geo-spatial data. We can change that manually.
+
+In order to view this plot in higher quality, we need to change R's default plot resolution. The second option will export a higher-quality image of the map showing travel time to cities for Bangladesh and save it in the `maps` folder in your working directory. Unless you are cloning this repo from GitHub, in which case the folder will already be there, you may need to simply add a folder named `maps` in your working directory that you specified in Step 1. The high-quality image will be saved there. Now you can zoom into your image and retain much more of the original granularity of the data - but we can step up that visualisation further!
+
+The final approach is creating an interactive map through the `leaflet` package and exporting it as an html widget. This produces the highest quality visualisation and also allows the end user to interact with our data (for instance, zoom into specific areas of Bangladesh). First, we need to create a colour palette object called `pal`. Depending on whether we are portraying continuous or categorical data, we will choose the option `colorNumeric` (for continuous) or `colorFactor` (for categorical). We then have to supply our colour palette of interest - in this case `viridis_pal` and define the values that should be assigned to colours, i.e. values of the first raster in the list of processed Malaria Artlas list of rasters `matlas.processed[[1]]`. Finally, we want NA values to appear transparent.
+
+Once we created the colour pallete, we can start creating our interactive map object called `map_access`. This relies on Open Street Map base layers that form a sort of "background" on which we will overlay our accessibility data. I selected `addProviderTiles(providers$CartoDB.Positron)`, which is a nice light greay shaded OSM global map as the background. There are other options (such as colourful backgrounds) that you can explore. On top of that, I am overlaying the raster image with travel time to cities for Bangladesh. I select the colour palette object `pal` and `opacity=0.9`, which controls the transparency of my layer. As the layer already has a specified CRS, we do not reproject. Finally, we add a legend in the viridis colour palette and values of the Malaria Atlas layer. This interactive map is saved in the `html widgets` folder in my working directory. You can choose any location on your local machine to save this file.
 
 ### Steps 2-5 - process the demographic data from Meta
 
@@ -689,7 +724,9 @@ To process the demographic data from Meta, we will apply the second function geo
 6.  Population Density - Women of Reproductive Age 15-49
 7.  Population Density - Youth 15-24
 
-Just a note that these datasets use population density per pixel as their unit of measurement.
+Just a note that these datasets use population density per pixel as their unit of measurement. This time, we will be applying our second function `geo_process2`, which differs only by the type of algorithm that is used for resampling. Since we are working with *demographic* data of a higher spatial resolution than our base layer, we need to aggregate our data to a coarser grid and the use of the `sum` algorithm will ensure that we are counting all the populations from all higher resolution pixels. An important step here is replacing missing values with zeros, which is done by specifying the argument `value = 0` in the `geo_process2` function. From the documentation, we know that pixels which have been coded as missing in fact have no people in it, i.e. the population density is zero - so we can safely recode. However, the user should always check whether recoding missing values as zeros is appropriate.
+
+As before, we create a list `fblist.processed`, where we will store all the harmonised rasters with demographic information, and apply a loop to process all the seven raster layers with population density for Bangladesh.
 
 ```{r}
 # Check that all the files were picked up by this 
@@ -710,6 +747,9 @@ fblist.processed[[i]] <- geo_process2(aux.raster = fb.rasters[[i]], base.raster 
 # See the result
 fblist.processed
 
+# Compare to base layer
+base.layer.raster
+
 # Plot results
 plot(fblist.processed[[1]], box=F, axes=F, main = "Bangladesh - Population density (children under 5)")
 plot(fblist.processed[[2]], box=F, axes=F, main = "Bangladesh - Population density (elderly 60+)")
@@ -725,7 +765,13 @@ plot(fblist.processed[[7]], box=F, axes=F, main = "Bangladesh - Population densi
 dev.off()
 ```
 
+The output from simply typing `fb.processed` into your console should show you the attributes of harmonised rasters with demographic data from Meta. The dimensions, resolution, extent, CRS should all be the same as the base layer. In addition, we can see the range of minimum and maximum values for each population density raster.
+
+Visualisations show the population density (per pixel) for 7 population groups for Bangladesh. In all cases, we can see that population density increases around urban areas, such as Dhaka or Chattogram.
+
 ### Steps 2-5 - Process nightlights data
+
+The final dataset that requires harmonisation is the Nightlights Intensity raster from the VIIRS satellite. It contains codified values of radiance per pixel. We will follow the same procedure as with the Malaria Atlas datasets and simply apply our `geo_process` function. In this case, there is no need to recode missing values. The output, `nightlights.raster.processed` should again show dimensions, resolution, extent, CRS that are the same as the base layer. In addition, we can see the range of minimum and maximum values of nightlights intensity.
 
 ```{r}
 # Apply the geo processing function
@@ -733,6 +779,9 @@ nightlights.raster.processed <- geo_process(aux.raster = nightlights.raster, bas
 
 # Check raster
 nightlights.raster.processed
+
+# Compare to base layer
+base.layer.raster
 
 # Plot raster 
 plot(nightlights.raster.processed, axes=F, box=F, main = "Nightlights data in Bangladesh", col=cividis(50))
@@ -742,6 +791,8 @@ png(filename="maps/nightlights_BGD.png", res=400, width=2000, height=1500)
 plot(nightlights.raster.processed, box=F, axes=F, main = "Nightlights data in Bangladesh", col=cividis(50))
 dev.off()
 ```
+
+The visualisation, though a little difficult to see in R's standard plot resolution, shows that urban areas such as Dhaka appear to have a higher radiance of nightlights.
 
 ### Steps 2-5 - Inspect pre-harmonised World Pop datasets
 
