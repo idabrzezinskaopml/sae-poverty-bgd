@@ -387,6 +387,9 @@ library("RColorBrewer")   # funky graph colors
 library("haven")          # opening stata files
 library("gsubfn")         # string operations
 library("viridis")        # colour palette for data visualisations
+devtools::install_github("marcosci/cividis")
+library("devtools")       # User-developed packages
+library("cividis")        # Another colour palette
 library("rgdal")          # RGDAL functions
 library("sp")             # spatial objects in R
 library("plyr")           # Data wrangling
@@ -394,6 +397,7 @@ library("dplyr")          # Data wrangling
 library("readr")          # read rectangular data
 library("leaflet")        # Interactive maps
 library("htmlwidgets")              # HTML widgets
+library("scales")
 ```
 
 ### Step 1 - Load all data sets
@@ -714,7 +718,7 @@ Once we created the colour pallete, we can start creating our interactive map ob
 
 ### Steps 2-5 - process the demographic data from Meta
 
-To process the demographic data from Meta, we will apply the second function geo_process2, which relies on the sum algorithm for resampling rather than nearest neighbour interpolation, as discussed before. As before, we will begin by typing the name of the objects that stores a list with all raster files from Meta, fb.rasters. This will allow us to view the properties of the following seven datasets for Bangladesh:
+To process the demographic data from Meta, we will apply the second function `geo_process2`, which relies on the `sum` algorithm for resampling rather than nearest neighbour interpolation. As before, we will begin by typing the name of the objects that stores a list with all raster files from Meta, `fb.rasters`. This will allow us to view the properties of the following seven datasets for Bangladesh:
 
 1.  Population Density - Children under 5
 2.  Population Density - Elderly 60+
@@ -727,6 +731,8 @@ To process the demographic data from Meta, we will apply the second function geo
 Just a note that these datasets use population density per pixel as their unit of measurement. This time, we will be applying our second function `geo_process2`, which differs only by the type of algorithm that is used for resampling. Since we are working with *demographic* data of a higher spatial resolution than our base layer, we need to aggregate our data to a coarser grid and the use of the `sum` algorithm will ensure that we are counting all the populations from all higher resolution pixels. An important step here is replacing missing values with zeros, which is done by specifying the argument `value = 0` in the `geo_process2` function. From the documentation, we know that pixels which have been coded as missing in fact have no people in it, i.e. the population density is zero - so we can safely recode. However, the user should always check whether recoding missing values as zeros is appropriate.
 
 As before, we create a list `fblist.processed`, where we will store all the harmonised rasters with demographic information, and apply a loop to process all the seven raster layers with population density for Bangladesh.
+
+pal2 \<- leaflet::colorNumeric(cividis_pal(option = "C")(2), domain = values(fblist.processed\[\[1\]\]), na.color = "transparent")
 
 ```{r}
 # Check that all the files were picked up by this 
@@ -763,6 +769,8 @@ plot(fblist.processed[[7]], box=F, axes=F, main = "Bangladesh - Population densi
 png(filename="maps/BGD_pop_density_youth.png", res=400, width=2000, height=1500)
 plot(fblist.processed[[7]], box=F, axes=F, main = "Bangladesh - Population density (youth 15-24)")
 dev.off()
+
+
 ```
 
 The output from simply typing `fb.processed` into your console should show you the attributes of harmonised rasters with demographic data from Meta. The dimensions, resolution, extent, CRS should all be the same as the base layer. In addition, we can see the range of minimum and maximum values for each population density raster.
@@ -772,6 +780,8 @@ Visualisations show the population density (per pixel) for 7 population groups f
 ### Steps 2-5 - Process nightlights data
 
 The final dataset that requires harmonisation is the Nightlights Intensity raster from the VIIRS satellite. It contains codified values of radiance per pixel. We will follow the same procedure as with the Malaria Atlas datasets and simply apply our `geo_process` function. In this case, there is no need to recode missing values. The output, `nightlights.raster.processed` should again show dimensions, resolution, extent, CRS that are the same as the base layer. In addition, we can see the range of minimum and maximum values of nightlights intensity.
+
+show_col(cividis_pal()(10))
 
 ```{r}
 # Apply the geo processing function
@@ -784,12 +794,37 @@ nightlights.raster.processed
 base.layer.raster
 
 # Plot raster 
-plot(nightlights.raster.processed, axes=F, box=F, main = "Nightlights data in Bangladesh", col=cividis(50))
+plot(nightlights.raster.processed, axes=F, box=F, main = "Nightlights data in Bangladesh", ccol=cividis(50))
 
 # Create a high quality image 
 png(filename="maps/nightlights_BGD.png", res=400, width=2000, height=1500)
 plot(nightlights.raster.processed, box=F, axes=F, main = "Nightlights data in Bangladesh", col=cividis(50))
 dev.off()
+
+# First create a colour palette - let's go with viridis, and supply the values of our raster into domain
+
+display.brewer.pal(n = 9, name = 'YlOrRd')
+
+# Hexadecimal color specification 
+brewer.pal(n = 9, name = 'YlOrRd')
+
+# Set colour palette 
+pal2 <- colorNumeric(c("#1A1A1A", "#FD8D3C", "#FED976", "#FFEDA0", "#FFFFCC"), values(nightlights.raster.processed),
+  na.color = "transparent")
+
+
+# Create an interactive leaflet map
+map_night <- leaflet() %>%
+ addProviderTiles(providers$CartoDB.Positron) %>%
+  addRasterImage(nightlights.raster.processed,  colors = pal2, opacity=1, project = FALSE)%>%
+  addLegend(pal = pal2, values = values(nightlights.raster.processed), title = "Nightlights intensity")
+
+# Let's have a look
+map_night
+
+# Save map as widget
+saveWidget(map_night, file="html widgets/BGD_nightlights.html")
+
 ```
 
 The visualisation, though a little difficult to see in R's standard plot resolution, shows that urban areas such as Dhaka appear to have a higher radiance of nightlights.
