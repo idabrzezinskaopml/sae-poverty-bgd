@@ -328,14 +328,14 @@ We will be working with the following data sets:
 ### Base layers
 
 | Geo-spatial file name             | Description                                                          | Year | Link to download                                                                                                               |
-|:------------|:---------------|:------------|:-------------------------------|
+|:--------------|:--------------|:--------------|:--------------------------|
 | bgd_level0_100m_2000_2020.tif     | WorldPop Administrative Level 0 mastergrid base layer for Bangladesh | 2020 | [World Pop Hub - National boundaries](https://www.worldpop.org/geodata/summary?id=24282)                                       |
 | bgd_admbnda_adm3_bbs_20201113.shp | Administrative Level 3 (Upazila) Units in Bangladesh                 | 2015 | [Bangladesh - Subnational Administrative Boundaries - Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-bgd) |
 
 ### Geo-spatial data sets to be harmonised
 
 |                                                                             |                                                                              |      |                                                                                                                                                                                                                                                                                                  |
-|------------|------------|:-----------|--------------------------------------|
+|--------------|--------------|:-------------|-------------------------------|
 | **Geo-spatial file name**                                                   | Description                                                                  | Year | Link to download                                                                                                                                                                                                                                                                                 |
 | SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif | VIIRS night-time lights (global)                                             | 2015 | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/#v1)                                                                                                                                                                                                                            |
 | 2015_accessibility_to_cities_v1.0.tif                                       | MAP travel time to high-density urban centres (global)                       | 2015 | [Malaria Atlas - Accessibility to Cities](https://data.malariaatlas.org/maps?layers=Accessibility:201501_Global_Travel_Time_to_Cities,Malaria:202206_Global_Pf_Parasite_Rate)                                                                                                                    |
@@ -352,7 +352,7 @@ We will be working with the following data sets:
 ### WorldPop harmonised geo-spatial data sets
 
 |                                           |                                                                         |           |                                                                |
-|---------------|-----------------------|---------------|--------------------|
+|-----------------|---------------------|-----------------|------------------|
 | **Geo-spatial File Name**                 | **Description**                                                         | **Year**  | **Link to Download**                                           |
 | bgd_srtm_topo_100m.tif                    | SRTM topography in BGD                                                  | 2000      | [World Pop](https://www.worldpop.org/project/categories?id=14) |
 | bgd_srtm_slope_100m.tif                   | SRTM slope (derivative of topography) in BGD                            | 2000      |                                                                |
@@ -388,13 +388,14 @@ library("haven")          # opening stata files
 library("gsubfn")         # string operations
 library("viridis")        # colour palette for data visualisations
 library("rgdal")          # RGDAL functions
-library("sp")             # spatial objects in R
+library("sp")             # Spatial Points vector data
 library("plyr")           # Data wrangling
 library("dplyr")          # Data wrangling
 library("readr")          # read rectangular data
 library("leaflet")        # Interactive maps
 library("htmlwidgets")    # HTML widgets
 library("scales")
+library("exactextractr")
 ```
 
 ### Step 1 - Load all data sets
@@ -675,6 +676,7 @@ Now let's visualise our results! In the code chunk below, I'll present three way
 
 ## 1. Simple plot ##
 
+version
 # Plot results - with no bounding box or axes, using the viridis colour palette, and adding a main plot title
 plot(matlas.processed[[1]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Travel Time to Cities")
 plot(matlas.processed[[2]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Motorised Travel Time to Healthcare Facilities")
@@ -810,7 +812,7 @@ pal2 <- colorNumeric(c("#1A1A1A", "#FD8D3C", "#FED976", "#FFEDA0", "#FFFFCC"), v
 # Create an interactive leaflet map
 map_night <- leaflet() %>%
  addProviderTiles(providers$CartoDB.Positron) %>%
-  addRasterImage(nightlights.raster.processed,  colors = pal2, opacity=1)%>%
+  addRasterImage(nightlights.raster.processed,  colors = pal2, opacity=0.9)%>%
   addLegend(pal = pal2, values = values(nightlights.raster.processed), title = "Nightlights intensity")
 
 # Let's have a look
@@ -847,7 +849,9 @@ plot(worldpop.rasters[[11]], box = F, axes = F, main = "Distance to the closest 
 
 ### Step 6 - Convert shapefile to a raster
 
-Now, we have all the raster images with geo-spatial data that we will use in poverty estimation: `matlas.processed`, `fblist.processed`, `nightlights.raster.processed`, and `worldpop.rasters`. The next step is to calculate zonal statistics (min, max, mean, sd, etc.) for each upazila. For example: what is the mean distance to the closest road for each upazila? However, before we can do that - we need a file that will allocate each pixel in the raster data to the appropriate upazila. That is, we need to use the shapefile which contains administrative boundaries of upazilas and convert it to a raster of the same spatial resolution, extent, and CRS as the base layer. This newly created raster will assign the correct administrative upazila code to each pixel - and so, will allow us to assign geo-spatial information to the upazila.
+Now, we have all the raster images with geo-spatial data that we will use in poverty estimation: `matlas.processed`, `fblist.processed`, `nightlights.raster.processed`, and `worldpop.rasters`. These rasters are essentially collections of pixels within Banglafdesh and each pixel has some information associated with it (for example, population density of women). However, now we would like to know which upazila each of these pixels belongs to, so that we can obtain zonal statistics (min, max, mean, sd, etc.). For example: what is the mean nightlights intensity for each upazila?
+
+Before we can do that - we need a file that will allocate each pixel in the raster data to the appropriate upazila. That is, we need to use the shapefile which contains administrative boundaries of upazilas and convert it to a raster of the same spatial resolution, extent, and CRS as the base layer. This newly created raster will assign the correct administrative upazila code to each pixel - and so, will allow us to assign geo-spatial information to the upazila.
 
 First, we want to keep admin codes as numerics. We will create a new column in the shapefile data that will subtract "BD" from the upazila code. So, instead of "BD552769", we will keep simply "552769". This is now saved in the `adm3_integer` column. Next, we will create an empty raster object from scratch and assign the extent, dimensions, and CRS of the base layer. Then, using the `rasterize` function, we will transform values of the admin 3 codes from the shapefile into each pixel of the raster object. A simple plot of the resulting `raster_admin3` shows that values have been assigned to each pixel.
 
@@ -881,6 +885,12 @@ plot(raster_admin3, box=F, axes=F, legend=F)
 ```
 
 ### Step 7 - Calculation of zonal statistics
+
+This brings us to our final step - calculating zonal statistics, i.e. the values of min, max, mean, sd etc. of all the geo-spatial datasets at upazila level, which will serve as inputs into poverty estimation in Section B. For this, we will use our harmonised rasters from steps 2-5: `matlas.processed`, `fblist.processed`, `nightlights.raster.processed`, and `worldpop.rasters`, as well as a raster that assigns upazila codes to each pixel, raster_admin3, which we obtained from our shapefile in step 6.
+
+We begin by putting all of our rasters into one list, full.raster.list and creating a stack of rasters called raster.stack, which is essentially a collection of rasters with the same extent and spatial resolution that can be stored in one file. You can think of those layers as being "stacked" on top of each other. This format will make it easier to calculate zonal statistics as we only have to supply one object to the function (as opposed to doing it separately for 24 raster layers).
+
+Now we can calculate our zonal statistics: mean, minimum value, maximum value, sum, standard deviation, and the number of observations. Supplying our raster.stack with all geo-spatial data and raster_admin3, which contains upazila boundaries in the zonal function will calculate all the statistics of interest. We will save those in a data frame format (which should be fairly familiar!), with column names indicating the zonal statistic for each geo-spatial layer. We will combine all statistics in a single data frame zonal.stats.all.
 
 ```{r}
 # Make a list with all the rasters 
@@ -924,14 +934,14 @@ colnames_sum <- colnames(zonal.stats.sum)
 colnames_sum <- paste(colnames_sum, "sum", sep="_")
 colnames(zonal.stats.sum)[2:28] <- colnames_sum[2:28]
 
-# SD
+# SD (standard deviation)
 zonal.stats.sd <- zonal(raster.stack, raster_admin3, fun='sd', digits=6, na.rm=TRUE)
 zonal.stats.sd <- as.data.frame(zonal.stats.sd)
 colnames_sd <- colnames(zonal.stats.sd)
 colnames_sd <- paste(colnames_sd, "sd", sep="_")
 colnames(zonal.stats.sd)[2:28] <- colnames_sd[2:28]
 
-# Count
+# Count (number of observations)
 zonal.stats.count <- zonal(raster.stack, raster_admin3, fun='count', digits=6, na.rm=TRUE)
 zonal.stats.count <- as.data.frame(zonal.stats.count)
 colnames_count <- colnames(zonal.stats.count)
@@ -954,12 +964,10 @@ colnames(zonal.stats.all)[1] <- "upazila.code"
 save(zonal.stats.all, file = "C:/Users/idabr/OneDrive - Oxford Policy Management Limited/EMDI SAE/Geo-spatial Bangladesh data/BGD.zonalstats.RData")
 ```
 
-Save my Rdata
+Test: using Chris Lloyd's method and the `exactextractr` package
 
 ```{r}
-# Save the RData file 
-save.image("C:/Users/idabr/OneDrive - Oxford Policy Management Limited/EMDI SAE/Geo-spatial Bangladesh data/Quarto github workspace.RData")
-
+upazila <- cbind(raster.stack, exact_extract(raster.stack, shapefile.zone.plot, c('min', 'max', 'mean', 'sum', 'stdev', 'count')))
 ```
 
 ## 4. Caveats, problems, things to look out for
