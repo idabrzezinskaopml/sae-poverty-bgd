@@ -7,18 +7,20 @@ editor: visual
 
 # Introduction
 
-Nick - you can paste your introduction here.
+Nick - you can paste your introduction here
 
-Paul is trying something.
+@PJ *- Ida - should this not be a specific introduction to this section of the guide? I think that's the general comment that we need an overall structure within which each of the sections fall. Each section can have it's own intro.*
 
-# Section A: Geo-spatial
+# Section A: Producing geo-spatial covariates
 
 ::: callout-note
 ## Glossary
 
+@PJ *- Ida, some of these explanations use themselves technical terms that are not straightforward to understand. So for example: "raster data refers to any gridded data..." I am unsure that explains very much? I think we should try - where possible - to explain things in simpler terms. For example: "raster data is data where each observation (row in a table) refers to a specific geographic location or area. The raster is the pattern of locations that together - as a grid - cover a geographic area". I hope that makes sense. Check that the other explanations are similarly clear.*
+
 **Raster data** refers to any gridded (or pixelated) data where each pixel represents a specific geographical location. The value can be continuous (e.g. temperature) or categorical (e.g. land use).
 
-**Vector data** represents structures on the Earth's surface that are defined by discrete locations (x,y) called vertices. Depending on how the vertices (x,y) are oragnised, we can divide vector data types into: **points, lines, and polygons**.
+**Vector data** represents structures on the Earth's surface that are defined by discrete locations (x,y) called vertices. Depending on how the vertices (x,y) are organised, we can divide vector data types into: **points, lines, and polygons**.
 
 **Extent**: the maximum and minimum values of longitude and latitude that define the boundaries of our spatial structure.
 
@@ -28,20 +30,24 @@ Paul is trying something.
 
 **Geographic Information System (GIS)** - a system that creates, manages, analyses, and maps data. GIS connects data to a map, integrating location data (where things are), with all types of descriptive information (what things are like there).
 
-**Spatial resolution** of a raster describes the area that each pixel covers. For example, a 1km x 1km spatial resolution will be a grid where each grid cell covers and area of 1km x 1km. The smaller the area covered, the higher the spatial resolution (i.e. the more we "zoom in").
+**Spatial resolution** of a raster describes the area that each pixel (or observation) covers. For example, a 1km x 1km spatial resolution will be a grid where each grid cell covers and area of 1km x 1km. The smaller the area covered, the higher the spatial resolution (i.e. the more we "zoom in").
 
-**Nearest neighbour interpolation -** a method for resampling, i.e. changing the spatial resolution of rasters used in remote sensing, where each "corrected" pixel is assigned a data value of the "uncorrected" pixel that is closest to it in terms of coordinate location.
+**Nearest neighbour interpolation -** a method for resampling, i.e. changing the spatial resolution of rasters used in remote sensing, where each "corrected" pixel is assigned a data value of the "uncorrected" pixel that is closest to it in terms of coordinate location. @PJ: *Sorry this one is very difficult to get.*
 
-**Resampling using the "sum" algorithm** - a method for resampling, i.e. changing the spatial resolution of a raster used in remote sensing. This is considered the appropriate method when aggregating high-resolution *demographic* data to a coarser grid.
+**Resampling using the "sum" algorithm** - a method for resampling, i.e. changing the spatial resolution of a raster used in remote sensing. This is considered the appropriate method when aggregating high-resolution *demographic* data to a coarser grid. @PJ: *As above. Not sure if we want to include the two last ones? They are almost methods that need to be explained in the main text.*
 :::
 
 ## 1. Introduction
 
 Section A is our first step into poverty modelling in Bangladesh. Here, we will obtain and transform various geo-spatial datasets (such as accessiblity, nightlights intensity, demographic maps, and topography) into predictors of poverty rates. Geo-spatial datasets can be important inputs in poverty estimation, particularly in context where other data such as census is unavailable and household survey samples are too small to produce reliable statistics at a disaggregated zonal level. Geo-spatial data has many advantages: it is open source, has wide coverage, high spatial resolution, and is frequently updated (in theory you could have a dynamic poverty map which updates itself as new geo-spatial data becomes available!).
 
-The main goal of Section A will be to produce a "**harmonised geo-spatial covariate raster for poverty modelling**". In other words, layers of geo-spatial information in a raster format (a collection of pixels) for each upazila that we can use to predict poverty. Imagine that each upazila is divided into pixels. Each pixel will contain some geo-spatial information: slope, travel time to healthcare facilities, distance to nearest water source etc. Harmonising them means that all of our geo-spatial layers are in the same format: CRS, extent, spatial resolution, and shape. Why is this necessary? Short answer: so that each pixel with values of geo-spatial data describes the same location across all our geo-spatial datasets.
+@pj: *Ida - I am not sure if all of this is correct. Not all geospatial data is necessarily open source, right? Also not all of it frequently updated. Survey data with geolocation could also be geo-spatial data. See your explanation in section 2.1. So I think we need to change some terminology here?*
+
+The main goal of Section A will be to produce a "**harmonised geo-spatial covariate raster for poverty modelling**". In other words, layers of geo-spatial information in a raster format (a collection of pixels) for each upazila (\@PJ: *Need to explain what an upazila is.*) that we can use to predict poverty. Imagine that each upazila is divided into pixels. Each pixel will contain some geo-spatial information: slope, travel time to healthcare facilities, distance to nearest water source etc. Harmonising them means that all of our geo-spatial layers are in the same format: CRS, extent, spatial resolution, and shape. Why is this necessary? Short answer: so that each pixel with values of geo-spatial data describes the same location across all our geo-spatial datasets.
 
 Long anwer: In order to predict poverty rates for upazilas, we need to know some basic statistics (mean, max, min, sd etc.) for the values of our geo-spatial variables at upazila level. For example: what is the mean population density of women and nightlights intensity in each upazila in Bangladesh? We would only be able to answer this question if our layers showing population density for women and nightlights were aligned: they had the same CRS (projection), extent (maximum and minimum values of geographical coordinates), spatial resolution (size of pixels), and shape of Bangladesh. That is, we need comparable pixels with data values that can be assigned to upazilas.
+
+@PJ - *I really think some of the above could use some visuals. I can see you have the overarching steps in a visual below - but I also think that some of the reasons for why we need this can be visualised using graphs.*
 
 Finally, we will need a shapefile that defines the boundaries of each administrative zone and turn it into a raster (again, a collection of pixels) - so that we can assign each pixel with geo-spatial information to the right upazila.
 
@@ -84,11 +90,11 @@ Let us start with the two most burning questions: What is geo-spatial data and w
 
 #### Traditional surveys
 
-Recall that geo-spatial data is simply a set of data values that are indexed to a geographical location on Earth. In that sense, traditional census or surveys are sources of geo-spatial data as long as they contain information on administrative units, GPS location, or any other geographical identifiers. Data coming from traditional surveys can even be more precise, for instance if we are interesetd in measuring a building and its properties.
+Recall that geo-spatial data is simply a set of data values that are indexed to a geographical location on Earth. In that sense, traditional census or surveys are sources of geo-spatial data as long as they contain information on administrative units, GPS location, or any other geographical identifiers. Data coming from traditional surveys can even be more precise, for instance if we are interested in measuring a building and its properties.
 
 #### Remote sensing
 
-Increasingly, **remote sensing** data collection is turning out to be a more efficient method than surveys. This includes satellite imagery and aircraft sensors that orbit the Earth and collect data continuously, at a high spatial resolution, and globally, including places that would be hard to reach with a survey (say the middle of the ocean or conflict-affected areas). In fact, due to the advantages of remote sensing data collection - space is becoming a crowded place, and increasingly more so in the last couple of years. Figure X below shows the time trend of the annual number of objects launched into space, which explodes upwards after around 2015. As of 2022, there were 6,905 active satellites in space. In this workflow, we will be working exclusively with remote sensing data, but let us briefly consider other sources of geo-spatial information.
+Increasingly, **remote sensing** data collection is turning out to be a very efficient way of collection geo-spatial data. This includes satellite imagery and aircraft sensors that orbit the Earth and collect data continuously, at a high spatial resolution, and globally, including places that would be hard to reach with a survey (say the middle of the ocean or conflict-affected areas). In fact, due to the advantages of remote sensing data collection - space is becoming a crowded place, and increasingly more so in the last couple of years. Figure X below shows the time trend of the annual number of objects launched into space, which explodes upwards after around 2015. As of 2022, there were 6,905 active satellites in space. In this workflow, we will be working exclusively with remote sensing data, but let us briefly consider other sources of geo-spatial information. @PJ- *Ida are you sure about this last sentence? Is the demographic data remote-sensing data?*
 
 ![](images/Objects%20launched%20into%20space.png){width="573"}
 
@@ -104,7 +110,7 @@ Basic services provided by cell phone operators are routed by satellites, provid
 
 #### Online data
 
-Online data is broad and includes all data shared online purposefully, including Wikipedia, social media, online articles etc. Location and mobility tracking via social media can be another source of geographical information. App-based mobile phone location data is actually often of higher spatial resolution than that coming from cell phone data operators and is increasingly being used in mobility studies. In fact, we will be using high-resolution population density estimates from Meta (previously Facebook) in our poverty modelling exercise.
+Online data is broad and includes all data shared online purposefully, including Wikipedia, social media, online articles etc. Location and mobility tracking via social media can be another source of geographical information. App-based mobile phone location data is actually often of higher spatial resolution than that coming from cell phone data operators and is increasingly being used in mobility studies. In fact, we will be using high-resolution population density estimates from Meta (previously Facebook) in our poverty modelling exercise. @PJ: *are these last part of the covariates here?*
 
 ### 2.2. Data structures
 
@@ -118,11 +124,11 @@ An important note on the naming conventions and structures of geographical coord
 
 #### 2.2.1. Raster data
 
-**Raster data** refers to any gridded (or pixelated) data where each pixel represents a specific geographical location. The value can be continuous (e.g. temperature) or categorical (e.g. land use). If pixels sound familiar, it's because they are - in fact, this is how every digital image is represented. The only difference is that a raster additionally includes spatial information that connects data from the image to a particular location. The location is defined by the following attributes (these are important attributes to inspect when you first open your raster):
+**Raster data** refers to any gridded (or pixelated) data where each pixel represents a specific geographical location. @PJ - *see comments above on this explanation.* The value can be continuous (e.g. temperature) or categorical (e.g. land use). If pixels sound familiar, it's because they are - in fact, this is how every digital image is represented. The only difference is that a raster additionally includes spatial information that connects data from the image to a particular location. The location is defined by the following attributes (these are important attributes to inspect when you first open your raster):
 
 -   Extent
 
--   Cell size (spatial resoluton or size of each pixel)
+-   Cell size (spatial resolution or size of each pixel)
 
 -   The number of rows and columns
 
@@ -150,17 +156,17 @@ To illustrate this concept, below is a vector data set with lines showing the ro
 
 Source: [Humanitarian Data Exchange](https://data.humdata.org/dataset/hotosm_gha_roads)
 
-Vector data comes in many formats, but we will be working with the (very common) Shapefile format, which has a .shp extension. More specifically, we will download a shapefile containing multipolygons that define adminsitrative boundaries of upazilas (admin level 3) in Bangladesh. A shapefile stores the coordinates of vertices, as well as other metadata:
+Vector data comes in many formats, but we will be working with the (very common) Shapefile format, which has a .shp extension. More specifically, we will download a shapefile containing multipolygons @PJ - *Ida you explained polygons but not multipolygons. Worth explaining them as well.* that define administrative boundaries of upazilas (admin level 3) in Bangladesh. A shapefile stores the coordinates of vertices, as well as other metadata:
 
 -   Extent
 
 -   Object type - whether the shapefile contains points, lines, or polygons.
 
--   Coordinate Referenec System (CRS)
+-   Coordinate Reference System (CRS)
 
 -   Other attributes - e.g. in our case the name of the upazila, its administrative code, area covered etc.
 
-Could have a short quiz here showing different images and asking the audience whether this is a raster or a vector dataset.
+Could have a short quiz here showing different images and asking the audience whether this is a raster or a vector dataset. @PJ - *yes, good idea.*
 
 ### 2.3. Layering geo-spatial data sets
 
@@ -176,11 +182,11 @@ Source: [National Geographic](https://education.nationalgeographic.org/resource/
 Make sure that the CRS is the same for all of your objects before layering. The most standard CRS is the World Geodetic System 1984 (WGS 84), but you may encounter other ones when working with spatial data for specific regions of the world.
 :::
 
-Now, let's see an example of visualising multiple raster layers from our project work under [Data & Evidence to End Extreme Poverty (DEEP)](https://povertyevidence.org/). In this case, we wanted to map the spatial distribution of climatic risks in Nigeria, looking at droughts and floods. Figure XX below shows the worst drought (defined as Standardized Precipitation Evapotranspiration Index or SPEI below -1.5) and all flooded areas in the period 2010-2020 in Nigeria, on top of an Open Street Map background. Drought is captured by a continuous variable for a range of values of SPEI, while flood is a categorical variable (i.e. flood or no flood), with flooded areas shown in blue. We can see that the extent of these layers differs, i.e. drought is only defined within Nigeria (including bordering grid cells), while flood data extends beyond the borders of Nigeria and considers an entire river system, which is not necessarily bound by national borders.
+Now, let's see an example of visualising multiple raster layers from our project work under [Data & Evidence to End Extreme Poverty (DEEP)](https://povertyevidence.org/). In this case, we wanted to map the spatial distribution of climatic risks in Nigeria, looking at droughts and floods. Figure XX below shows the worst drought (defined as Standardized Precipitation Evapotranspiration Index or SPEI below -1.5) and all flooded areas in the period 2010-2020 in Nigeria, on top of an Open Street Map background. Drought is captured by a continuous variable for a range of values of SPEI (large pixels from yellow to red), while flood is a categorical variable (i.e. flood or no flood), with flooded areas shown in blue. We can see that the extent of these layers differs, i.e. drought is only defined within Nigeria (including bordering grid cells), while flood data extends beyond the borders of Nigeria and considers an entire river system, which is not necessarily bound by national borders.
 
 ![Rasters showing all floods and the worst droughts in Nigeria between 2010-2020](images/Nigeria%20flood%20drought%20.png)
 
-The two layers (drought and flood) also have different spatial resolutions. Here, drought data is of a lower spatial resolution, i.e. it comes up as big pixels of around 0.5 degrees (or \~30km), while flood data is extremely high resolution, with each pixel the size of \~250m x 250m, coming from the NASA MODIS satellite. Figure XX below shows a zoom into two grid cells of drought data, which contain numerous grid cells with flood data. The higher the spatial resolution, the smaller your grid cells!
+The two layers (drought and flood) also have different spatial resolutions. Here, drought data is of a lower spatial resolution, i.e. it comes up as big pixels of around 0.5 degrees (or \~30km x 30km @PJ *- Ida check my addition is correct.*), while flood data is extremely high resolution, with each pixel the size of \~250m x 250m, coming from the NASA MODIS satellite. Figure XX below shows a zoom into two grid cells of drought data, which contain numerous grid cells with flood data. The higher the spatial resolution, the smaller your grid cells!
 
 ![Zoom into pixels showing floods and droughts in Nigeria](images/Pixel%20zoom%20in%20.png)
 
@@ -188,7 +194,7 @@ The two layers (drought and flood) also have different spatial resolutions. Here
 
 The previous section introduced the concept of working with multiple layers of geo-spatial information. In our example, the two layers, despite being displayed on top of each other, had very different attributes: spatial resolution, cell sizes, extent . However, there are cases, as in the poverty modelling exercise we are about to do, where we want to "harmonise" our raster objects, i.e. make sure all the attributes (CRS, extent, spatial resolution, cell size) are the same when rasters are overlaid on top of each other.
 
-Let's consider our problem at hand again: **We want to compute zonal poverty statistics at administrative level 3 (upazila) level in Bangladesh.** We will do so by using statistical modelling and a number of remote sensed covariates as our predictors. For this, we need some basic statistics (mean, min, max, standard deviation, count etc.) that describe our geo-spatial information for each upazila. For example, what is the mean Travel Time to Healthcare Facilities (in minutes) in the upazila of Abador? Or, what is the median nightlights intensity in that upazila? While R is smart enough to compute those statistics for us automatically, we need to provide it with a nicely harmonised set of rasters. We will use a "base layer", which contains all the attributes we are interested in, and harmonise all other remote sensing covariates to our base layer. That is: we will match the CRS, extent, spatial resolution, cell size of the base layer.
+Let's consider our problem at hand again: **We want to compute zonal poverty statistics at administrative level 3 (upazila) level in Bangladesh.** @PJ *- Ida - does the 'zonal' need to be here? What does it actually mean?* We will do so by using statistical modelling and a number of remote sensed covariates as our predictors. For this, we need some basic statistics (mean, min, max, standard deviation, count etc.) that describe geo-spatial information for each upazila. For example, what is the mean Travel Time to Healthcare Facilities (in minutes) in the upazila of Abador? Or, what is the median nightlights intensity in that upazila? While R is smart enough to compute those statistics for us automatically, we need to provide it with a nicely harmonised set of rasters. We will use a "base layer", which contains all the attributes we are interested in, and harmonise all other remote sensing covariates to our base layer. That is: we will match the CRS, extent, spatial resolution, cell size of all our data to the one of the base layer.
 
 With that in mind, I will introduce a few ways in which we will manipulate spatial data. This is a useful skill to have as we will soon discover that raw open source data can be a little messy and you may need to implement some of these steps to make sense of your data before any meaningful analysis.
 
@@ -199,24 +205,28 @@ With that in mind, I will introduce a few ways in which we will manipulate spati
 ::: callout-caution
 ## Caution
 
-A note of caution on missing values in geo-spatial data. As with every data type, the treatment of missing values can be a source of philosophical discussions and should always be determined depending on the context and the specific problem at hand. The user should always ask themselves: can a missing value be interpreted as a zero or do we simply not have enough information to conclude? If it is a zero, missing values should be recoded accordingly.
+A note of caution on missing values in geo-spatial data. As with every data type, the treatment of missing values can be a source of philosophical discussions and should always be determined depending on the context and the specific problem at hand. The user should always ask themselves: can a missing value be interpreted as a zero or do we simply not have enough information to conclude? If it is a zero, missing values can be recoded accordingly. Be careful with this. If in doubt, always consult an expert.
 :::
 
 4.  **Masking** - cutting the exact "shape" of a raster layer. This is different from cropping, which would leave us with a chunky box that contains Bangladesh, but also some areas between the maximum and minimum values that fall outside of Bangladesh. We can use the mask function to examine only the country boundaries.
 
-These concepts may seem a little abstract for now, so let us consider visually what each of these processes will entail. Let's take the example of processing geo-spatial data on nightlights intensity for Bangladesh - a process we will be implementing in Step 5 of Section 3. Night lights intensity has been widely used in literature as a proxy for income and will be one of our predictors of poverty. Figure XX shows a TIFF file with the aerial shot of nightlights intensity in South-East Asia as seen from space. We can see that urban areas and areas with higher density of economic activity appear more luminous. We will use the functions described above to manipulate this TIFF file and transform it into a raster layer for Bangladesh with codified values of radiance per pixel (this is a measure of nightlights intensity).
+These concepts may seem a little abstract for now, so let us consider visually what each of these processes will entail. Let's take the example of processing geo-spatial data on nightlights intensity for Bangladesh - a process we will be implementing in Step 5 of Section 3. Night lights intensity has been widely used in literature as a proxy for income and will be one of our predictors of poverty. Figure XX shows a TIFF file with the aerial shot of nightlights intensity in South-East Asia as seen from space. We can see that urban areas and areas with higher density of economic activity appear more luminous. We will use the functions described above to manipulate this TIFF file and transform it into a raster layer for Bangladesh with codified values of radiance per pixel (this is a measure of nightlights intensity). @PJ *- Ida - what's the weird very high intensity blob at the bottom right hand side in the picture? Shouldn't that just be dark sea?*
 
 ![](images/Nightlights%20data%20-01.png)
 
 Figure XX below shows the processing of data on nightlights intensity. The left hand side is what you will see if you simply load the above TIFF file into your R environment, turn it into a raster, and plot - in other words, not much. Although it is a little difficult to see, the original raster is showing values of nightlights intensity for the entire South East Asia region at the orginal spatial resolution of around \~450m. First, we are interested in analysing just Bangladesh, rather than the entirely of South East Asia (not least because TIFF files can be quite heavy and maintaining unnecessarily large raster objects slows down a lot of the computation). We will "crop" our raster object to the Bangladesh base layer, i.e. we will change the extent to that of Bangladesh. Now, our raster object changed dimensions. It is defined by the maximum and minimum values of longitude and latitude in Bangladesh.
 
-The next step in the process is to resample the raster, i.e. change the spatial resolution to \~100m to match that of our base layer. Going from a lower to a higher spatial resolution is called disaggregation. If we zoomed into the image under "resample", we would see more smaller pixels appear than previously. Finally, we want to view the "shape" fo Bangladesh, rather than a rectangular box bound by its extent. For this purpose, we "mask" our raster layer with nightlights to the base layer - and we finally achieve a nicely formatted raster that resembles Bangladesh!
+The next step in the process is to resample the raster, i.e. change the spatial resolution to \~100m to match that of our base layer. Going from a lower to a higher spatial resolution is called disaggregation. If we zoomed into the image under "resample", we would see more smaller pixels appear than previously. Finally, we want to view the "shape" of Bangladesh, rather than a rectangular box bound by its extent. For this purpose, we "mask" our raster layer with nightlights to the base layer - and we finally achieve a nicely formatted raster that resembles Bangladesh!
 
-![](images/Nightlights%20data%20processing.png)
+@PJ: *Ida, you mention this, but it is very difficult to see what is going on in the right three rectangles. To my eye they basically are dark blue, almost uniformly. It would be good if we could do something with this so that it is easier to see variation.*
+
+![](images/Nightlights%20data%20processing.png){width="803"}
 
 Note that the nightlights raster did not contain missing values and any location with no radiance was coded as having a value of zero nightlights intensity. There are cases, however, where we should be more careful about the interpretation of missing values vs. zeros. In our next example, we will go through the processing of high-resolution demographic maps from Meta, specifically the population density of youth aged 15-24 - a process we will be implementing in Step 4 of Section 3. The left hand side of Figure XX below shows the result from simply plotting the raster from the original TIFF file. We can see a few colour-coded values of population density, but most of the raster is empty (NAs shown in white). Here, the user should consider: are the values missing because there are no people in this location? Or is it because we haven't collected data on those locations? In our case, the documentation tells us that missing values are equivalent to there being no people aged 15-24. After recoding NA values as 0s, we see that the raster layer is now populated with values (zeros shown in grey).
 
 As in the example of nightlights, we want to crop our raster so that it has the extent of Bangladesh. Afterwards, we will change the spatial resolution to \~100m. Note that the population density data is originally of a higher spatial resolution (of around \~30m), so in this case we are resampling to a coarser grid. This process is called aggregation. Since we are deploying the "sum" algorithm, we can observe that the legend beside the plot has changed - we now have larger density of people per pixel (since our pixels just got bigger as a result of aggregation). The final step is to mask our raster with demographic data to the base layer - and we end up with a nice shape of Bangladesh.
+
+@PJ: *Ida as before it is very hard to see what is going on here, can we do something about that? The pixels I think are very small.*
 
 ![](images/FB%20data%20processing.png)
 
@@ -226,7 +236,7 @@ These are exactly the processing steps that we will be carrying out in our next 
 
 Given that our entire workflow will be carried out in R to make it accessible, open source, and user-friendly - we will introduce some common spatial objects in R. There are numerous packages that allow you to work with spatial data. In fact, packages are very often retired and new ones are created to replace them. We will be relying mostly on:
 
-1.  The `sp` and `sf` packages for vector data
+1.  The `sp` and `sf` packages for vector data @PJ *- Ida, add hyperlinks to these packages.*
 2.  The `raster` package for raster data
 3.  The `rgdal` package for manipulation of geo-spatial data using the GDAL library.
 
@@ -253,11 +263,13 @@ The `sf` package implements [Simple Features](https://en.wikipedia.org/wiki/Simp
 
 Source: [Wikipedia](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry)
 
-`sf` objects are organised into three features (see Figure XX below):
+`sf` objects are organised into three features (see Figure XX below): @PJ: *Ida the below output lists "100 features" in the first row, so this is slightly confusing.*
 
 1.  `sf`, the data frame with feature attributes (for example, administrative codes) and feature geometries (green box).
 2.  `sfc,` the simple feature geometry list-column (red box).
 3.  `sfg`, the simple feature geometry (blue box). In this case, a multipolygon.
+
+@PJ *- Ida I find this explanation slightly confusing. It is not clear to me at least what these three features in the end are. Why do they matter?*
 
 ![](images/multipolygon%20feature%20.png)
 
@@ -279,7 +291,7 @@ r <- raster(ncol=10, nrow = 10, xmx=-116,xmn=-126,ymn=42,ymx=46)
 r
 ```
 
-Note that just specifying the number of rows and column and extent was sufficient to create a `RasterLayer` object. The number of rows and columns defined our spatial resolution of the raster. In addition, the standard CRS `+proj=longlat +datum=WGS84 +no_defs` was automatically assigned. At the moment, our raster is empty, i.e. it is simply a grid with no data values. Let us generate some data to populate the raster by assigning random values from the unit distribution to each grid cell.
+Note that just specifying the number of rows and columns and extent was sufficient to create a `RasterLayer` object. The number of rows and columns defined our spatial resolution of the raster. In addition, the standard CRS `+proj=longlat +datum=WGS84 +no_defs` was automatically assigned. At the moment, our raster is empty, i.e. it is simply a grid with no data values. Let us generate some data to populate the raster by assigning random values from the unit distribution to each grid cell.
 
 ```{r}
 r[] <- runif(n=ncell(r))
@@ -304,12 +316,12 @@ I would recommend not rearranging the files across folders. Keeping this structu
 ::: callout-warning
 ## Warning
 
-Just a heads up that the files we will be working with are very large. The .zip file itself is is 5GB, while all the files after unzipping will take up around 34GB of space. Please make sure you have sufficient memory on your machine. If you are using an online storage solution, you might want to temporarily offload other files you are not currently using to the cloud.
+Just a heads up that the files we will be working with are very large. The .zip file itself is is 5GB, while all the files after unzipping will take up around 34GB of space. Please make sure you have sufficient memory on your machine. If you are using an online storage solution, you might want to temporarily offload other files you are not currently using to the cloud. @PJ *- Ida - you should specify how much memory at minimum is required for this.*
 :::
 
 ## 3. Applying this
 
-In Section 2 we covered key theoretical concepts in geo-spatial analysis, including the sources of such data, most common structures, data manipulation and types of spatial objects you might encounter in R. In this section we are going to apply this to a practical problem: **we will prepare the geo-spatial covariates (on accessibility, nightlights, topograhy, and demography) that will be used for poverty estimation in Section B**. Recall that there are two main types of geo-spatial data: vector and raster. We will primarily be working with raster data and performing what we will call a "harmonisation" - that is, bringing all the rasters to the same extent, shape, spatial resolution, and projection as the base raster layer. Let's begin with exploring the data sources we will use in this exercise.
+In Section 2 we covered key concepts in geo-spatial analysis, including the sources of such data, most common structures, data manipulation and types of spatial objects you might encounter in R. In this section we are going to apply this to a practical problem: **we will prepare the geo-spatial covariates (on accessibility, nightlights, topograhy, and demography) that will be used for poverty estimation in Section B**. Recall that there are two main types of geo-spatial data: vector and raster. We will primarily be working with raster data and performing what we will call a "harmonisation" - that is, bringing all the rasters to the same extent, shape, spatial resolution, and projection as the base raster layer. Let's begin with exploring the data sources we will use in this exercise.
 
 ### Data sources - Bangladesh
 
@@ -325,19 +337,21 @@ We will be working with the following data sets:
 
 5.  **Nightlights data** at \~450m spatial resolution with almost global coverage.
 
-6.  **World Pop** Pre-harmonised geo-spatial datasets: available for all countries. The datasets includes information on topography, slope, Open Street Map distance to closest road, waterway, and various land cover classes. Note that this data has already been harmonised to our base layer and hence will not require any processing in this script.
+6.  **World Pop** Pre-harmonised geo-spatial datasets: available for all countries. The datasets includes information on topography, slope, Open Street Map distance to closest road, waterway, and various land cover classes. @PJ *- Ida, explain what this means.* Note that this data has already been harmonised to our base layer and hence will not require any processing in this script.
+
+The below tables provide details on these data sets.
 
 ### Base layers
 
 | Geo-spatial file name             | Description                                                          | Year | Link to download                                                                                                               |
-|:--------------|:--------------|:--------------|:--------------------------|
+|:----------------|:----------------|:----------------|:--------------------|
 | bgd_level0_100m_2000_2020.tif     | WorldPop Administrative Level 0 mastergrid base layer for Bangladesh | 2020 | [World Pop Hub - National boundaries](https://www.worldpop.org/geodata/summary?id=24282)                                       |
 | bgd_admbnda_adm3_bbs_20201113.shp | Administrative Level 3 (Upazila) Units in Bangladesh                 | 2015 | [Bangladesh - Subnational Administrative Boundaries - Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-bgd) |
 
 ### Geo-spatial data sets to be harmonised
 
 |                                                                             |                                                                              |      |                                                                                                                                                                                                                                                                                                  |
-|--------------|--------------|:-------------|-------------------------------|
+|-----------------|-----------------|:----------------|----------------------|
 | **Geo-spatial file name**                                                   | Description                                                                  | Year | Link to download                                                                                                                                                                                                                                                                                 |
 | SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif | VIIRS night-time lights (global)                                             | 2015 | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/#v1)                                                                                                                                                                                                                            |
 | 2015_accessibility_to_cities_v1.0.tif                                       | MAP travel time to high-density urban centres (global)                       | 2015 | [Malaria Atlas - Accessibility to Cities](https://data.malariaatlas.org/maps?layers=Accessibility:201501_Global_Travel_Time_to_Cities,Malaria:202206_Global_Pf_Parasite_Rate)                                                                                                                    |
@@ -354,7 +368,7 @@ We will be working with the following data sets:
 ### WorldPop harmonised geo-spatial data sets
 
 |                                           |                                                                         |           |                                                                |
-|-----------------|---------------------|-----------------|------------------|
+|------------------|-------------------|------------------|------------------|
 | **Geo-spatial File Name**                 | **Description**                                                         | **Year**  | **Link to Download**                                           |
 | bgd_srtm_topo_100m.tif                    | SRTM topography in BGD                                                  | 2000      | [World Pop](https://www.worldpop.org/project/categories?id=14) |
 | bgd_srtm_slope_100m.tif                   | SRTM slope (derivative of topography) in BGD                            | 2000      |                                                                |
@@ -530,14 +544,14 @@ We now turn to Steps 2-5, which will process our raster layers of geo-spatial in
 
 ### Steps 2-5 - Write functions for automated processing of geo-spatial covariates
 
-Steps 2-5 all refer to the harmonisation of raster layers that conatin geo-spatial covariates. The goal is for all our datasets (accessibility, demographic maps, night lights) to have the same: extent, spatial resolution, and shape as the base layer. In some cases, we may need to additionally address missing values. A detailed description of Steps 2-5 can be found in Section 1.
+Steps 2-5 all refer to the harmonisation of raster layers that contain geo-spatial covariates. The goal is for all our datasets (accessibility, demographic maps, night lights) to have the same: extent, spatial resolution, and shape as the base layer. In some cases, we may need to additionally address missing values. A detailed description of Steps 2-5 can be found in Section 1.
 
 The reason that all steps are grouped together into one section is that all of those will be performed in a single automated function. We will write two functions, one for accessibility and nightlights data and the second one for demographic maps from Facebook. The only difference between them is the algorithm used for changing the spatial resolution of rasters.
 
 ::: callout-caution
 ## Caution
 
-There are many algorithms that can be used for changing the spatial resolution of a raster. For accessibility and nightlights data, we will use the nearest neighbour interpolation, where each "corrected" pixel is assigned a data value of the "uncorrected" pixel that is closest to it in terms of coordinate location. However, for harmonising demographic data that is of a higher spatial resolution than our base layer, the use of the "sum" algorithm is more appropriate. Otherwise we "lose people" in a downsample. To illustrate the issue, let's imagine we have 9 high resolution pixels (3x3). The sum algorithm will add up values from all those pixels when aggregating, while the nearest neighbour interpolation will select the value that falls closest to the "corrected" pixel, and not count any other ones.
+There are many algorithms that can be used for changing the spatial resolution of a raster. For accessibility and nightlights data, we will use the nearest neighbour interpolation, where each "corrected" pixel is assigned a data value of the "uncorrected" pixel that is closest to it in terms of coordinate location. @PJ- *Ida it is unclear what 'corrected' vs 'uncorrected' refers to here. Also unclear why the difference is chosen.* However, for harmonising demographic data that is of a higher spatial resolution than our base layer, the use of the "sum" algorithm is more appropriate. Otherwise we "lose people" in a downsample. To illustrate the issue, let's imagine we have 9 high resolution pixels (3x3). The sum algorithm will add up values from all those pixels when aggregating, while the nearest neighbour interpolation will select the value that falls closest to the "corrected" pixel, and not count any other ones.
 :::
 
 To automate the processing, we will write the first function for processing geo-spatial covariates and call it `geo_process`. We will use it for the Malaria Atlas accessibility and Nightlights data. It automatically executes the following steps:
