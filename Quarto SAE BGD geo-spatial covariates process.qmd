@@ -5,22 +5,14 @@ format: html
 editor: visual
 ---
 
-# Introduction
-
-Nick - you can paste your introduction here
-
-@PJ *- Ida - should this not be a specific introduction to this section of the guide? I think that's the general comment that we need an overall structure within which each of the sections fall. Each section can have it's own intro.*
-
 # Section A: Producing geo-spatial covariates
 
 ::: callout-note
 ## Glossary
 
-@PJ *- Ida, some of these explanations use themselves technical terms that are not straightforward to understand. So for example: "raster data refers to any gridded data..." I am unsure that explains very much? I think we should try - where possible - to explain things in simpler terms. For example: "raster data is data where each observation (row in a table) refers to a specific geographic location or area. The raster is the pattern of locations that together - as a grid - cover a geographic area". I hope that makes sense. Check that the other explanations are similarly clear.*
+**Raster data** is a collection of cells (or pixels) organised into rows and columns (called a grid), defined by its location in space. The raster is the pattern of locations that together - as a grid - cover a geographic area. Cells have values that carry information about those locations, such as temperature or elevation. Values can be continuous (e.g. a range of temperature values), or categorical (e.g. different categories of land use).
 
-**Raster data** refers to any gridded (or pixelated) data where each pixel represents a specific geographical location. The value can be continuous (e.g. temperature) or categorical (e.g. land use).
-
-**Vector data** represents structures on the Earth's surface that are defined by discrete locations (x,y) called vertices. Depending on how the vertices (x,y) are organised, we can divide vector data types into: **points, lines, and polygons**.
+**Vector data** represents structures on the Earth's surface that are defined by discrete locations (x,y) called vertices. Depending on how the vertices (x,y) are organised, we can divide vector data types into: **points, lines, and polygons**. Vector data is commonly used to represent structures such as: road networks, rivers, bridges, buildings, administrative areas.
 
 **Extent**: the maximum and minimum values of longitude and latitude that define the boundaries of our spatial structure.
 
@@ -32,18 +24,24 @@ Nick - you can paste your introduction here
 
 **Spatial resolution** of a raster describes the area that each pixel (or observation) covers. For example, a 1km x 1km spatial resolution will be a grid where each grid cell covers and area of 1km x 1km. The smaller the area covered, the higher the spatial resolution (i.e. the more we "zoom in").
 
-**Nearest neighbour interpolation -** a method for resampling, i.e. changing the spatial resolution of rasters used in remote sensing, where each "corrected" pixel is assigned a data value of the "uncorrected" pixel that is closest to it in terms of coordinate location. @PJ: *Sorry this one is very difficult to get.*
-
-**Resampling using the "sum" algorithm** - a method for resampling, i.e. changing the spatial resolution of a raster used in remote sensing. This is considered the appropriate method when aggregating high-resolution *demographic* data to a coarser grid. @PJ: *As above. Not sure if we want to include the two last ones? They are almost methods that need to be explained in the main text.*
+**Resampling** - changing the spatial resolution of raster data, i.e. the size of cells that give us information about a geographical area. If we move from a lower to a higher spatial resolution, our pixels (or cells) become smaller - so that we are able to see more granularity in the data. For instance, moving from a raster where each cell covers an area of 30km x 30km to a raster where each grid cell covers only 1km x 1km would mean resampling to a higher spatial resolution, with more density points in space that carry information. There are various algorithms for resampling. Some examples we will be using, such as neareast neighbour interpolation and the "sum" algorithm, are described in Section 3.
 :::
 
 ## 1. Introduction
 
-Section A is our first step into poverty modelling in Bangladesh. Here, we will obtain and transform various geo-spatial datasets (such as accessiblity, nightlights intensity, demographic maps, and topography) into predictors of poverty rates. Geo-spatial datasets can be important inputs in poverty estimation, particularly in context where other data such as census is unavailable and household survey samples are too small to produce reliable statistics at a disaggregated zonal level. Geo-spatial data has many advantages: it is open source, has wide coverage, high spatial resolution, and is frequently updated (in theory you could have a dynamic poverty map which updates itself as new geo-spatial data becomes available!).
+Section A is our first step into poverty modelling in Bangladesh. Here, we will obtain and transform various geo-spatial data sets (such as accessibility, nightlights intensity, demographic maps, and topography) into predictors of poverty rates. This data has been sourced through a combination of ground surveys and remote sensing (collected by satellites and remote sensors orbiting the Earth). Geo-spatial variables are important inputs into poverty estimation models. Outputs from such models fill spatial and temporal gaps that exist between official poverty statistics. This is due to the many advantages of remote sensed geo-spatial data:
 
-@pj: *Ida - I am not sure if all of this is correct. Not all geospatial data is necessarily open source, right? Also not all of it frequently updated. Survey data with geolocation could also be geo-spatial data. See your explanation in section 2.1. So I think we need to change some terminology here?*
+-   Has wide coverage and typically includes data from low-and-middle-income countries (LMICs).
 
-The main goal of Section A will be to produce a "**harmonised geo-spatial covariate raster for poverty modelling**". In other words, layers of geo-spatial information in a raster format (a collection of pixels) for each upazila (\@PJ: *Need to explain what an upazila is.*) that we can use to predict poverty. Imagine that each upazila is divided into pixels. Each pixel will contain some geo-spatial information: slope, travel time to healthcare facilities, distance to nearest water source etc. Harmonising them means that all of our geo-spatial layers are in the same format: CRS, extent, spatial resolution, and shape. Why is this necessary? Short answer: so that each pixel with values of geo-spatial data describes the same location across all our geo-spatial datasets.
+-   Covers areas that would otherwise be difficult to access, such as mountain ranges, islands, and remote communities.
+
+-   Can be obtained at a high spatial resolution - in some cases as high as 30m x 30m (which is the resolution of the population density maps that we will be using).
+
+-   Measurements can be collected frequently. For instance, the [ERA5](https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5) climate data set from the European Centre for Medium-Range Weather Foecasts (ECMWF) contains measures of temperature for every hour. This is a particulary exciting aspect as in theory you could have a dynamic poverty map which updates itself as new geo-spatial data becomes available!
+
+The main goal of Section A will be to produce a "**harmonised geo-spatial covariate raster for poverty modelling**". In other words, layers of geo-spatial information in a raster format (a collection of pixels) for each small area that can be used to estimate poverty. In our case, small areas will be **upazilas** in Bangladesh, which is the administrative level 3.
+
+Imagine that each upazila is divided into pixels. Each pixel will contain some geo-spatial information: slope, travel time to healthcare facilities, distance to nearest water source etc. Harmonising them means that all of our geo-spatial layers are in the same format: CRS, extent, spatial resolution, and shape. Why is this necessary? Short answer: so that each pixel with values of geo-spatial data describes the same location across all our geo-spatial datasets.
 
 Long anwer: In order to predict poverty rates for upazilas, we need to know some basic statistics (mean, max, min, sd etc.) for the values of our geo-spatial variables at upazila level. For example: what is the mean population density of women and nightlights intensity in each upazila in Bangladesh? We would only be able to answer this question if our layers showing population density for women and nightlights were aligned: they had the same CRS (projection), extent (maximum and minimum values of geographical coordinates), spatial resolution (size of pixels), and shape of Bangladesh. That is, we need comparable pixels with data values that can be assigned to upazilas.
 
@@ -84,7 +82,7 @@ Let us start with the two most burning questions: What is geo-spatial data and w
 
 **Geo-spatial data** in the simplest terms is any type of data referenced to a specific location on Earth. It consists broadly of two elements: **1) location data** (where things are) and **2) attributes data** (what things are like there). Location data allows us to position our data values adequately on the surface of the Earth. Attributes data describes any features of that specific location (temperature, elevation, road type, a bridge, demographic information and so on).
 
-**Geographic Information System (GIS)** is a system that creates, manages, analyses, and maps data. GIS connects data to a map, integrating location data , with all types of descriptive information.
+**Geographic Information System (GIS)** is a system that creates, manages, analyses, and maps data. GIS connects data to a map, integrating location data with all types of descriptive information.
 
 ### 2.1. Geo-spatial data sources
 
@@ -94,7 +92,7 @@ Recall that geo-spatial data is simply a set of data values that are indexed to 
 
 #### Remote sensing
 
-Increasingly, **remote sensing** data collection is turning out to be a very efficient way of collection geo-spatial data. This includes satellite imagery and aircraft sensors that orbit the Earth and collect data continuously, at a high spatial resolution, and globally, including places that would be hard to reach with a survey (say the middle of the ocean or conflict-affected areas). In fact, due to the advantages of remote sensing data collection - space is becoming a crowded place, and increasingly more so in the last couple of years. Figure X below shows the time trend of the annual number of objects launched into space, which explodes upwards after around 2015. As of 2022, there were 6,905 active satellites in space. In this workflow, we will be working exclusively with remote sensing data, but let us briefly consider other sources of geo-spatial information. @PJ- *Ida are you sure about this last sentence? Is the demographic data remote-sensing data?*
+Increasingly, **remote sensing** data collection is turning out to be a very efficient way of collection geo-spatial data. This includes satellite imagery and aircraft sensors that orbit the Earth and collect data continuously, at a high spatial resolution, and globally, including places that would be hard to reach with a survey (say the middle of the ocean or conflict-affected areas). In fact, due to the advantages of remote sensing data collection - space is becoming a crowded place, and increasingly more so in the last couple of years. Figure X below shows the time trend of the annual number of objects launched into space, which explodes upwards after around 2015. As of 2022, there were 6,905 active satellites in space. In this workflow, we will be relying heavily on remote sensing data, but let us briefly consider other sources of geo-spatial information.
 
 ![](images/Objects%20launched%20into%20space.png){width="573"}
 
@@ -110,7 +108,7 @@ Basic services provided by cell phone operators are routed by satellites, provid
 
 #### Online data
 
-Online data is broad and includes all data shared online purposefully, including Wikipedia, social media, online articles etc. Location and mobility tracking via social media can be another source of geographical information. App-based mobile phone location data is actually often of higher spatial resolution than that coming from cell phone data operators and is increasingly being used in mobility studies. In fact, we will be using high-resolution population density estimates from Meta (previously Facebook) in our poverty modelling exercise. @PJ: *are these last part of the covariates here?*
+Online data is broad and includes all data shared online purposefully, including Wikipedia, social media, online articles etc. Location and mobility tracking via social media can be another source of geographical information. App-based mobile phone location data is actually often of higher spatial resolution than that coming from cell phone data operators and is increasingly being used in mobility studies.
 
 ### 2.2. Data structures
 
@@ -119,12 +117,14 @@ I want to introduce the two most common spatial data types, which we will be wor
 ::: callout-important
 ## Important
 
-An important note on the naming conventions and structures of geographical coordinates in geo-spatial data. A set of coordinates will typically be expressed as **(x,y), where x relates to longitude and y to latitude**. Latitude has a range (-90, 90), while longitude has a range (-180, 180). Negative values of longitude refer to the Western hemisphere and positive values to the Eastern hemisphere. Similarly, negative values of latitude refer to the Southern hemisphere and positive values refer to the Northern hemisphere.
+An important note on the naming conventions and structures of geographical coordinates in geo-spatial data. A set of coordinates will typically be expressed as **(x,y), where x relates to longitude and y to latitude**. Latitude has a range (-90, 90), while longitude has a range (-180, 180). Negative values of longitude refer to the Western hemisphere and positive values to the Eastern hemisphere. Similarly, negative values of latitude refer to the Southern hemisphere and positive values refer to the Northern hemisphere. Here is a diagram that can serve as a cheat sheet!
+
+![](images/geographic-coordinate-system-l-01.jpg){width="433"}
 :::
 
 #### 2.2.1. Raster data
 
-**Raster data** refers to any gridded (or pixelated) data where each pixel represents a specific geographical location. @PJ - *see comments above on this explanation.* The value can be continuous (e.g. temperature) or categorical (e.g. land use). If pixels sound familiar, it's because they are - in fact, this is how every digital image is represented. The only difference is that a raster additionally includes spatial information that connects data from the image to a particular location. The location is defined by the following attributes (these are important attributes to inspect when you first open your raster):
+**Raster data** is a collection of cells (or pixels) organised into rows and columns (called a grid), defined by its location in space. The raster is the pattern of locations that together - as a grid - cover a geographic area. Cells have values that carry information about those locations, such as temperature or elevation. Values can be continuous (e.g. a range of temperature values), or categorical (e.g. different categories of land use). If pixels sound familiar, it's because they are - in fact, this is how every digital image is represented. The only difference is that a raster additionally includes spatial information that connects data from the image to a particular location. The location is defined by the following attributes (these are important attributes to inspect when you first open your raster):
 
 -   Extent
 
@@ -140,8 +140,6 @@ An important note on the naming conventions and structures of geographical coord
 
 Source: [National Ecological Observatory Network](https://www.neonscience.org/)
 
-Mention file extensions of raster data?
-
 #### 2.2.2. Vector data
 
 **Vector data** represents structures on the Earth's surface that are defined by discrete locations (x,y) called vertices. Depending on how the vertices (x,y) are oragnised, we can divide vector data types into: **points, lines, and polygons**. You could think of: locations of hospitals, road networks, administrative boundaries.
@@ -150,13 +148,17 @@ Mention file extensions of raster data?
 
 Source: [National Ecological Observatory Network](https://www.neonscience.org/)
 
-To illustrate this concept, below is a vector data set with lines showing the road network in Ghana, developed through Open Street Maps Ghana, downloadable via the Humanitarian Data Exchange website. Each line is determined by its vertices (think of them as the (x,y) points shown in the image above) and indexed geographically in space.
+We could add another category to this, which is the **multipolygon**. As the name suggests, a multipolygon is a collection of polygons. For instance, if we think about a polygon representing a lake or a forest cover, a multipolygon could depict an area of a national park that consists of a forest cover and two lakes - such as in the image below. In this particular example our polygons are *nested* within each other, but they could very well be just next to each other and not touching (such as two buildings on either side of a street).
+
+![](images/Multipolygon.png)
+
+To illustrate the concept further, below is a vector data set with lines showing the road network in Ghana, developed through Open Street Maps Ghana, downloadable via the Humanitarian Data Exchange website. Each line is determined by its vertices (think of them as the (x,y) points shown in the image above) and indexed geographically in space.
 
 ![](images/Ghana%20road%20network.png){width="648"}
 
 Source: [Humanitarian Data Exchange](https://data.humdata.org/dataset/hotosm_gha_roads)
 
-Vector data comes in many formats, but we will be working with the (very common) Shapefile format, which has a .shp extension. More specifically, we will download a shapefile containing multipolygons @PJ - *Ida you explained polygons but not multipolygons. Worth explaining them as well.* that define administrative boundaries of upazilas (admin level 3) in Bangladesh. A shapefile stores the coordinates of vertices, as well as other metadata:
+Vector data comes in many formats, but we will be working with the (very common) Shapefile format, which has a .shp extension. More specifically, we will download a shapefile containing multipolygons that define administrative boundaries of upazilas (admin level 3) in Bangladesh. A shapefile stores the coordinates of vertices, as well as other metadata:
 
 -   Extent
 
@@ -166,7 +168,11 @@ Vector data comes in many formats, but we will be working with the (very common)
 
 -   Other attributes - e.g. in our case the name of the upazila, its administrative code, area covered etc.
 
-Could have a short quiz here showing different images and asking the audience whether this is a raster or a vector dataset. @PJ - *yes, good idea.*
+::: callout-tip
+## Quick quiz alert
+
+Now, let's do a super quick quiz to check our intuitition, which goes as follows: I will present to you a few examples of geo-spatial datasets and invite you to either type in the chat or shout out directly whether this is a vector or a raster dataset.
+:::
 
 ### 2.3. Layering geo-spatial data sets
 
@@ -344,14 +350,14 @@ The below tables provide details on these data sets.
 ### Base layers
 
 | Geo-spatial file name             | Description                                                          | Year | Link to download                                                                                                               |
-|:----------------------------------|:---------------------------------------------------------------------|:-----|:-------------------------------------------------------------------------------------------------------------------------------|
+|:------------|:---------------|:------------|:-------------------------------|
 | bgd_level0_100m_2000_2020.tif     | WorldPop Administrative Level 0 mastergrid base layer for Bangladesh | 2020 | [World Pop Hub - National boundaries](https://www.worldpop.org/geodata/summary?id=24282)                                       |
 | bgd_admbnda_adm3_bbs_20201113.shp | Administrative Level 3 (Upazila) Units in Bangladesh                 | 2015 | [Bangladesh - Subnational Administrative Boundaries - Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-bgd) |
 
 ### Geo-spatial data sets to be harmonised
 
 |                                                                             |                                                                              |      |                                                                                                                                                                                                                                                                                                  |
-|-----------------------------------------------------------------------------|------------------------------------------------------------------------------|:-----|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|------------|------------|:-----------|--------------------------------------|
 | **Geo-spatial file name**                                                   | Description                                                                  | Year | Link to download                                                                                                                                                                                                                                                                                 |
 | SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif | VIIRS night-time lights (global)                                             | 2015 | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/#v1)                                                                                                                                                                                                                            |
 | 2015_accessibility_to_cities_v1.0.tif                                       | MAP travel time to high-density urban centres (global)                       | 2015 | [Malaria Atlas - Accessibility to Cities](https://data.malariaatlas.org/maps?layers=Accessibility:201501_Global_Travel_Time_to_Cities,Malaria:202206_Global_Pf_Parasite_Rate)                                                                                                                    |
@@ -368,7 +374,7 @@ The below tables provide details on these data sets.
 ### WorldPop harmonised geo-spatial data sets
 
 |                                           |                                                                         |           |                                                                |
-|-------------------------------------------|-------------------------------------------------------------------------|-----------|----------------------------------------------------------------|
+|---------------|-----------------------|---------------|--------------------|
 | **Geo-spatial File Name**                 | **Description**                                                         | **Year**  | **Link to Download**                                           |
 | bgd_srtm_topo_100m.tif                    | SRTM topography in BGD                                                  | 2000      | [World Pop](https://www.worldpop.org/project/categories?id=14) |
 | bgd_srtm_slope_100m.tif                   | SRTM slope (derivative of topography) in BGD                            | 2000      |                                                                |
@@ -984,9 +990,38 @@ Test: using Chris Lloyd's method and the `exactextractr` package
 
 Omg this works way quicker and there is no need to convert the shapefile into a raster. However, some values of min are negative?
 
-```{r}
-upazila <- exact_extract(raster.stack, shapefile.zone.plot, c('min', 'max', 'mean', 'sum', 'stdev', 'count'), stack_apply=TRUE)
+Need to assign the upazila code to the final data frame
 
+```{r}
+# Load Nikos's data
+load("C:/Users/idabr/OneDrive - Oxford Policy Management Limited/EMDI SAE/Geo-spatial Bangladesh data/Z all other files/Harmonised data Nikos/final.cov.est.new.Rdata")
+
+# Apply exact extract function
+upazila <- exact_extract(raster.stack, shapefile.zone.plot, c('min', 'max', 'mean', 'sum', 'stdev', 'count'), stack_apply=TRUE, append_cols="ADM3_PCODE")
+
+# Compare values to those obtained by Nikos (and my earlier estimates)
+# Get column names
+colnames(upazila)
+colnames(final.cov.est)
+colnames(zonal.stats.all)
+
+# Summary - min of Global Travel Time to Cities - reasonably similar
+summary(upazila$min.X201501_Global_Travel_Time_to_Cities_BGD)
+summary(final.cov.est$ACCCITY.MIN)
+summary(zonal.stats.all$X201501_Global_Travel_Time_to_Cities_BGD_min)
+
+# Max distance to the closest road - super similar!
+summary(upazila$max.osm_dst_road_100m_2016_BGD)
+summary(final.cov.est$DSTROAD.MAX)
+summary(zonal.stats.all$osm_dst_road_100m_2016_BGD_max)
+
+# Sum population density of women - super similar again!
+summary(upazila$sum.bgd_women_2020)
+summary(final.cov.est$WOMEN.SUM)
+summary(zonal.stats.all$bgd_women_2020_sum)
+
+# Save file 
+save(upazila, file = "C:/Users/idabr/OneDrive - Oxford Policy Management Limited/EMDI SAE/Geo-spatial Bangladesh data/BGD.zonalstats.exactextract.RData")
 
 
 ```
