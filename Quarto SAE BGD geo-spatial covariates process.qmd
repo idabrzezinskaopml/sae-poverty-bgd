@@ -965,21 +965,46 @@ de <- merge(de, sizes,
 ```
 
 NB that we will be inserting Ida's step 2 in here. Now using the final_de dataset for se.GVF
+Also the BGD.zonal stats will be used for the geospatial variables
+
 
 ### Step 3: How to combine your datasets. Getting your geospatial data, direct estimates and survey data in the same dataframe.
 
 First you load the necessary dataset from where you have it saved.
 
 ```{r}
-setwd("/Users/nicklindsay/Downloads")
 
-data_area_level <- get(load("final.cov.est.new-1.Rdata"))
+load("C:/Users/nickl/iCloudDrive/Desktop/Oxford Policy Management/Bang_V2/BGD.zonalstats.RData")
 
-data_area_level = cbind(data_area_level, data_area_level$se.GVF^2)
+View(zonal.stats.all)
 
-attach(data_area_level)
+final_de$ADM3_PCODE <- substring(final_de$ADM3_PCODE, 3)
 
+colnames(final_de)[colnames(final_de) == "ADM3_PCODE"] <- "upazila.code"
+
+new_df <- merge(zonal.stats.all, final_de[, c("upazila.code", "binary_wealth", "se.GVF", "num_clusters")], by = "upazila.code", all.x = TRUE)
+
+new_df = cbind(new_df, new_df$se.GVF^2)
+
+attach(new_df)
+
+View(new_df)
 ```
+NEW CODE with the new method of generating geospatial statistics.
+
+```{r}
+
+BGD_zonal_new_version$upazila.code <- substring(BGD_zonal_new_version$ADM3_PCODE, 3)
+
+new_df <- merge(BGD_zonal_new_version, final_de[, c("upazila.code", "binary_wealth", "se.GVF", "num_clusters")], by = "upazila.code", all.x = TRUE)
+
+new_df = cbind(new_df, new_df$se.GVF^2)
+
+attach(new_df)
+
+View(new_df)
+```
+
 
 This also calculates the variance of the GVF (Generalised Variance Function) variable and attaches it to the dataset since it is an important element in the estimation.
 
@@ -993,12 +1018,16 @@ This step follows the principle of parsimony in order to slim down the model to 
 new_df2 <- data_area_level[, c(2:210, 223)]
 
 ```
+```{r}
+new_df2 <- new_df[,c(2:164)]
+
+full_model2 <- lm(binary_wealth ~ ., data = new_df2)
+```
+
+We trim the dataset of variables since we only want the geospatial variables at this stage and the variable of interest. We have no interest in the standard errors or the upazila code being used for prediction.
 
 We then fit a full linear regression model using the new dataframe
 
-```{r}
-full_model2 <- lm(poorest ~ ., data = new_df2)
-```
 
 We then perform stepwise selection based on BIC criterion to narrow down the number of variables from 200+ to around 15
 
@@ -1014,6 +1043,27 @@ summary(stepwise_model2)
 
 ### Step 5: Fitting the model
 
+Generating the nhog variable. first you find out how many households have been surveyed in each upazila.
+You then merge this with the new_df we are using to make sure we have this information in that survey.
+
+```{r}
+
+bgd_geo_2014 <- bgd_geo_2014 %>%
+  group_by(ADM3_PCODE) %>%
+  mutate(num_unique_hhid = n_distinct(hhid)) %>%
+  ungroup()
+
+bgd_geo_2014$upazila.code <- substring(bgd_geo_2014$ADM3_PCODE, 3)
+View(bgd_geo_2014)
+
+
+new_df <- merge(new_df, bgd_geo_2014[, c("upazila.code", "num_unique_hhid")], by = "upazila.code", all.x = TRUE)
+
+cleaned_df <- distinct(new_df, upazila.code, .keep_all = TRUE)
+
+View(cleaned_df)
+```
+
 Now we estimate an initial cursory model using the variables selected by an initial AIC/BIC variable selection.
 
 ```{r}
@@ -1022,6 +1072,57 @@ new_fh_final <- fh(fixed = poorest ~ CHILU5.SUM + MEN.MEAN + WOMEN.MIN + WOMEN.S
           VIIRS.SUM + DSTWATWAY.MAX + DSTCOAST.MEAN, vardir = "data_area_level$se.GVF^2",
           combined_data = data_area_level, domains = "upazila.code", method = "ml",
           transformation = "arcsin", backtransformation = "bc", eff_smpsize = "nhog",
+          MSE = TRUE, mse_type = "boot", B = 50)
+
+summary(new_fh_final)
+```
+OUR CODE 
+```{r}
+new_fh_final <- fh(fixed = binary_wealth ~ X201501_Global_Travel_Time_to_Cities_BGD_count +              
+X202001_Global_Motorized_Travel_Time_to_Healthcare_BGD_count +
+bgd_women_2020_max                                        + 
+bgd_women_of_reproductive_age_15_49_2020_max               +  
+esaccilc_dst_water_100m_2000_2012_BGD_max                 + 
+esaccilc_dst140_100m_2014_BGD_max                          +  
+X201501_Global_Travel_Time_to_Cities_BGD_mean             + 
+dst_coastline_100m_2000_2020_BGD_mean                     +  
+esaccilc_dst_water_100m_2000_2012_BGD_mean                +  
+osm_dst_road_100m_2016_BGD_mean                           +  
+osm_dst_waterway_100m_2016_BGD_min                         +  
+bgd_women_2020_sd                                           + 
+bgd_women_of_reproductive_age_15_49_2020_sd                  +
+esaccilc_dst130_100m_2014_BGD_sd                            + 
+esaccilc_dst140_100m_2014_BGD_sd                            +
+X201501_Global_Travel_Time_to_Cities_BGD_sum                 +
+bgd_children_under_five_2020_sum   +
+bgd_general_2020_sum                +                         
+bgd_men_2020_sum                     +                        
+bgd_women_of_reproductive_age_15_49_2020_sum  +               
+bgd_youth_15_24_2020_sum                       +              
+esaccilc_dst140_100m_2014_BGD_sum               +           
+osm_dst_road_100m_2016_BGD_sum                   +            
+Nightlights_data_sum, vardir = "new_df$se.GVF^2",
+          combined_data = cleaned_df, domains = "upazila.code", method = "ml",
+          transformation = "arcsin", backtransformation = "bc", eff_smpsize = "num_unique_hhid",
+          MSE = TRUE, mse_type = "boot", B = 50)
+
+summary(new_fh_final)
+```
+OUR CODE using second bit of data 
+
+```{r}
+new_fh_final <- fh(fixed = binary_wealth ~ min.osm_dst_waterway_100m_2016_BGD + 
+    max.bgd_women_2020 + max.bgd_women_of_reproductive_age_15_49_2020 + 
+    max.esaccilc_dst_water_100m_2000_2012_BGD + mean.X201501_Global_Travel_Time_to_Cities_BGD + 
+    mean.esaccilc_dst_water_100m_2000_2012_BGD + mean.osm_dst_road_100m_2016_BGD + 
+    sum.X201501_Global_Travel_Time_to_Cities_BGD + sum.bgd_children_under_five_2020 + 
+    sum.bgd_general_2020 + sum.bgd_men_2020 + sum.bgd_women_of_reproductive_age_15_49_2020 + 
+    sum.bgd_youth_15_24_2020 + sum.osm_dst_road_100m_2016_BGD + 
+    sum.Nightlights_data + stdev.esaccilc_dst130_100m_2014_BGD + 
+    count.X201501_Global_Travel_Time_to_Cities_BGD + count.X202001_Global_Motorized_Travel_Time_to_Healthcare_BGD + 
+    min.esaccilc_dst150_100m_2014_BGD, vardir = "new_df$se.GVF^2",
+          combined_data = cleaned_df, domains = "upazila.code", method = "ml",
+          transformation = "arcsin", backtransformation = "bc", eff_smpsize = "num_unique_hhid",
           MSE = TRUE, mse_type = "boot", B = 50)
 
 summary(new_fh_final)
@@ -1111,6 +1212,40 @@ fh_arcsin <- fh(fixed = poorest ~
                 B = c(0,50)) 
 ```
 
+
+OUR NEW CODE 
+```{r}
+fh_arcsin <- fh(fixed = binary_wealth ~ X201501_Global_Travel_Time_to_Cities_BGD_count +              
+X202001_Global_Motorized_Travel_Time_to_Healthcare_BGD_count +
+bgd_women_2020_max                                        + 
+bgd_women_of_reproductive_age_15_49_2020_max               +  
+esaccilc_dst_water_100m_2000_2012_BGD_max                 + 
+esaccilc_dst140_100m_2014_BGD_max                          +  
+X201501_Global_Travel_Time_to_Cities_BGD_mean             + 
+dst_coastline_100m_2000_2020_BGD_mean                     +  
+esaccilc_dst_water_100m_2000_2012_BGD_mean                +  
+osm_dst_road_100m_2016_BGD_mean                           +  
+osm_dst_waterway_100m_2016_BGD_min                         +  
+bgd_women_2020_sd                                           + 
+bgd_women_of_reproductive_age_15_49_2020_sd                  +
+esaccilc_dst130_100m_2014_BGD_sd                            + 
+esaccilc_dst140_100m_2014_BGD_sd                            +
+X201501_Global_Travel_Time_to_Cities_BGD_sum                 +
+bgd_children_under_five_2020_sum   +
+bgd_general_2020_sum                +                         
+bgd_men_2020_sum                     +                        
+bgd_women_of_reproductive_age_15_49_2020_sum  +               
+bgd_youth_15_24_2020_sum                       +              
+esaccilc_dst140_100m_2014_BGD_sum               +           
+osm_dst_road_100m_2016_BGD_sum                   +            
+Nightlights_data_sum, vardir = "new_df$se.GVF^2",
+          combined_data = cleaned_df, domains = "upazila.code", method = "ml",
+          transformation = "arcsin", backtransformation = "bc", eff_smpsize = "num_unique_hhid",
+          MSE = TRUE, mse_type = "boot", B = 50 )
+
+```
+
+
 NB We have initially have set MIC = FALSE above to in order to speed the model selection step up but we will be changing this later.
 
 We now use the step function using the BIC criterion to see if additional variables can be dropped from the mode. Note that this takes a long time to estimate.
@@ -1130,6 +1265,25 @@ fh_arcsin_final <- fh(fixed = poorest ~ CHILU5.SUM + MEN.MEAN + WOMEN.MIN + WOME
           combined_data = data_area_level, domains = "upazila.code", method = "ml",
           transformation = "arcsin", backtransformation = "bc", eff_smpsize = "nhog",
           MSE = TRUE, mse_type = "boot", B = 50)
+summary(fh_arcsin_final)
+```
+OUR CODE
+
+```{r}
+fh_arcsin_final <- fh(fixed = binary_wealth ~ X201501_Global_Travel_Time_to_Cities_BGD_count + 
+    X202001_Global_Motorized_Travel_Time_to_Healthcare_BGD_count + 
+    bgd_women_2020_max + bgd_women_of_reproductive_age_15_49_2020_max + 
+    X201501_Global_Travel_Time_to_Cities_BGD_mean + dst_coastline_100m_2000_2020_BGD_mean + 
+    osm_dst_road_100m_2016_BGD_mean + osm_dst_waterway_100m_2016_BGD_min + 
+    esaccilc_dst130_100m_2014_BGD_sd + X201501_Global_Travel_Time_to_Cities_BGD_sum + 
+    bgd_children_under_five_2020_sum + bgd_general_2020_sum + 
+    bgd_men_2020_sum + bgd_women_of_reproductive_age_15_49_2020_sum + 
+    bgd_youth_15_24_2020_sum + osm_dst_road_100m_2016_BGD_sum + 
+    Nightlights_data_sum, vardir = "new_df$se.GVF^2", combined_data = cleaned_df, 
+    domains = "upazila.code", method = "ml", transformation = "arcsin", 
+    backtransformation = "bc", eff_smpsize = "num_unique_hhid", 
+    MSE = TRUE, mse_type = "boot", B = 50)
+
 summary(fh_arcsin_final)
 ```
 
@@ -1225,6 +1379,15 @@ bgd_admin3 <- st_read("bgd_admbnda_adm3_bbs_20201113.shp")
 
 extent(bgd_admin3)
 ```
+OUR CODE
+
+```{r}
+setwd("C:/Users/nickl/iCloudDrive/Desktop/Oxford Policy Management/Bang_Rep/Admin_level3")
+
+bgd_admin3 <- st_read("bgd_admbnda_adm3_bbs_20201113.shp")
+
+```
+
 
 We then assign this shape file a name and use the fortify function in order to get it in to a format that can be used for data visualisation.
 
