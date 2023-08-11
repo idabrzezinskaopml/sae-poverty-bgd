@@ -972,27 +972,13 @@ Also the BGD.zonal stats will be used for the geospatial variables
 
 First you load the necessary dataset from where you have it saved.
 
-```{r}
-
-load("C:/Users/nickl/iCloudDrive/Desktop/Oxford Policy Management/Bang_V2/BGD.zonalstats.RData")
-
-View(zonal.stats.all)
-
-final_de$ADM3_PCODE <- substring(final_de$ADM3_PCODE, 3)
-
-colnames(final_de)[colnames(final_de) == "ADM3_PCODE"] <- "upazila.code"
-
-new_df <- merge(zonal.stats.all, final_de[, c("upazila.code", "binary_wealth", "se.GVF", "num_clusters")], by = "upazila.code", all.x = TRUE)
-
-new_df = cbind(new_df, new_df$se.GVF^2)
-
-attach(new_df)
-
-View(new_df)
-```
 NEW CODE with the new method of generating geospatial statistics.
 
 ```{r}
+
+BGD_zonal_new_version <- read_csv("C:/Users/nickl/iCloudDrive/Desktop/Oxford Policy Management/Bang_V2/BGD.zonal.new.version.csv")
+
+View(BGD_zonal_new_version)
 
 BGD_zonal_new_version$upazila.code <- substring(BGD_zonal_new_version$ADM3_PCODE, 3)
 
@@ -1006,20 +992,14 @@ View(new_df)
 ```
 
 
-This also calculates the variance of the GVF (Generalised Variance Function) variable and attaches it to the dataset since it is an important element in the estimation.
-
-We use the column bind command to merge two dataframes together. This new dataframe now includes the variable for "vardir" which is standard errors squared.
+We use the column bind command to merge two dataframes together. This new dataframe now includes the variable for "vardir" which is standard errors squared from the generalised variance function (GVF). This is an important argument in the FH model prediction.
 
 ### Step 4: Covariate selection for initial model.
 
 This step follows the principle of parsimony in order to slim down the model to find only the geospatial covariates that have the highest predictive power. To do this we first create a new dataframe without the variables that were used to create the wealth index such as whether a household has a mobile phone or their access to sanitation facilities. Since these will clearly be highly correlated with our 'poorest' indicator of interest and we do not want these to be in the model. Also they are obviously not available for the out of sample data points.
 
 ```{r}
-new_df2 <- data_area_level[, c(2:210, 223)]
-
-```
-```{r}
-new_df2 <- new_df[,c(2:164)]
+new_df2 <- new_df[,c(3:165)]
 
 full_model2 <- lm(binary_wealth ~ ., data = new_df2)
 ```
@@ -1029,7 +1009,7 @@ We trim the dataset of variables since we only want the geospatial variables at 
 We then fit a full linear regression model using the new dataframe
 
 
-We then perform stepwise selection based on BIC criterion to narrow down the number of variables from 200+ to around 15
+We then perform stepwise selection based on BIC criterion to narrow down the number of variables from 150+ to around 15-20
 
 ```{r}
 stepwise_model2 <- stepAIC(full_model2, direction = "both", trace = FALSE, k = log(nrow(new_df2)))
@@ -1043,75 +1023,17 @@ summary(stepwise_model2)
 
 ### Step 5: Fitting the model
 
-Generating the nhog variable. first you find out how many households have been surveyed in each upazila.
-You then merge this with the new_df we are using to make sure we have this information in that survey.
+Our first step is running the estimation procedure without carrying out a transformation on the dataset. For this we use the variables that were selected to be most significant by the stepwise selection procedure above.
+
+First of all we carry out the estimation with no transformation on a raw scale to see if the model offers reasonable predictive power.
+
+We can then run a couple of model diagnostic regressions to see how the raw scale fits the data.
+
+
+RAW SCALE ESTIMATION WITH NEW CODE
 
 ```{r}
-
-bgd_geo_2014 <- bgd_geo_2014 %>%
-  group_by(ADM3_PCODE) %>%
-  mutate(num_unique_hhid = n_distinct(hhid)) %>%
-  ungroup()
-
-bgd_geo_2014$upazila.code <- substring(bgd_geo_2014$ADM3_PCODE, 3)
-View(bgd_geo_2014)
-
-
-new_df <- merge(new_df, bgd_geo_2014[, c("upazila.code", "num_unique_hhid")], by = "upazila.code", all.x = TRUE)
-
-cleaned_df <- distinct(new_df, upazila.code, .keep_all = TRUE)
-
-View(cleaned_df)
-```
-
-Now we estimate an initial cursory model using the variables selected by an initial AIC/BIC variable selection.
-
-```{r}
-new_fh_final <- fh(fixed = poorest ~ CHILU5.SUM + MEN.MEAN + WOMEN.MIN + WOMEN.SUM +
-          WOMENREP.MIN + WOMENREP.SUM + YOUTH1524.MIN + YOUTH1524.MEAN +
-          VIIRS.SUM + DSTWATWAY.MAX + DSTCOAST.MEAN, vardir = "data_area_level$se.GVF^2",
-          combined_data = data_area_level, domains = "upazila.code", method = "ml",
-          transformation = "arcsin", backtransformation = "bc", eff_smpsize = "nhog",
-          MSE = TRUE, mse_type = "boot", B = 50)
-
-summary(new_fh_final)
-```
-OUR CODE 
-```{r}
-new_fh_final <- fh(fixed = binary_wealth ~ X201501_Global_Travel_Time_to_Cities_BGD_count +              
-X202001_Global_Motorized_Travel_Time_to_Healthcare_BGD_count +
-bgd_women_2020_max                                        + 
-bgd_women_of_reproductive_age_15_49_2020_max               +  
-esaccilc_dst_water_100m_2000_2012_BGD_max                 + 
-esaccilc_dst140_100m_2014_BGD_max                          +  
-X201501_Global_Travel_Time_to_Cities_BGD_mean             + 
-dst_coastline_100m_2000_2020_BGD_mean                     +  
-esaccilc_dst_water_100m_2000_2012_BGD_mean                +  
-osm_dst_road_100m_2016_BGD_mean                           +  
-osm_dst_waterway_100m_2016_BGD_min                         +  
-bgd_women_2020_sd                                           + 
-bgd_women_of_reproductive_age_15_49_2020_sd                  +
-esaccilc_dst130_100m_2014_BGD_sd                            + 
-esaccilc_dst140_100m_2014_BGD_sd                            +
-X201501_Global_Travel_Time_to_Cities_BGD_sum                 +
-bgd_children_under_five_2020_sum   +
-bgd_general_2020_sum                +                         
-bgd_men_2020_sum                     +                        
-bgd_women_of_reproductive_age_15_49_2020_sum  +               
-bgd_youth_15_24_2020_sum                       +              
-esaccilc_dst140_100m_2014_BGD_sum               +           
-osm_dst_road_100m_2016_BGD_sum                   +            
-Nightlights_data_sum, vardir = "new_df$se.GVF^2",
-          combined_data = cleaned_df, domains = "upazila.code", method = "ml",
-          transformation = "arcsin", backtransformation = "bc", eff_smpsize = "num_unique_hhid",
-          MSE = TRUE, mse_type = "boot", B = 50)
-
-summary(new_fh_final)
-```
-OUR CODE using second bit of data 
-
-```{r}
-new_fh_final <- fh(fixed = binary_wealth ~ min.osm_dst_waterway_100m_2016_BGD + 
+fh_raw_scale <- fh(fixed = binary_wealth ~ min.osm_dst_waterway_100m_2016_BGD + 
     max.bgd_women_2020 + max.bgd_women_of_reproductive_age_15_49_2020 + 
     max.esaccilc_dst_water_100m_2000_2012_BGD + mean.X201501_Global_Travel_Time_to_Cities_BGD + 
     mean.esaccilc_dst_water_100m_2000_2012_BGD + mean.osm_dst_road_100m_2016_BGD + 
@@ -1122,38 +1044,12 @@ new_fh_final <- fh(fixed = binary_wealth ~ min.osm_dst_waterway_100m_2016_BGD +
     count.X201501_Global_Travel_Time_to_Cities_BGD + count.X202001_Global_Motorized_Travel_Time_to_Healthcare_BGD + 
     min.esaccilc_dst150_100m_2014_BGD, vardir = "new_df$se.GVF^2",
           combined_data = cleaned_df, domains = "upazila.code", method = "ml",
-          transformation = "arcsin", backtransformation = "bc", eff_smpsize = "num_unique_hhid",
-          MSE = TRUE, mse_type = "boot", B = 50)
+          MSE = TRUE, mse_type = "analytical")
 
-summary(new_fh_final)
+summary(fh_raw_scale)
 ```
 
-First of all we carry out the estimation with no transformation on a raw scale to see if the model offers reasonable predictive power.
-
-This is just an illustrative example using only the variables that are later selected using the AIC/ BIC.
-
-You can then run a couple of model diagnostic regressions to see how the raw scale fits the data.
-
-```{r}
-fh_raw_scale <- fh(fixed = poorest ~
-                     CHILU5.SUM + MEN.MEAN +
-                     WOMEN.MIN + WOMEN.SUM +
-                     WOMENREP.MIN +
-                     WOMENREP.SUM +
-                     YOUTH1524.MIN +
-                     YOUTH1524.MEAN +
-                     VIIRS.SUM + DSTWATWAY.MAX +
-                     DSTCOAST.MEAN,
-                   vardir = "data_area_level$se.GVF^2",
-                   combined_data = data_area_level,
-                   domains = "upazila.code",
-                   method = "ml", MSE = TRUE,
-                   mse_type = "analytical")
-                   
-summary(fh_raw_scale)                   
-```
-
-When looking at the model summary the adjusted R-squared is 0.52. This might seem like reasonable predictive power.
+When looking at the model summary the adjusted R-squared is 0.57. This might seem like reasonable predictive power.
 
 However, we also need to look at normal probability plots of residuals and random errors to see if there is a clear departure from normality which is carried out below.
 
@@ -1178,75 +1074,70 @@ est_raw = estimators(fh_raw_scale,
 summary(fh_raw_scale$ind$FH)
 ```
 
-We notice that the model-based point estimates include negative predicted values despite the fact that we are modelling a proportion. This is a consequence of using a model that does not fit well and illustrates the importance of using model diagnostics.
+We notice that the model-based point estimates include negative predicted values (min = -2.19) despite the fact that we are modelling a proportion. This is a consequence of using a model that does not fit well and illustrates the importance of using model diagnostics.
 
-As a result in order to better fit the data we use the arcsin transformation. This is common when using income data. Using this transformation requires additional arguments, namely the effective sample size defined by the sample size divided by the design effect and the type of backtransformation.
+As a result in order to better fit the data we are going to try using the arcsin transformation. This is common when using income data. Using this transformation requires additional arguments, namely the effective sample size which is defined by the sample size divided by the design effect, as well as the type of backtransformation.
+
+First of all, in order to do this, we need to generate the argument relating to the effective sample size. First you find out how many households have been surveyed in each upazila. You then load the design effect that we calculated in step 2.
+
+You then merge this with the new_df we are using to make sure we have this information in that survey.
 
 ```{r}
-fh_arcsin <- fh(fixed = poorest ~
-                  POP.MAX + CHILU5.STD +
-                  CHILU5.SUM +
-                  ELD60P.STD +
-                  MEN.MEAN + MEN.STD +
-                  WOMEN.MIN + WOMEN.MEAN +
-                  WOMEN.STD + WOMEN.SUM +
-                  WOMENREP.MIN +
-                  WOMENREP.STD +
-                  WOMENREP.SUM +
-                  YOUTH1524.MIN +
-                  YOUTH1524.MEAN +
-                  SLOPE.MAX + SLOPE.MEAN +
-                  SLOPE.SUM + SLOPE.MINORITY +
-                  VIIRS.MIN + VIIRS.MAX +
-                  VIIRS.MEAN +
-                  VIIRS.STD + VIIRS.SUM +
-                  TOPO.MEAN + DSTWATWAY.MAX +
-                  DSTCOAST.MEAN,
-                vardir = "data_area_level$se.GVF^2",
-                combined_data = data_area_level,
-                domains = "upazila.code",
-                method = "ml", transformation = "arcsin",
-                backtransformation = "bc",
-                eff_smpsize = "nhog",
-                MSE = FALSE, mse_type = "boot",
-                B = c(0,50)) 
+
+bgd_geo_2014 <- bgd_geo_2014 %>%
+  group_by(ADM3_PCODE) %>%
+  mutate(num_unique_hhid = n_distinct(hhid)) %>%
+  ungroup()
+
+bgd_geo_2014$upazila.code <- substring(bgd_geo_2014$ADM3_PCODE, 3)
+View(bgd_geo_2014)
+
+
+new_df <- merge(new_df, bgd_geo_2014[, c("upazila.code", "num_unique_hhid")], by = "upazila.code", all.x = TRUE)
+
+cleaned_df <- distinct(new_df, upazila.code, .keep_all = TRUE)
+
+View(cleaned_df)
 ```
+
+Now we estimate an initial cursory model using the variables selected by an initial AIC/BIC variable selection.
 
 
 OUR NEW CODE 
 ```{r}
-fh_arcsin <- fh(fixed = binary_wealth ~ X201501_Global_Travel_Time_to_Cities_BGD_count +              
-X202001_Global_Motorized_Travel_Time_to_Healthcare_BGD_count +
-bgd_women_2020_max                                        + 
-bgd_women_of_reproductive_age_15_49_2020_max               +  
-esaccilc_dst_water_100m_2000_2012_BGD_max                 + 
-esaccilc_dst140_100m_2014_BGD_max                          +  
-X201501_Global_Travel_Time_to_Cities_BGD_mean             + 
-dst_coastline_100m_2000_2020_BGD_mean                     +  
-esaccilc_dst_water_100m_2000_2012_BGD_mean                +  
-osm_dst_road_100m_2016_BGD_mean                           +  
-osm_dst_waterway_100m_2016_BGD_min                         +  
-bgd_women_2020_sd                                           + 
-bgd_women_of_reproductive_age_15_49_2020_sd                  +
-esaccilc_dst130_100m_2014_BGD_sd                            + 
-esaccilc_dst140_100m_2014_BGD_sd                            +
-X201501_Global_Travel_Time_to_Cities_BGD_sum                 +
-bgd_children_under_five_2020_sum   +
-bgd_general_2020_sum                +                         
-bgd_men_2020_sum                     +                        
-bgd_women_of_reproductive_age_15_49_2020_sum  +               
-bgd_youth_15_24_2020_sum                       +              
-esaccilc_dst140_100m_2014_BGD_sum               +           
-osm_dst_road_100m_2016_BGD_sum                   +            
-Nightlights_data_sum, vardir = "new_df$se.GVF^2",
-          combined_data = cleaned_df, domains = "upazila.code", method = "ml",
-          transformation = "arcsin", backtransformation = "bc", eff_smpsize = "num_unique_hhid",
-          MSE = TRUE, mse_type = "boot", B = 50 )
 
+fh_arcsin <- fh(fixed = binary_wealth ~ min.osm_dst_waterway_100m_2016_BGD + 
+    max.bgd_women_2020 + max.bgd_women_of_reproductive_age_15_49_2020 + 
+    max.esaccilc_dst_water_100m_2000_2012_BGD + mean.X201501_Global_Travel_Time_to_Cities_BGD + 
+    mean.esaccilc_dst_water_100m_2000_2012_BGD + mean.osm_dst_road_100m_2016_BGD + 
+    sum.X201501_Global_Travel_Time_to_Cities_BGD + sum.bgd_children_under_five_2020 + 
+    sum.bgd_general_2020 + sum.bgd_men_2020 + sum.bgd_women_of_reproductive_age_15_49_2020 + 
+    sum.bgd_youth_15_24_2020 + sum.osm_dst_road_100m_2016_BGD + 
+    sum.Nightlights_data + stdev.esaccilc_dst130_100m_2014_BGD + 
+    count.X201501_Global_Travel_Time_to_Cities_BGD + count.X202001_Global_Motorized_Travel_Time_to_Healthcare_BGD + 
+    min.esaccilc_dst150_100m_2014_BGD, vardir = "new_df$se.GVF^2",
+          combined_data = cleaned_df, domains = "upazila.code", method = "ml",transformation = "arcsin", backtransformation = "bc", eff_smpsize = "num_unique_hhid",
+          MSE = FALSE, mse_type = "boot", B = 50)
+
+summary(fh_arcsin)
+```
+NB We have initially have set MSE = FALSE above to in order to speed the model stepwise selection step up (the next step) but we will be changing MSE back to true in step 6 when we compute the out of sample estimates.
+
+
+HERE WE SHOULD PROBABLY CHECK AGAIN THAT MODEL DIAGNOSTICS ARE SATISFIED with the graphs etc
+
+```{r}
+lev1 = fh_arcsin$model$real_residuals
+lev2 = fh_arcsin$model$random_effects
+qqnorm(lev1)
+qqnorm(lev2)                   
 ```
 
+```{r}
+summary(fh_arcsin$ind$FH)
+```
 
-NB We have initially have set MIC = FALSE above to in order to speed the model selection step up but we will be changing this later.
+Now we are satisfied that this transformation satisfies the model assumptions we can carry on with the remaining modelling steps.
 
 We now use the step function using the BIC criterion to see if additional variables can be dropped from the mode. Note that this takes a long time to estimate.
 
@@ -1258,38 +1149,29 @@ We then use the variables that are left by this selection process to create our 
 
 ### Step 6: FH model prediction for out of sample estimates
 
-```{r}
-fh_arcsin_final <- fh(fixed = poorest ~ CHILU5.SUM + MEN.MEAN + WOMEN.MIN + WOMEN.SUM +
-          WOMENREP.MIN + WOMENREP.SUM + YOUTH1524.MIN + YOUTH1524.MEAN +
-          VIIRS.SUM + DSTWATWAY.MAX + DSTCOAST.MEAN, vardir = "data_area_level$se.GVF^2",
-          combined_data = data_area_level, domains = "upazila.code", method = "ml",
-          transformation = "arcsin", backtransformation = "bc", eff_smpsize = "nhog",
-          MSE = TRUE, mse_type = "boot", B = 50)
-summary(fh_arcsin_final)
-```
-OUR CODE
+
 
 ```{r}
-fh_arcsin_final <- fh(fixed = binary_wealth ~ X201501_Global_Travel_Time_to_Cities_BGD_count + 
-    X202001_Global_Motorized_Travel_Time_to_Healthcare_BGD_count + 
-    bgd_women_2020_max + bgd_women_of_reproductive_age_15_49_2020_max + 
-    X201501_Global_Travel_Time_to_Cities_BGD_mean + dst_coastline_100m_2000_2020_BGD_mean + 
-    osm_dst_road_100m_2016_BGD_mean + osm_dst_waterway_100m_2016_BGD_min + 
-    esaccilc_dst130_100m_2014_BGD_sd + X201501_Global_Travel_Time_to_Cities_BGD_sum + 
-    bgd_children_under_five_2020_sum + bgd_general_2020_sum + 
-    bgd_men_2020_sum + bgd_women_of_reproductive_age_15_49_2020_sum + 
-    bgd_youth_15_24_2020_sum + osm_dst_road_100m_2016_BGD_sum + 
-    Nightlights_data_sum, vardir = "new_df$se.GVF^2", combined_data = cleaned_df, 
-    domains = "upazila.code", method = "ml", transformation = "arcsin", 
-    backtransformation = "bc", eff_smpsize = "num_unique_hhid", 
+
+fh_arcsin_final <- fh(fixed = binary_wealth ~ min.osm_dst_waterway_100m_2016_BGD + 
+    max.bgd_women_2020 + max.bgd_women_of_reproductive_age_15_49_2020 + 
+    max.esaccilc_dst_water_100m_2000_2012_BGD + mean.X201501_Global_Travel_Time_to_Cities_BGD + 
+    mean.esaccilc_dst_water_100m_2000_2012_BGD + mean.osm_dst_road_100m_2016_BGD + 
+    sum.X201501_Global_Travel_Time_to_Cities_BGD + sum.bgd_children_under_five_2020 + 
+    sum.bgd_general_2020 + sum.bgd_men_2020 + sum.bgd_women_of_reproductive_age_15_49_2020 + 
+    sum.bgd_youth_15_24_2020 + sum.osm_dst_road_100m_2016_BGD + 
+    sum.Nightlights_data + stdev.esaccilc_dst130_100m_2014_BGD + 
+    count.X202001_Global_Motorized_Travel_Time_to_Healthcare_BGD + 
+    min.esaccilc_dst150_100m_2014_BGD, vardir = "new_df$se.GVF^2", 
+    combined_data = cleaned_df, domains = "upazila.code", method = "ml", 
+    transformation = "arcsin", backtransformation = "bc", eff_smpsize = "num_unique_hhid", 
     MSE = TRUE, mse_type = "boot", B = 50)
-
 summary(fh_arcsin_final)
 ```
 
 Note we use 50 bootstraps here but in a real case study you may want to use 200 or even 250.
 
-The summary includes a lot of useful information. It also now gives the adjusted R-squared as 0.56. This shows the transformed model is an improvement compared to the raw model.
+The summary includes a lot of useful information. It also now gives the adjusted R-squared as 0.61. This shows the transformed model is an improvement compared to the raw model.
 
 We now estimate the model-based point estimates again.
 
@@ -1339,7 +1221,7 @@ We can then carry out a Brown test to test this relationship computationally. Th
 compare(fh_arcsin_final)
 ```
 
-The output of this command shows that the correlation between the two sets of point estimates is 0.73. In addition, this command performs a statistical test on the differences between the direct and model-based point estimates. The p-value of the test is 1 indicating that the null hypothesis of no difference between the two sets of estimates is not rejected.
+The output of this command shows that the correlation between the two sets of point estimates is 0.78. In addition, this command performs a statistical test on the differences between the direct and model-based point estimates. The p-value of the test is 1 indicating that the null hypothesis of no difference between the two sets of estimates is not rejected.
 
 **Benchmark the estimates if required**
 
