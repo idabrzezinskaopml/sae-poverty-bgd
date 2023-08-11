@@ -29,11 +29,11 @@ editor: visual
 
 ## 1. Introduction
 
-Section A is our first step into poverty modelling in Bangladesh. Here, we will obtain and transform various geo-spatial data sets (such as accessibility, nightlights intensity, demographic maps, and topography) into predictors of poverty rates. This data has been sourced through a combination of ground surveys and remote sensing (collected by satellites and remote sensors orbiting the Earth). Geo-spatial variables are important inputs into poverty estimation models. Outputs from such models fill spatial and temporal gaps that exist between official poverty statistics. This is due to the many advantages of remote sensed geo-spatial data:
+Section A is our first step into poverty modelling in Bangladesh. Here, we will obtain and transform various geo-spatial data sets (such as accessibility, nightlights intensity, demographic maps, and topography) into predictors of poverty rates. This data has been sourced through a combination of ground surveys and remote sensing (collected by satellites and remote sensors orbiting the Earth). Geo-spatial variables are important inputs into poverty estimation models. Outputs from such models fill spatial and temporal gaps that exist between official poverty statistics. This is due to the many advantages of **remote sensed** geo-spatial data:
 
 -   Has wide coverage and typically includes data from low-and-middle-income countries (LMICs).
 
--   Covers areas that would otherwise be difficult to access, such as mountain ranges, islands, and remote communities.
+-   Covers areas that would otherwise be difficult to access, such as mountain ranges, islands, and conflict zones.
 
 -   Can be obtained at a high spatial resolution - in some cases as high as 30m x 30m (which is the resolution of the population density maps that we will be using).
 
@@ -47,9 +47,9 @@ Long anwer: In order to predict poverty rates for upazilas, we need to know some
 
 @PJ - *I really think some of the above could use some visuals. I can see you have the overarching steps in a visual below - but I also think that some of the reasons for why we need this can be visualised using graphs.*
 
-Finally, we will need a shapefile that defines the boundaries of each administrative zone and turn it into a raster (again, a collection of pixels) - so that we can assign each pixel with geo-spatial information to the right upazila.
+Finally, we will need a shapefile that defines the boundaries of each administrative zone - so that we can assign each pixel with geo-spatial information to the right upazila.
 
-Figure XX below demonstrates the process in seven steps:
+Figure XX below demonstrates the process in six steps:
 
 **Step 1**: Load all datasets. I have divided those into 6 categories:
 
@@ -70,11 +70,9 @@ Datasets no. 3-5 will need harmonising, while the World Pop datasets are pre-har
 
 **Step 5**: Mask to obtain the "shape" of Bangladesh.
 
-**Step 6**: Convert the shapefile with administrative boundaries of upazilas in Bangladesh to a raster (a collection of pixels each indexed to the correct upazila).
+**Step 6**: Estimate zonal statistics (mean, max, min, sd etc.) for each geo-spatial dataset for each upazila.
 
-**Step 7**: Estimate zonal statistics (mean, max, min, sd etc.) for each geo-spatial dataset for each upazila.
-
-![](images/diagram%20vol%202.png)
+![](images/daigram%20vol%203.png)
 
 ## 2. Theory - key concepts in Geo-spatial analysis
 
@@ -119,7 +117,7 @@ I want to introduce the two most common spatial data types, which we will be wor
 
 An important note on the naming conventions and structures of geographical coordinates in geo-spatial data. A set of coordinates will typically be expressed as **(x,y), where x relates to longitude and y to latitude**. Latitude has a range (-90, 90), while longitude has a range (-180, 180). Negative values of longitude refer to the Western hemisphere and positive values to the Eastern hemisphere. Similarly, negative values of latitude refer to the Southern hemisphere and positive values refer to the Northern hemisphere. Here is a diagram that can serve as a cheat sheet!
 
-![](images/geographic-coordinate-system-l-01.jpg){width="433"}
+![](images/geographic-coordinate-system-l-01.jpg){width="428"}
 :::
 
 #### 2.2.1. Raster data
@@ -148,7 +146,7 @@ Source: [National Ecological Observatory Network](https://www.neonscience.org/)
 
 Source: [National Ecological Observatory Network](https://www.neonscience.org/)
 
-We could add another category to this, which is the **multipolygon**. As the name suggests, a multipolygon is a collection of polygons. For instance, if we think about a polygon representing a lake or a forest cover, a multipolygon could depict an area of a national park that consists of a forest cover and two lakes - such as in the image below. In this particular example our polygons are *nested* within each other, but they could very well be just next to each other and not touching (such as two buildings on either side of a street).
+We could add another category to this, which is the **multipolygon**. As the name suggests, a multipolygon is a collection of polygons. For instance, if we think about a polygon representing a lake or a forest cover, a multipolygon could depict an area of a national park that consists of a forest cover *and* two lakes - such as in the image below. In this particular example our polygons are *nested* within each other, but they could very well be just next to each other and not touching (such as two buildings on either side of a street).
 
 ![](images/Multipolygon.png)
 
@@ -192,7 +190,7 @@ Now, let's see an example of visualising multiple raster layers from our project
 
 ![Rasters showing all floods and the worst droughts in Nigeria between 2010-2020](images/Nigeria%20flood%20drought%20.png)
 
-The two layers (drought and flood) also have different spatial resolutions. Here, drought data is of a lower spatial resolution, i.e. it comes up as big pixels of around 0.5 degrees (or \~30km x 30km @PJ *- Ida check my addition is correct.*), while flood data is extremely high resolution, with each pixel the size of \~250m x 250m, coming from the NASA MODIS satellite. Figure XX below shows a zoom into two grid cells of drought data, which contain numerous grid cells with flood data. The higher the spatial resolution, the smaller your grid cells!
+The two layers (drought and flood) also have different spatial resolutions. Here, drought data is of a lower spatial resolution, i.e. it comes up as big pixels of around 0.5 degrees (or \~30km x 30km), while flood data is extremely high resolution, with each pixel the size of \~250m x 250m, coming from the NASA MODIS satellite. Figure XX below shows a zoom into two grid cells of drought data, which contain numerous grid cells with flood data. The higher the spatial resolution, the smaller your grid cells!
 
 ![Zoom into pixels showing floods and droughts in Nigeria](images/Pixel%20zoom%20in%20.png)
 
@@ -200,7 +198,7 @@ The two layers (drought and flood) also have different spatial resolutions. Here
 
 The previous section introduced the concept of working with multiple layers of geo-spatial information. In our example, the two layers, despite being displayed on top of each other, had very different attributes: spatial resolution, cell sizes, extent . However, there are cases, as in the poverty modelling exercise we are about to do, where we want to "harmonise" our raster objects, i.e. make sure all the attributes (CRS, extent, spatial resolution, cell size) are the same when rasters are overlaid on top of each other.
 
-Let's consider our problem at hand again: **We want to compute zonal poverty statistics at administrative level 3 (upazila) level in Bangladesh.** @PJ *- Ida - does the 'zonal' need to be here? What does it actually mean?* We will do so by using statistical modelling and a number of remote sensed covariates as our predictors. For this, we need some basic statistics (mean, min, max, standard deviation, count etc.) that describe geo-spatial information for each upazila. For example, what is the mean Travel Time to Healthcare Facilities (in minutes) in the upazila of Abador? Or, what is the median nightlights intensity in that upazila? While R is smart enough to compute those statistics for us automatically, we need to provide it with a nicely harmonised set of rasters. We will use a "base layer", which contains all the attributes we are interested in, and harmonise all other remote sensing covariates to our base layer. That is: we will match the CRS, extent, spatial resolution, cell size of all our data to the one of the base layer.
+Let's consider our problem at hand again: **We want to compute poverty statistics at administrative level 3 (upazila) level in Bangladesh.** We will do so by using statistical modelling and a number of remote sensed covariates as our predictors. For this, we need some basic statistics (mean, min, max, standard deviation, count etc.) that describe geo-spatial information for each upazila. For example, what is the mean Travel Time to Healthcare Facilities (in minutes) in the upazila of Abador? Or, what is the median nightlights intensity in that upazila? While R is smart enough to compute those statistics for us automatically, we need to provide it with a nicely harmonised set of rasters. We will use a "base layer", which contains all the attributes we are interested in, and harmonise all other remote sensing covariates to our base layer. That is: we will match the CRS, extent, spatial resolution, cell size of all our data to the one of the base layer.
 
 With that in mind, I will introduce a few ways in which we will manipulate spatial data. This is a useful skill to have as we will soon discover that raw open source data can be a little messy and you may need to implement some of these steps to make sense of your data before any meaningful analysis.
 
@@ -216,35 +214,27 @@ A note of caution on missing values in geo-spatial data. As with every data type
 
 4.  **Masking** - cutting the exact "shape" of a raster layer. This is different from cropping, which would leave us with a chunky box that contains Bangladesh, but also some areas between the maximum and minimum values that fall outside of Bangladesh. We can use the mask function to examine only the country boundaries.
 
-These concepts may seem a little abstract for now, so let us consider visually what each of these processes will entail. Let's take the example of processing geo-spatial data on nightlights intensity for Bangladesh - a process we will be implementing in Step 5 of Section 3. Night lights intensity has been widely used in literature as a proxy for income and will be one of our predictors of poverty. Figure XX shows a TIFF file with the aerial shot of nightlights intensity in South-East Asia as seen from space. We can see that urban areas and areas with higher density of economic activity appear more luminous. We will use the functions described above to manipulate this TIFF file and transform it into a raster layer for Bangladesh with codified values of radiance per pixel (this is a measure of nightlights intensity). @PJ *- Ida - what's the weird very high intensity blob at the bottom right hand side in the picture? Shouldn't that just be dark sea?*
+These concepts may seem a little abstract for now, so let us consider visually what each of these processes will entail. Let's take the example of processing geo-spatial data on nightlights intensity for Bangladesh - a process we will be implementing in Step 5 of Section 3. Night lights intensity has been widely used in literature as a proxy for income and will be one of our predictors of poverty. Figure XX shows a TIFF file with the aerial shot of nightlights intensity in South-East Asia as seen from space. We can see that urban areas and areas with higher density of economic activity appear more luminous. We will use the functions described above to manipulate this TIFF file and transform it into a raster layer for Bangladesh with codified values of radiance per pixel (this is a measure of nightlights intensity).
 
-![](images/Nightlights%20data%20-01.png)
+![](images/Nightlights%20data%20-02.png){width="494"}
 
-Figure XX below shows the processing of data on nightlights intensity. The left hand side is what you will see if you simply load the above TIFF file into your R environment, turn it into a raster, and plot - in other words, not much. Although it is a little difficult to see, the original raster is showing values of nightlights intensity for the entire South East Asia region at the orginal spatial resolution of around \~450m. First, we are interested in analysing just Bangladesh, rather than the entirely of South East Asia (not least because TIFF files can be quite heavy and maintaining unnecessarily large raster objects slows down a lot of the computation). We will "crop" our raster object to the Bangladesh base layer, i.e. we will change the extent to that of Bangladesh. Now, our raster object changed dimensions. It is defined by the maximum and minimum values of longitude and latitude in Bangladesh.
+Figure XX below shows the processing of data on nightlights intensity. The left hand side is what you will see if you simply load the above TIFF file into your R environment, turn it into a raster, and plot - in other words, a massive block of dark blue over Asia. The original raster shows values of nightlights intensity for the entire South East Asia region at the original spatial resolution of around \~450m.
 
-The next step in the process is to resample the raster, i.e. change the spatial resolution to \~100m to match that of our base layer. Going from a lower to a higher spatial resolution is called disaggregation. If we zoomed into the image under "resample", we would see more smaller pixels appear than previously. Finally, we want to view the "shape" of Bangladesh, rather than a rectangular box bound by its extent. For this purpose, we "mask" our raster layer with nightlights to the base layer - and we finally achieve a nicely formatted raster that resembles Bangladesh!
+First, we are interested in analysing just Bangladesh, rather than the entirely of South East Asia (not least because TIFF files can be quite heavy and maintaining unnecessarily large raster objects slows down a lot of the computation). We will "crop" our raster object to the Bangladesh base layer, i.e. we will change the extent to that of Bangladesh. Now, our raster object changed dimensions. It is defined by the maximum and minimum values of longitude and latitude in Bangladesh.
 
-@PJ: *Ida, you mention this, but it is very difficult to see what is going on in the right three rectangles. To my eye they basically are dark blue, almost uniformly. It would be good if we could do something with this so that it is easier to see variation.*
+We also want to view the "shape" of Bangladesh, rather than a rectangular box bound by its extent. For this purpose, we "mask" our raster layer with nightlights to the base layer - and we achieve a nicely formatted raster that resembles Bangladesh!
 
-![](images/Nightlights%20data%20processing.png){width="803"}
+Just a note that along this process, we also resample the raster, i.e. change the spatial resolution to \~100m to match that of our base layer. Going from a lower to a higher spatial resolution is called disaggregation. If we zoomed into the image, we would see more of smaller pixels appear than previously. However, since the diagram is meant to demonstrate how we change the geographical coverage, it is quite zoomed out and luminous pixels in yellow do not appear immediately visible. Also, given that we are working with a really high spatial resolution - we would need to zoom *a lot*, possibly to the level of individual buildings, in order to see the change resulting from resampling (hence I do not show it in the diagram).
 
-Note that the nightlights raster did not contain missing values and any location with no radiance was coded as having a value of zero nightlights intensity. There are cases, however, where we should be more careful about the interpretation of missing values vs. zeros. In our next example, we will go through the processing of high-resolution demographic maps from Meta, specifically the population density of youth aged 15-24 - a process we will be implementing in Step 4 of Section 3. The left hand side of Figure XX below shows the result from simply plotting the raster from the original TIFF file. We can see a few colour-coded values of population density, but most of the raster is empty (NAs shown in white). Here, the user should consider: are the values missing because there are no people in this location? Or is it because we haven't collected data on those locations? In our case, the documentation tells us that missing values are equivalent to there being no people aged 15-24. After recoding NA values as 0s, we see that the raster layer is now populated with values (zeros shown in grey).
-
-As in the example of nightlights, we want to crop our raster so that it has the extent of Bangladesh. Afterwards, we will change the spatial resolution to \~100m. Note that the population density data is originally of a higher spatial resolution (of around \~30m), so in this case we are resampling to a coarser grid. This process is called aggregation. Since we are deploying the "sum" algorithm, we can observe that the legend beside the plot has changed - we now have larger density of people per pixel (since our pixels just got bigger as a result of aggregation). The final step is to mask our raster with demographic data to the base layer - and we end up with a nice shape of Bangladesh.
-
-@PJ: *Ida as before it is very hard to see what is going on here, can we do something about that? The pixels I think are very small.*
-
-![](images/FB%20data%20processing.png)
-
-These are exactly the processing steps that we will be carrying out in our next session, although they will all be automated with a single function for ease of application.
+![](images/Nightlights%20processing%203.png){width="720"}
 
 ### 2.5. Spatial Data in R
 
 Given that our entire workflow will be carried out in R to make it accessible, open source, and user-friendly - we will introduce some common spatial objects in R. There are numerous packages that allow you to work with spatial data. In fact, packages are very often retired and new ones are created to replace them. We will be relying mostly on:
 
-1.  The `sp` and `sf` packages for vector data @PJ *- Ida, add hyperlinks to these packages.*
-2.  The `raster` package for raster data
-3.  The `rgdal` package for manipulation of geo-spatial data using the GDAL library.
+1.  The [`sp`](https://www.rdocumentation.org/packages/sp/versions/2.0-0) and [`sf`](https://www.rdocumentation.org/packages/sf/versions/1.0-14) packages for vector data
+2.  The [`raster`](https://www.rdocumentation.org/packages/raster/versions/3.6-23/topics/raster-package) package for raster data
+3.  The [`rgdal`](https://www.rdocumentation.org/packages/rgdal/versions/1.6-7) package for manipulation of geo-spatial data using the GDAL library.
 
 #### 2.5.1. Vector data with `sp` package
 
@@ -269,13 +259,11 @@ The `sf` package implements [Simple Features](https://en.wikipedia.org/wiki/Simp
 
 Source: [Wikipedia](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry)
 
-`sf` objects are organised into three features (see Figure XX below): @PJ: *Ida the below output lists "100 features" in the first row, so this is slightly confusing.*
+`sf` objects are organised into three elements. Figure XX shows an example of an `sf` object, which displays 100 features (or rows in our data) and 6 fields (columns in our data). The key elements that make up this object are:
 
-1.  `sf`, the data frame with feature attributes (for example, administrative codes) and feature geometries (green box).
-2.  `sfc,` the simple feature geometry list-column (red box).
-3.  `sfg`, the simple feature geometry (blue box). In this case, a multipolygon.
-
-@PJ *- Ida I find this explanation slightly confusing. It is not clear to me at least what these three features in the end are. Why do they matter?*
+1.  `sf`, an individual row or record in our data with values for each column (green box).
+2.  `sfc,` the simple feature geometry list-column (red box). This column indicates that our object is indeed 'spatial', as opposed to being a simple data frame. It contains the geometry type for each row in our data (see geometry types we learned in the figure above: they could be lines, points, multipoints etc.). In this case, we are working with multipolygons (which could be for instance administrative boundaries).
+3.  `sfg`, the simple feature geometry (blue box). It contains the actual geographical coordinates - or (x,y) points, that make up our geometry. In our case, they will show all (x,y) points that are vertices of multipolygon structures.
 
 ![](images/multipolygon%20feature%20.png)
 
@@ -322,7 +310,7 @@ I would recommend not rearranging the files across folders. Keeping this structu
 ::: callout-warning
 ## Warning
 
-Just a heads up that the files we will be working with are very large. The .zip file itself is is 5GB, while all the files after unzipping will take up around 34GB of space. Please make sure you have sufficient memory on your machine. If you are using an online storage solution, you might want to temporarily offload other files you are not currently using to the cloud. @PJ *- Ida - you should specify how much memory at minimum is required for this.*
+Just a heads up that the files we will be working with are very large. The .zip file itself is is 5GB, while all the files after unzipping will take up around 34GB of space. Please make sure you have sufficient memory on your machine (a minimum of 34 GB will be required). If you are using an online storage solution, you might want to temporarily offload other files you are not currently using to the cloud.
 :::
 
 ## 3. Applying this
@@ -343,7 +331,7 @@ We will be working with the following data sets:
 
 5.  **Nightlights data** at \~450m spatial resolution with almost global coverage.
 
-6.  **World Pop** Pre-harmonised geo-spatial datasets: available for all countries. The datasets includes information on topography, slope, Open Street Map distance to closest road, waterway, and various land cover classes. @PJ *- Ida, explain what this means.* Note that this data has already been harmonised to our base layer and hence will not require any processing in this script.
+6.  **World Pop** Pre-harmonised geo-spatial datasets: available for all countries. The datasets includes information on topography (this relates to land cover classes - for instance, waterways, forests, mountains, plains ets.), slope (measure of change in elevation), and Open Street Map's data on distance to closest road, waterway*.* Note that this data has already been harmonised to our base layer and hence will not require any processing in this script.
 
 The below tables provide details on these data sets.
 
@@ -416,8 +404,9 @@ library("dplyr")          # Data wrangling
 library("readr")          # read rectangular data
 library("leaflet")        # Interactive maps
 library("htmlwidgets")    # HTML widgets
-library("scales")
-library("exactextractr")
+library("scales")         # Nice scales on graphs
+library("exactextractr")  # Automated production of zonal statistics
+library ("cividis")       # Colour palette for data visualisations
 ```
 
 ### Step 1 - Load all data sets
@@ -516,7 +505,7 @@ We also produced our first map of Bangladesh! This is the raster layer we will b
 
 Apart from the raster file defining the national boundaries of Bangladesh, we are interested to know the boundaries of the administrative zones that we will estimate poverty for. In our case, this is administrative level 3, or upazila, in Bangladesh. This information is provided by a shapefile, which is a *vector* dataset - and has different properties than raster data.
 
-As before, we will start by simply typing the name of our spatial object into the console. This will provide information on: geometry, dimensions, extent, CRS, as well as give us a preview into the features. To demonstrate this, I saved our shapefile in two formats: 1) an `sf` object called `multipolygon`, and 2) a `sp` object called `SpatialPolygonsDataFrame`.
+As before, we will start by simply typing the name of our spatial object into the console. This will provide information on: geometry, dimensions, extent, CRS, as well as give us a preview into the features. To demonstrate this, I saved our shapefile in two formats: 1) an `sf` object with `multipolygon` geometry, and 2) a `sp` object called `SpatialPolygonsDataFrame`.
 
 ```{r}
 # Inspect the sf multipolygon object with admin 3 boundaries
@@ -544,7 +533,7 @@ The output gives us the following information about the shape file:
 
 -   A preview of the first 10 features tells us that for each multipolygon we have information on: administrative codes for the upazila, English name of the upazila, area covered by the shape, and codes as well as names for other administrative levels.
 
-The plot shows a visualisation of the boundaries of each upazila in Bangladesh. They are essentially a collection of multipolygons (i.e. each upazila is bound by a multipolygon object). We will be estimating poverty for each upazila. This illustrates our issue quite nicely - it would be prohibitively costly for a survey like the DHS to travel to each upazila and obtain a sufficient sample size to generate reliable poverty statistics. By using open-source high-resolution geo-spatial data, we can model poverty for each zone, including out-of-sample areas, i.e. areas where the DHS did not reach.
+The plot shows a visualisation of the boundaries of each upazila in Bangladesh. They are essentially a collection of multipolygons (i.e. each upazila is bound by a multipolygon object). We will be estimating poverty for each upazila. This illustrates our issue quite nicely - it would be prohibitively costly for a survey like the DHS to travel to each upazila and obtain a sufficient sample size to generate reliable poverty statistics. By using open-source high-resolution remote sensed geo-spatial data, we can model poverty for each zone, including out-of-sample areas, i.e. areas where the DHS did not reach.
 
 We now turn to Steps 2-5, which will process our raster layers of geo-spatial information.
 
@@ -557,7 +546,10 @@ The reason that all steps are grouped together into one section is that all of t
 ::: callout-caution
 ## Caution
 
-There are many algorithms that can be used for changing the spatial resolution of a raster. For accessibility and nightlights data, we will use the nearest neighbour interpolation, where each "corrected" pixel is assigned a data value of the "uncorrected" pixel that is closest to it in terms of coordinate location. @PJ- *Ida it is unclear what 'corrected' vs 'uncorrected' refers to here. Also unclear why the difference is chosen.* However, for harmonising demographic data that is of a higher spatial resolution than our base layer, the use of the "sum" algorithm is more appropriate. Otherwise we "lose people" in a downsample. To illustrate the issue, let's imagine we have 9 high resolution pixels (3x3). The sum algorithm will add up values from all those pixels when aggregating, while the nearest neighbour interpolation will select the value that falls closest to the "corrected" pixel, and not count any other ones.
+There are many algorithms that can be used for changing the spatial resolution of a raster, depending on the direction of resampling and types of geo-spatial information represented. We have two cases in our guide:
+
+1.   Accessibility (\~250m resolution) and nightlights data (\~450 m resolution), which are at a coarser spatial resolution than our base layer (\~100m resolution), meaning they have fewer, larger grid cells. Moving from a lower to a higher spatial resolution is called disaggregation, as we see more smaller, or 'disaggregated' grid cells in the data after resampling. In this case, we can use the **nearest neighbour interpolation** method, where each new small pixel is assigned a data value of the older bigger pixel that is closest to it in terms of coordinate location. So, only the data value from *one* closest grid cell is transferred, and the values from other cells nearby are discarded.
+2.  Demographic maps from Meta (\~30m resolution), which are at a higher spatial resolution than our base layer (\~100m resolution). This means our demographic data has more smaller pixels than the base layer. In this case, we have to "aggregate" a few smaller pixels into a bigger one to match the spatial resolution of our base layer. Given the nature of our data - where each pixel represents the number of people living there - we cannot simply take the value of *one* closest pixel, as is the case in the neareast neighbour interpolation, because we would discard information on all the other people living in neighbouring cells and underestimate the real population density. Instead, we have to use the **"sum" algorithm**, which sums up values from all smaller cells that fall within the bigger one (rather than just taking the value from one of them). This way, we will ensure that no people are 'lost' when aggregating. **In general, the use of the "sum" algorithm is the appropriate method when aggregating (changing to a lower spatial resolution) demographic raster data.**
 :::
 
 To automate the processing, we will write the first function for processing geo-spatial covariates and call it `geo_process`. We will use it for the Malaria Atlas accessibility and Nightlights data. It automatically executes the following steps:
@@ -698,7 +690,6 @@ Now let's visualise our results! In the code chunk below, I'll present three way
 
 ## 1. Simple plot ##
 
-version
 # Plot results - with no bounding box or axes, using the viridis colour palette, and adding a main plot title
 plot(matlas.processed[[1]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Travel Time to Cities")
 plot(matlas.processed[[2]], box=F, axes=F, col=viridis(50), main = "Bangladesh - Motorised Travel Time to Healthcare Facilities")
@@ -869,50 +860,13 @@ plot(worldpop.rasters[[11]], box = F, axes = F, main = "Distance to the closest 
 
 ```
 
-### Step 6 - Convert shapefile to a raster
+### Step 6 - Calculation of zonal statistics
 
-Now, we have all the raster images with geo-spatial data that we will use in poverty estimation: `matlas.processed`, `fblist.processed`, `nightlights.raster.processed`, and `worldpop.rasters`. These rasters are essentially collections of pixels within Banglafdesh and each pixel has some information associated with it (for example, population density of women). However, now we would like to know which upazila each of these pixels belongs to, so that we can obtain zonal statistics (min, max, mean, sd, etc.). For example: what is the mean nightlights intensity for each upazila?
+This brings us to our final step - calculating zonal statistics, i.e. the values of min, max, mean, sd etc. of all the geo-spatial datasets at upazila level, which will serve as inputs into poverty estimation in Section B. For this, we will use our harmonised rasters from steps 2-5: `matlas.processed`, `fblist.processed`, `nightlights.raster.processed`, and `worldpop.rasters`, as well as the shapefile containing the administrative level 3 (upazila) boundaries in Bangladesh: `shapefile.zone.plot.`
 
-Before we can do that - we need a file that will allocate each pixel in the raster data to the appropriate upazila. That is, we need to use the shapefile which contains administrative boundaries of upazilas and convert it to a raster of the same spatial resolution, extent, and CRS as the base layer. This newly created raster will assign the correct administrative upazila code to each pixel - and so, will allow us to assign geo-spatial information to the upazila.
+We begin by putting all of our rasters into one list, `full.raster.list` and creating a stack of rasters called `raster.stack`, which is essentially a collection of rasters with the same extent and spatial resolution that can be stored in one file. You can think of those layers as being "stacked" on top of each other. This format will make it easier to calculate zonal statistics as we only have to supply one object to the function (as opposed to doing it separately for 24 raster layers).
 
-First, we want to keep admin codes as numerics. We will create a new column in the shapefile data that will subtract "BD" from the upazila code. So, instead of "BD552769", we will keep simply "552769". This is now saved in the `adm3_integer` column. Next, we will create an empty raster object from scratch and assign the extent, dimensions, and CRS of the base layer. Then, using the `rasterize` function, we will transform values of the admin 3 codes from the shapefile into each pixel of the raster object. A simple plot of the resulting `raster_admin3` shows that values have been assigned to each pixel.
-
-```{r}
-# Copy admin unit codes to new column in upazila shapefile attributes, in the process removing Bangladesh prefix from the integer code
-shapefile.zonal@data$adm3_integer <- substr(shapefile.zonal@data[["ADM3_PCODE"]], 3, 10)
-
-# Turn into numeric
-shapefile.zonal@data[["adm3_integer"]] <- as.numeric(shapefile.zonal@data[["adm3_integer"]])
-
-# Convert upazila shapefile to raster using the integer admin unit code, maintaining extent and cell size of L0 base layer
-## Set up a raster "template" to use in rasterize()
-ext_base <-  extent(base.layer.raster)
-ncol_base <- base.layer.raster@ncols
-nrow_base <- base.layer.raster@nrows
-
-xy <- abs(apply(as.matrix(bbox(ext_base)), 1, diff))
-r <- raster(ext_base, ncol=ncol_base, nrow=nrow_base)
-
-## Rasterize the shapefile
-raster_admin3 <-rasterize(shapefile.zonal, r, field=shapefile.zonal$adm3_integer)
-
-# Assign the same CRS as the base layer 
-crs_base <- crs(base.layer.raster)
-crs(raster_admin3) <- crs_base
-
-# Plot to see if values have been assigned to the raster
-plot(raster_admin3, box=F, axes=F, legend=F)
-
-
-```
-
-### Step 7 - Calculation of zonal statistics
-
-This brings us to our final step - calculating zonal statistics, i.e. the values of min, max, mean, sd etc. of all the geo-spatial datasets at upazila level, which will serve as inputs into poverty estimation in Section B. For this, we will use our harmonised rasters from steps 2-5: `matlas.processed`, `fblist.processed`, `nightlights.raster.processed`, and `worldpop.rasters`, as well as a raster that assigns upazila codes to each pixel, raster_admin3, which we obtained from our shapefile in step 6.
-
-We begin by putting all of our rasters into one list, full.raster.list and creating a stack of rasters called raster.stack, which is essentially a collection of rasters with the same extent and spatial resolution that can be stored in one file. You can think of those layers as being "stacked" on top of each other. This format will make it easier to calculate zonal statistics as we only have to supply one object to the function (as opposed to doing it separately for 24 raster layers).
-
-Now we can calculate our zonal statistics: mean, minimum value, maximum value, sum, standard deviation, and the number of observations. Supplying our raster.stack with all geo-spatial data and raster_admin3, which contains upazila boundaries in the zonal function will calculate all the statistics of interest. We will save those in a data frame format (which should be fairly familiar!), with column names indicating the zonal statistic for each geo-spatial layer. We will combine all statistics in a single data frame zonal.stats.all.
+Now we can calculate our zonal statistics: mean, minimum value, maximum value, sum, standard deviation, and the number of observations. We will make use of the `exact_extract` function, which is the quickest and most computationally efficient way of obtaining key statistics from geo-spatial data at the chosen administrative level. Supplying our `raster.stack` with all geo-spatial data and `shapefile.zonal.plot`, which contains upazila boundaries in the zonal function will calculate all the statistics of interest. We will save those in a data frame format (which should be fairly familiar!), with column names indicating the zonal statistic for each geo-spatial layer. We will also include a column with the administrative code for each upazila, given by `ADM3_PCODE`. The name of this final data frame is `BGD.zonal.stats`.
 
 ```{r}
 # Make a list with all the rasters 
@@ -924,106 +878,27 @@ full.raster.list
 # Create a raster stack
 raster.stack <- stack(full.raster.list)
 
-# Zonal statistics 
-
-# Mean
-zonal.stats.mean <- zonal(raster.stack, raster_admin3, fun='mean', digits=6, na.rm=TRUE)
-zonal.stats.mean <- as.data.frame(zonal.stats.mean)
-colnames_mean <- colnames(zonal.stats.mean)  # gather column names
-colnames_mean <- paste(colnames_mean, "mean", sep="_")  # add identifier for mean
-colnames_mean <- colnames_mean[2:28]  # exclude zone
-colnames(zonal.stats.mean)[2:28] <- colnames_mean  # rename columns
- 
-
-# Min
-zonal.stats.min <- zonal(raster.stack, raster_admin3, fun='min', digits=6, na.rm=TRUE)
-zonal.stats.min <- as.data.frame(zonal.stats.min)
-colnames_min <- colnames(zonal.stats.min)
-colnames_min <- paste(colnames_min, "min", sep="_")
-colnames(zonal.stats.min)[2:28] <- colnames_min[2:28]
-
-# Max
-zonal.stats.max <- zonal(raster.stack, raster_admin3, fun='max', digits=6, na.rm=TRUE)
-zonal.stats.max <- as.data.frame(zonal.stats.max)
-colnames_max <- colnames(zonal.stats.max)
-colnames_max <- paste(colnames_max, "max", sep="_")
-colnames(zonal.stats.max)[2:28] <- colnames_max[2:28]
-
-# Sum
-zonal.stats.sum <- zonal(raster.stack, raster_admin3, fun='sum', digits=6, na.rm=TRUE)
-zonal.stats.sum <- as.data.frame(zonal.stats.sum)
-colnames_sum <- colnames(zonal.stats.sum)
-colnames_sum <- paste(colnames_sum, "sum", sep="_")
-colnames(zonal.stats.sum)[2:28] <- colnames_sum[2:28]
-
-# SD (standard deviation)
-zonal.stats.sd <- zonal(raster.stack, raster_admin3, fun='sd', digits=6, na.rm=TRUE)
-zonal.stats.sd <- as.data.frame(zonal.stats.sd)
-colnames_sd <- colnames(zonal.stats.sd)
-colnames_sd <- paste(colnames_sd, "sd", sep="_")
-colnames(zonal.stats.sd)[2:28] <- colnames_sd[2:28]
-
-# Count (number of observations)
-zonal.stats.count <- zonal(raster.stack, raster_admin3, fun='count', digits=6, na.rm=TRUE)
-zonal.stats.count <- as.data.frame(zonal.stats.count)
-colnames_count <- colnames(zonal.stats.count)
-colnames_count <- paste(colnames_count, "count", sep="_")
-colnames(zonal.stats.count)[2:28] <- colnames_count[2:28]
-
-# Make a list of all dataframes that contain zonal statistics
-l.df <- lapply(ls(pattern="zonal.stats"), function(x) get(x))
-
-# Combine all zonal statistics into one data frame 
-zonal.stats.all <- bind_cols(l.df)
-
-# Delete repeated columns for zones - occurs every 28 variables 
-zonal.stats.all = subset(zonal.stats.all, select = -c(29, 57, 85, 113, 141)) 
-
-# Rename the colum with upazila codes
-colnames(zonal.stats.all)[1] <- "upazila.code"
-
-# Save file 
-save(zonal.stats.all, file = "C:/Users/idabr/OneDrive - Oxford Policy Management Limited/EMDI SAE/Geo-spatial Bangladesh data/BGD.zonalstats.RData")
-```
-
-Test: using Chris Lloyd's method and the `exactextractr` package
-
-Omg this works way quicker and there is no need to convert the shapefile into a raster. However, some values of min are negative?
-
-Need to assign the upazila code to the final data frame
-
-```{r}
-# Load Nikos's data
-load("C:/Users/idabr/OneDrive - Oxford Policy Management Limited/EMDI SAE/Geo-spatial Bangladesh data/Z all other files/Harmonised data Nikos/final.cov.est.new.Rdata")
-
 # Apply exact extract function
-upazila <- exact_extract(raster.stack, shapefile.zone.plot, c('min', 'max', 'mean', 'sum', 'stdev', 'count'), stack_apply=TRUE, append_cols="ADM3_PCODE")
+BGD.zonal.stats <- exact_extract(raster.stack, shapefile.zone.plot, c('min', 'max', 'mean', 'sum', 'stdev', 'count'), stack_apply=TRUE, append_cols="ADM3_PCODE")
 
-# Compare values to those obtained by Nikos (and my earlier estimates)
-# Get column names
-colnames(upazila)
-colnames(final.cov.est)
-colnames(zonal.stats.all)
+# Save zonal stats as an RData file
+#save(BGD.zonal.stats, file = "BGD.zonal.stats.RData")
 
-# Summary - min of Global Travel Time to Cities - reasonably similar
-summary(upazila$min.X201501_Global_Travel_Time_to_Cities_BGD)
-summary(final.cov.est$ACCCITY.MIN)
-summary(zonal.stats.all$X201501_Global_Travel_Time_to_Cities_BGD_min)
-
-# Max distance to the closest road - super similar!
-summary(upazila$max.osm_dst_road_100m_2016_BGD)
-summary(final.cov.est$DSTROAD.MAX)
-summary(zonal.stats.all$osm_dst_road_100m_2016_BGD_max)
-
-# Sum population density of women - super similar again!
-summary(upazila$sum.bgd_women_2020)
-summary(final.cov.est$WOMEN.SUM)
-summary(zonal.stats.all$bgd_women_2020_sum)
-
-# Save file 
-save(upazila, file = "C:/Users/idabr/OneDrive - Oxford Policy Management Limited/EMDI SAE/Geo-spatial Bangladesh data/BGD.zonalstats.exactextract.RData")
-
+# Save my workspace
+#save.image("C:/Users/idabr/OneDrive - Oxford Policy Management Limited/EMDI SAE/Geo-spatial Bangladesh data/Quarto github workspace update.RData")
 
 ```
+
+Congrats! You have made it to the end of Section A on processing geo-spatial covariates. Now you can use them to predict poverty rates for every upazila in Bangladesh, which will be done in Section B.
 
 ## 4. Caveats, problems, things to look out for
+
+-   **Replication:** This guide is intended to be replicable with various types of geo-spatial data sources and country contexts - we would welcome all such replication exercises and hope that our material can be used to produce small area estimates of poverty in countries other than Bangladesh! That said, the exact raster manipulation as well as processing steps needed will depend on your specific geo-spatial data. Always check the key elements of your raster data to inform the processing you will need to do - our procedure is not to be simply copy pasted (though it provides many useful functions you can work with). CRS, spatial resolution, extent, number of cells, and dimensions are always good things to check.
+
+-   **Time period of geo-spatial data**: whenever possible, try to obtain geo-spatial data for the same time period as the household survey data that contains the poverty variable (or any other outcome you are interested in modelling). If that is not possible - say that you can only access geo-spatial data that is older than your poverty data - you should consider whether this information is outdated, or could still be considered relevant (for instance the elevation of mountain ranges is unlikely to have changed much over time, but demographic data will change quite quickly).
+
+-   **Choice of poverty predictors**: This list of predictors of poverty is only indicative. You should consider, when replicating the poverty modelling exercise in your country context, what sources of geo-spatial data are available and relevant to poverty prediction.
+
+-   **Level of administrative disaggregation**: Although in this example we consider administrative level 3 in Bangladesh, small area estimation of poverty using geo-spatial data can be replicated at any other administrative level (higher or lower) - and this will vary depending on the country. Note however that the level of aggregation will inform your modelling choices (see Section B for more details).
+
+-   **Resampling algorithm**: The choice of the algorithm used for resampling matters - and depends on the information represented by your geo-spatial data, as well as whether you are aggregating (moving to a lower spatial resolution), or disaggregating (moving to a higher spatial resolution). For example, when you aggregate demographic data - you should use the "sum" algorithm. More details on this can be found in Section 3.
