@@ -811,62 +811,36 @@ Note that when applying to the DHS for data they say that they will get back to 
 
 **Insert screenshot of the DHS website here with circles around the files you wish to download**
 
-First of all you have to generate the unique domain identifier for each observation so that you are able to identify each observation by both its upazila as well as its cluster. **Insert Ida's method here:**
+First of all you have to generate the unique domain identifier for each observation so that you are able to identify each observation by both its upazila as well as its cluster. **Insert Ida's method here:** This method here should be able the data join so you have the geolocation connected to the household data.
 
 This new dataframe is represented by Ida's HH + Geospatial data.
 
 It is then merged with the sampling weights from the household data.
 
-```{r}
+**DHS 2014 data**
 
-setwd("C:/Users/nickl/iCloudDrive/Desktop/Oxford Policy Management/Bang_Rep")
+Loading a file that combines the household recode module for the 2014 DHS, the geo-location of clusters of households, and upazila codes to which the clusters belong. GPS coordinates correspond to the centroid of a cluster of households, which has a random offset of 2km in urban areas and 5-10km in rural areas to preserve the privacy of households. However, the DHS note that efforts have been made for offsets to be specified in a way that preserves the original administrative units within which HHs reside - therefore this should not affect our matching of households to upazilas.
 
-library(readr)
-Ida_s_HH_Geospatial_Data <- read_csv("Ida's HH + Geospatial Data.csv")
-View(Ida_s_HH_Geospatial_Data)
+This dataset has information on: Wealth index factor score, quintiles of the wealth index, strata, household weights, upazila, GPS location of clusters, cluster numbers.
 
-library(haven)
-BDHR7RFL <- read_dta("BDHR7RFL.DTA")
-View(BDHR7RFL)
+First we want to generate our variable of interest. In our case we use the variable 'prop_wealth_1'. This is the probability that a household will be in the lowest quintile of wealth across the whole survey. By definition 20% of households across the country will be in this bottom quantile but you will be able to see which areas are poorer by seeing which areas across the country have a higher probability of a household being in this bottom quintile of wealth. 
 
-Ban_data <- cbind(Ida_s_HH_Geospatial_Data, hv022 = BDHR7RFL$hv022)
+Our variable 'binary_wealth' is a dummy variable that equals 1 if the household is a part of the poorest quintile of wealth in Bangladesh and is equal to 0 otherwise.
 
-View(Ban_data)
 
-```
+We also createvariable to determine how many clusters are in each upazila because depending on this, the estimates will be more or less precise due to the change in sample size. The number of clusters in each upazila is necessary so that we know which method we will use to calculate our direct estimates in the next step.
 
-Next we want to generate our variable of interest. In our case we use the variable 'prop_wealth_1'. This is the probability that a household will be in the lowest quintile of wealth across the whole survey. By definition 20% of households across the country will be in this bottom quantile but you will be able to see which areas are poorer by seeing which areas across the country have a higher probability of a household being in this bottom quintile of wealth.
 
-```{r}
+```{r load DHS data, include=FALSE}
+# Load 2014 geo-referenced DHS data
+Ban_data <- read_csv("C:/Users/nickl/OneDrive - Oxford Policy Management Limited/EMDI SAE/Bangladesh household survey/DHS 2018/bgd_geo_2014.csv")
 
-## Making the poorest variable 
-
-install.packages("dplyr")
-library(dplyr)
-
-## Calculating our version of the poorest variable "prop_wealth_1"
-
-proportion <- Ban_data %>%
-  group_by(ADM3_PCODE) %>%
-  summarize(prop_wealth_1 = sum(Wealth_quint_rank == 1) / n())
-
-summary(proportion)
-Ban_data <- left_join(Ban_data, proportion,by = "ADM3_PCODE")
-
-View(Ban_data)
-```
-
-We now create a variable to determine how many clusters are in each upazila because depending on this, the estimates will be more or less precise due to the change in sample size. The number of clusters in each upazila is necessary so that we know which method we will use to calculate our direct estimates in the next step.
-
-```{r}
-
-## How many clusters are in each upazila 
-
-Ban_data <- Ban_data %>%
+# Check how many observations there are there in each cluster
+Ban_data <- bgd_geo_2014 %>%
   group_by(ADM3_PCODE) %>%
   mutate(num_clusters = n_distinct(DHSCLUST))
 
-
+# Display values in a table
 frequency_table <- table(Ban_data$num_clusters)
 
 print(frequency_table)
@@ -876,19 +850,228 @@ upazila_cluster_count <- Ban_data %>%
   group_by(ADM3_PCODE) %>%
   summarize(num_clusters = n_distinct(DHSCLUST))
 
-# View the summary table
-print(upazila_cluster_count)
 
 # Summarize the count of clusters per Upazila
 cluster_summary <- table(upazila_cluster_count$num_clusters)
 
 # View the summary table
 print(cluster_summary)
-```
 
-Finally we can generate the direct estimates and the sampling variances. The method is different if there is 1 cluster per upazila since by definition there will be the same variation in the cluster as in the whole upazila. Therefore we use a design effect if there is only one upazila in the cluster, if there is more than 1 cluster in the upazila we are able to calculate using the survey() package.
+# Test - construct a binary variable for whether a HH belongs to the lowest wealth quintile
+Ban_data$binary_wealth <- 0
+
+# Replace with 1 if the HH belongs to the lowest quintile
+Ban_data$binary_wealth[Ban_data$wealth_quintile_rank == 1] <- 1
+
+```
+Now can generate the direct estimates and the sampling variances. The method is different if there is 1 cluster per upazila since by definition there will be the same variation in the cluster as in the whole upazila. Therefore we use a design effect if there is only one upazila in the cluster, if there is more than 1 cluster in the upazila we are able to calculate using the survey() package.
 
 First of all we calculate the direct estimates and the sampling variances for every upazila using the survey package, regardless of how many clusters are in the area. We will then overwrite the direct estimates and variances for the upazilas which have only one cluster of observations within them.
+
+
+
+
+
+**Direct and standard error estimation for all upazilas (irrespective of the number of clusters)**
+
+```{r direct and se estimation all upazilas}
+# Create a survey design object, accounting for household weights, strata, and clusters 
+DHS.design <- svydesign(ids = ~ DHSCLUST,
+                        weights = ~ hh_sample_weight,
+                        strata = ~ strata,
+                        data = Ban_data)
+
+de <- svyby(~ binary_wealth,
+            by = ~ADM3_PCODE,
+            design = DHS.design,
+            svymean,
+            vartype=c("se"))
+
+# Check standard errors
+summary(de$se)
+
+
+```
+
+We now look at the direct estimates and sampling variances if there is only one cluster in an upazila. We use a design effect to do this. The design effect of a single-stage cluster sample, assuming equal selection probabilities and clusters of size M, is given by design effect(henceforth deff or de) = 1 + (M - 1)\* ICC where ICC is the intra-cluster correlation coefficient for the variable of interest. ICC is estimated by the variance of the poorest variable in the cluster divided by the variance of the poorest variable of the cluster added to the variance of the household.
+
+The DHS design involves a second stage of selection of a group of 30 households out of those in the cluster (113 on average) therefore we have set M = 4.
+
+We fit the model using the lme function from the package nlme. STRS stands for stratified simple random sampling.
+
+
+
+**Estimation of design effect for upazilas with one cluster**
+
+```{r design effect estimation}
+# Fitting a linear model with just an intercept
+fit.rs <- lme(binary_wealth ~ 1,
+              random = ~1 |
+                DHSCLUST, method = "ML",
+                data = Ban_data[Ban_data$num_clusters ==
+                                1, ])
+# Variance covariance matrix
+vcomp <- as.numeric(VarCorr(fit.rs))
+
+# Save this as a matrix
+test.matrix <- VarCorr(fit.rs)
+test.matrix
+
+# Calculate the design effect 
+deff.1clus <- 1 + (4 -1) * vcomp[1]/(vcomp[1] + vcomp[2])
+
+# Check design effect 
+deff.1clus
+
+# deff is 1.739737 in our case and 1.72 in Nikos's case. We also get an Intercluster Correlation (ICC) of 0.24, same as Nikos.
+
+# Calculate standard errors
+
+# Create a survey design object for upazilas with just one cluster 
+design.STSRS <- svydesign(id = ~1,
+                          weights = ~hh_sample_weight,
+                          strata = ~strata,
+                          data = Ban_data)
+
+de.STSRS <- svyby(~binary_wealth,
+                  by = ~ADM3_PCODE,
+                  design = design.STSRS,
+                  svymean,
+                  vartype=c("se"))
+
+de.STSRS <- dplyr::select(de.STSRS,
+                          ADM3_PCODE, se.STSRS = se)
+
+# Create an object with upazila codes and number of clusters
+sizes <- Ban_data[, c("num_clusters", "ADM3_PCODE")]
+
+de <- merge(de, sizes,
+by = "ADM3_PCODE") %>%
+merge(de.STSRS, by = "ADM3_PCODE") %>%
+mutate(se.imp = ifelse(num_clusters ==
+1, se.STSRS *
+sqrt(deff.1clus),
+se))
+
+
+# Remove duplicates
+final_de <- de[!duplicated(de$ADM3_PCODE), ]
+View(final_de)
+
+
+```
+
+Pre-smoothing this is what the CV looks like:
+```{r}
+#  2. Test our data  #
+# Turn number of clusters into factor
+final_de$num_clusters_factor <- as.factor(final_de$num_clusters)
+
+# Calculate the coefficient of variation in our data
+final_de$cve <- (final_de$se.imp / final_de$binary_wealth) 
+
+# Plot 
+ggplot(final_de, aes(x=binary_wealth, y=cve, color=num_clusters_factor)) + geom_point() 
+```
+
+**Smoothing the variance estimates using a Generalised Variance Function**
+
+From the prototype: To reduce this volatility we use an additional smoothing step that involves the use the Generalised Variance Functions. Smoothing the variance estimates may be needed in order to improve the performance of area-level models. Smoothing involves the initial variance estimates being replaced by corresponding predicted values produced under a linear regression model with the response defined by standard error estimates. Predictors in this model include the direct estimates of Poorest, the square of the direct estimates, the number of clusters representing each upazila, the square of the number of clusters and the average sampling weight for a household in each upazila. In order to avoid undue impact of influential observations, the model is fitted by using only the data of upazilas with less than 5 clusters. Such a model explains 62% of the variability present in the data. After fitting the model, only the variances for upazilas represented by 2-4 clusters are smoothed. 
+
+I think this is what we need to do:
+
+1. Calculate the average HH weight for each upazila
+2. Fit a linear model where the outcome is standard errors estimates and the predictors are: direct estimates of Poorest, the square of the direct estimates, the number of clusters representing each upazila, the square of the number of clusters and the average sampling weight for a household in each upazila. Use a subset of the upazilas that have fewer than 5 clusters --> what should this model be though??
+3. Make a data frame with fitted values from this linear model, upazilas to which those correspond, and the number of clusters.
+4. Replace the original cve by fitted values for upazilas that have 2-4 clusters.
+
+Note: According to the graph from the prototype I think they also smooth the variance for upazilas that have just one cluster
+
+```{r smoothing}
+# Calculate the average sampling weight for households in an upazila
+Ban_data <- Ban_data %>%
+  group_by(ADM3_PCODE) %>%
+  mutate(avg_hh_weight = mean(hh_sample_weight))
+
+# Create a data frame with just the average hh weight and upazila code
+avg_weight_df <- Ban_data[, c("avg_hh_weight", "ADM3_PCODE")]
+
+# Remove duplicates
+avg_weight_df <- avg_weight_df[!duplicated(avg_weight_df$ADM3_PCODE), ]
+
+summary(final_de)
+
+# Merge with the final_de data
+final_de <- left_join(final_de, avg_weight_df)
+
+# Make a subset for upazilas with fewer than 5 clusters
+final_de_subset <- subset(final_de, num_clusters < 5)
+
+# Test - remove observations where standard errors are 0 (this does not tell us anything about the variability of the estimate)
+final_de_subset <- subset(final_de_subset, se.imp > 0)
+
+# Fitting a linear model
+model1 <- lm(se.imp  ~ binary_wealth + I(binary_wealth^2) + num_clusters + I(num_clusters^2) + avg_hh_weight,
+                data = final_de_subset, na.action=na.omit)
+
+summary(model1)
+
+# In our case the model explains 59% variation in data and in Nikos's case 62%
+
+# Experiment below #
+
+# Save fitted values in a data frame - initial variance estimates should be replaced by predicted values from this model
+fitted <- as.data.frame(model1[["fitted.values"]])
+
+summary(fitted)
+
+# Save upazila codes in a list
+upazilas <- final_de_subset$ADM3_PCODE
+
+# Add to the fitted data frame 
+fitted$ADM3_PCODE <- as.character(upazilas)
+
+# Get column names
+colnames(fitted)
+
+# Rename column
+names(fitted)[names(fitted) == 'model1[["fitted.values"]]'] <- 'se.GVF'
+
+# Have a look 
+summary(fitted$se.GVF)
+
+# Save number of clusters in a list
+clusters <- final_de_subset$num_clusters
+
+# Add to the fitted data frame
+fitted$num_clusters <- as.numeric(clusters)
+
+# Keep only observations that have 2-4 clusters - actually I think we should smooth all of them (including upazilas with one cluster)
+#fitted <- subset(fitted, num_clusters > 1)
+
+# Now look at the summary
+summary(fitted$se.GVF)
+
+
+# Left join with final_de dataframe
+final_de <- left_join(final_de, fitted)
+
+# Replace NA values of se.GVF with the previous standard errors - this is equivalent to smoothing for all upazilas that have 1-4 clusters
+final_de$se.GVF <- ifelse(is.na(final_de$se.GVF), final_de$se.imp, final_de$se.GVF)
+
+# Now re-calculate CV
+final_de$cve.2 <- (final_de$se.GVF / final_de$binary_wealth) 
+
+# Plot 
+ggplot(final_de, aes(x=binary_wealth, y=cve.2, color=num_clusters_factor)) + geom_point() 
+
+```
+
+
+
+
+
+
 
 ```{r}
 library(survey)
@@ -906,63 +1089,7 @@ de <- svyby(~ prop_wealth_1,
 summary(de)
 ```
 
-We now look at the direct estimates and sampling variances if there is only one cluster in an upazila. We use a design effect to do this. The design effect of a single-stage cluster sample, assuming equal selection probabilities and clusters of size M, is given by design effect(henceforth deff or de) = 1 + (M - 1)\* ICC where ICC is the intra-cluster correlation coefficient for the variable of interest. ICC is estimated by the variance of the poorest variable in the cluster divided by the variance of the poorest variable of the cluster added to the variance of the household.
 
-The DHS design involves a second stage of selection of a group of 30 households out of those in the cluster (113 on average) therefore we have set M = 4.
-
-We fit the model using the lme function from the package nlme. STRS stands for stratified simple random sampling.
-
-```{r}
-
-### Estimation of the
-### design effect for
-### upazilas with only one
-### cluster
-
-library(nlme)
-
-fit.rs <- lme(prop_wealth_1 ~
-                1, random = ~1 |
-                DHSCLUST, method = "ML",
-              data = Ban_data[Ban_data$num_clusters ==
-                                1, ])
-
-plot(fit.rs)
-vcomp <- as.numeric(VarCorr(fit.rs))
-
-print(VarCorr(fit.rs))
-
-
-deff.1clus <- 1 + (4 -
-                     1) * vcomp[1]/(vcomp[1] +
-                                      vcomp[2])
-print(deff.1clus)
-
-
-### Estimation of the
-### standard error for
-### upazilas with one
-### cluster
-
-
-design.STSRS <- svydesign(id = ~1,
-                          weights = ~weight,
-                          strata = ~strat.se,
-                          data = dhs.data)
-de.STSRS <- svyby(~poorest,
-                  by = ~upazila.code,
-                  design = design.STSRS,
-                  svymean)
-de.STSRS <- dplyr::select(de.STSRS,
-                          upazila.code, se.STSRS = se)
-de <- merge(de, sizes,
-            by = "upazila.code") %>%
-  merge(de.STSRS, by = "upazila.code") %>%
-  mutate(se.imp = ifelse(nclus ==
-                           1, se.STSRS *
-                           sqrt(deff.1clus),
-                         se))
-```
 
 NB that we will be inserting Ida's step 2 in here. Now using the final_de dataset for se.GVF
 Also the BGD.zonal stats will be used for the geospatial variables
