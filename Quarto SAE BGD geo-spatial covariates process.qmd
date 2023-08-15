@@ -8,8 +8,9 @@ editor: visual
 ## 1. Introduction
 
 # Contents Page
- 
+
 ## Section A
+
 ## Section B
 
 ### Introduction:
@@ -88,7 +89,7 @@ The remainder of the steps in the process are used to ensure the robustness and 
 
 Step 1: Gathering the geospatial data and compiling into a harmonised dataset.
 
-You can either start with the geospatial co-ordinates you generated in section A or use our pre-processed dataframe which is available [here.]{.underline} Part 1 of our guide explains how to gather the geospatial data in detail.
+You can either start with the geospatial co-ordinates you generated in section A or use our pre-processed dataframe which is available [here.]{.underline} Section A of our guide explains how to gather the geospatial data in detail.
 
 Step 2: Generating direct estimates of the wealth index and their sampling variance for the in-sample observations.
 
@@ -98,25 +99,25 @@ For this we use the survey() package in R. This takes into account the bias intr
 
 Step 3: Merging the geospatial data to the household data and your direct estimates.
 
-Now we need to combine the geospatial data from part 1 of the guide, the DHS household survey and the direct estimates and their variances that you generated in step 2 of the process. In order to combine this information into one big dataset we need a unique common identifier and for this we merge the observations using the unique domain identifier.
+Now we need to combine the geospatial data from Section A of the guide, the DHS household survey and the direct estimates and their variances that you generated in Section B of the process. In order to combine this information into one big dataset we need a unique common identifier and for this we merge the observations using the unique domain identifier.
 
 Step 4: Selecting the geospatial covariates with the most predictive power
 
-The initial large dataframe with over 200 geospatial variables is unwieldy and following the 'principle of parsimony' we want fewer variables. We therefore initially trim the model to include fewer covariates. This helps to prevent issues such as overfitting. For this we use a selection criterion (AIC/BIC/KIC) to find only the geospatial covariates with the highest predictive power on predicting the wealth estimates.
+The initial large dataframe with over 150 geospatial variables is unwieldy and following the 'principle of parsimony' we want fewer variables. We therefore initially trim the model to include fewer covariates. This helps to prevent issues such as overfitting. For this we use a selection criterion (AIC/BIC/KIC) to find only the geospatial covariates with the highest predictive power on predicting the wealth estimates.
 
-We perform a BIC stepwise selection criterion using all of the available geospatial covariates to see which 10-15 variables perform the best in predicting the level of wealth in an area.
+We perform a BIC stepwise selection criterion using all of the available geospatial covariates to see which 15-20 variables perform the best in predicting the level of wealth in an area.
 
 Step 5: Generating the model and checking model assumptions.
 
 We now use the geospatial covariates selected in step 4 by the selection criterion in a cursory model in order to test the key assumptions of the model and assess the predictive power. For example, the model assumes normality of the error terms which, if violated, introduces bias into the estimation so it is necessary to show that all the necessary assumptions hold.
 
-If the assumptions do not hold with the model in its current format then it is important to carry out a transformation on the target variable. Log transformations are traditionally popular with income data in order to mitigate issues such as skewed data. This transformation stabilises the variance and makes the relationship with other variables more linear. We use a variety of visual aids such as plots as well as regression tests to ensure that we are satisfied that these assumptions hold after a transformation.
+If the assumptions do not hold with the model in its current format then it is important to carry out a transformation on the target variable. We use a variety of visual aids such as plots as well as regression tests to ensure that we are satisfied that these assumptions hold after a transformation.
 
 Step 6: Carry out the FH model prediction for our out of sample estimates.
 
 In this step we carry out the FH modelling procedure in order to generate our out of sample wealth estimates. The FH model adopts a bootstrap approach in order to predict out of sample estimates. This is an iterative resampling method which provides estimates of variability and uncertainty without requiring strong assumptions about the data distribution.
 
-The FH model has been trained on in-sample domains which have both geospatial and household data available. However, by definition, only geospatial data is available in out-of-sample domains. By learning the relationship between the most significant geospatial covariates and the wealth index (as determined in step 4), the model can estimate what the wealth index would be in an area that has not been surveyed in the DHS.
+The FH model has been trained on in-sample domains which have both geospatial and household data available. However, by definition, only geospatial data is available in out-of-sample domains. By learning the relationship between the most significant geospatial covariates and the poverty rates of an area (as determined in step 4), the model can estimate what the poverty rates would be in an area that has not been surveyed in the DHS.
 
 Step 7: Comparison of FH model estimates with the ground-truth direct estimates.
 
@@ -126,9 +127,7 @@ Step 8: Visualisation of the results.
 
 The final step of the process is visualising the results. To do this we have to download a Bangladesh shapefile from online which includes the co-ordinates of the country's border lines and includes the polygon shapes for each upazila. We merge the dataset using the unique upazila district code and then visualise the relative wealth in each domain by using a gradient colour scheme.
 
-
 # Section A: Geo-spatial
-
 
 ## 2. Theory - key concepts in Geo-spatial analysis
 
@@ -284,14 +283,14 @@ We will be working with the following data sets:
 ### Base layers
 
 | Geo-spatial file name             | Description                                                          | Year | Link to download                                                                                                               |
-|:--------------|:--------------|:--------------|:--------------------------|
+|:----------------------------------|:---------------------------------------------------------------------|:-----|:-------------------------------------------------------------------------------------------------------------------------------|
 | bgd_level0_100m_2000_2020.tif     | WorldPop Administrative Level 0 mastergrid base layer for Bangladesh | 2020 | [World Pop Hub - National boundaries](https://www.worldpop.org/geodata/summary?id=24282)                                       |
 | bgd_admbnda_adm3_bbs_20201113.shp | Administrative Level 3 (Upazila) Units in Bangladesh                 | 2015 | [Bangladesh - Subnational Administrative Boundaries - Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-bgd) |
 
 ### Geo-spatial data sets to be harmonised
 
 |                                                                             |                                                                              |      |                                                                                                                                                                                                                                                                                                  |
-|--------------|--------------|:-------------|-------------------------------|
+|-----------------------------------------------------------------------------|------------------------------------------------------------------------------|:-----|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Geo-spatial file name**                                                   | Description                                                                  | Year | Link to download                                                                                                                                                                                                                                                                                 |
 | SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif | VIIRS night-time lights (global)                                             | 2015 | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/#v1)                                                                                                                                                                                                                            |
 | 2015_accessibility_to_cities_v1.0.tif                                       | MAP travel time to high-density urban centres (global)                       | 2015 | [Malaria Atlas - Accessibility to Cities](https://data.malariaatlas.org/maps?layers=Accessibility:201501_Global_Travel_Time_to_Cities,Malaria:202206_Global_Pf_Parasite_Rate)                                                                                                                    |
@@ -308,7 +307,7 @@ We will be working with the following data sets:
 ### WorldPop harmonised geo-spatial data sets
 
 |                                           |                                                                         |           |                                                                |
-|-----------------|---------------------|-----------------|------------------|
+|-------------------------------------------|-------------------------------------------------------------------------|-----------|----------------------------------------------------------------|
 | **Geo-spatial File Name**                 | **Description**                                                         | **Year**  | **Link to Download**                                           |
 | bgd_srtm_topo_100m.tif                    | SRTM topography in BGD                                                  | 2000      | [World Pop](https://www.worldpop.org/project/categories?id=14) |
 | bgd_srtm_slope_100m.tif                   | SRTM slope (derivative of topography) in BGD                            | 2000      |                                                                |
@@ -777,13 +776,89 @@ save.image("C:/Users/idabr/OneDrive - Oxford Policy Management Limited/EMDI SAE/
 
 ## 4. Caveats, problems, things to look out for
 
-
 # Section B
 
+# Introduction
+
+Section A of the guide showed you how to gather and harmonise geospatial data from online in order to make it into one dataframe ready for analysis. However, as a reminder, the complete estimation procedure of the Fay-Herriot model is an 8 step process. Section B will explain to you how you go from the geospatial dataset you have produced in the first section of the guide, to producing poverty estimates for every upazila in Bangladesh and displaying this information on a map. As a reminder, the steps of the estimation procedure are as follows:
+
+Step 1: Gathering the geospatial data and compiling into a harmonised dataset.
+
+You can either start with the geospatial co-ordinates you generated in section A or use our pre-processed dataframe which is available [here.]{.underline} Section A of our guide explains how to gather the geospatial data in detail.
+
+Step 2: Generating direct estimates of poverty and their sampling variance for the in-sample observations.
+
+Surveys often employ complex sampling designs, with elements of stratification and multistage sampling with unequal probabilities. In order to account for this, we need to calculate direct estimates of our variablle of interest (in our case is poverty) and estimates of their variances. This is in order to prevent bias being introduced into the estimation. We carry out this step using the data from the wealth index in the DHS household dataset.
+
+Once we generate the direct estimates and their variances. We then smooth the variances using a generalised variance function. This improves performance of an area-level model by reducing noise, stablising estimates as well as accounting for uncertainty in the data because of the limited sample size which is an inherent problem in area-level models.
+
+Step 3: Merging the geospatial data to the household data and your direct estimates.
+
+Now we need to combine the geospatial data from section A of the guide, the DHS household survey and the direct estimates and their variances that you generated in step 2 of the process. In order to combine this information into one big dataset we need a unique common identifier and for this we merge the observations using the unique domain identifier 'upazila.code'.
+
+Step 4: Selecting the geospatial covariates with the most predictive power
+
+The initial large dataframe we generated in section A with over 150 geospatial variables is unwieldy and following the 'principle of parsimony' we want fewer variables. We therefore initially trim the model to include fewer covariates which helps to prevent issues such as overfitting. For this we use a selection criterion (AIC/BIC/KIC) to find only the geospatial covariates with the highest predictive power on predicting the variable of interest.
+
+We perform a BIC stepwise selection criterion using all of the available geospatial covariates to see which 15-20 variables perform the best in predicting poverty rates in an area.
+
+Step 5: Generating the model and checking model assumptions.
+
+We now use the geospatial covariates selected in step 4 by the selection criterion in a cursory model on a raw scale in order to test the key assumptions of the model and assess the predictive power. For example, the model assumes normality of the error terms which, if violated, introduces bias into the estimation so it is necessary to show that all the necessary assumptions hold.
+
+If the assumptions do not hold with the model in its current format then it is important to carry out a transformation on the target variable. For example log transformations are traditionally popular with income data in order to mitigate issues such as skewed data. In our case, since we are modelling a proportion or a percentage, we use an arcsin transformation. This kind of transformation is common for dealing with data that is bounded between 0 and 1 and is very effective at stabilising the variance of data that follows a binomial distribution.
+
+We then use a variety of visual aids such as plots as well as regression tests to ensure that we are satisfied that all our assumptions hold after a transformation.
+
+Step 6: Carry out the FH model prediction for our out of sample estimates.
+
+In this step we carry out the FH modelling procedure using the model we have developed above that satisfies our assumptions, in order to generate our out of sample wealth estimates. The FH model adopts a bootstrap approach in order to predict out of sample estimates. This is an iterative resampling method which provides estimates of variability and uncertainty without requiring strong assumptions about the data distribution.
+
+The FH model has been trained on in-sample domains which have both geospatial and household data available. However, by definition, only geospatial data is available in out-of-sample domains. By learning the relationship between the most significant geospatial covariates and the variable of interest (as determined by the selection criterion in step 4), the model can estimate what the probability is that a household is in poverty would be in an area that has not been surveyed in the DHS.
+
+Step 7: Comparison of FH model estimates and variances with the ground-truth direct estimates and variances from step 2.
+
+In this step we compare the direct point poverty estimates we generated in step 2 using the DHS data with the FH model estimates that we generated in step 6. This is done both graphically and with a Brown test. This gives some indication of the precision of the model. If we are satisfied with the similarity of the estimates, we can move on to the final stage.
+
+Step 8: Visualisation of the results.
+
+The final step of the process is visualising the results. To do this we have to download a Bangladesh shapefile from online which includes the co-ordinates of the country's border lines and includes the polygon shapes for each upazila. We merge the dataset using the unique upazila district code and then visualise the relative wealth in each domain by using a gradient colour scheme.
 
 # Estimation
 
 ### Using the Fay Herriot model to predict poverty in Bangladesh
+
+### Step 1: Gathering your geospatial data
+
+This step of the estimation procedure is the material covered in part 1 of the guide. Ensure to save this dataset to your working directory since it is used throughout the process.
+
+Alternatively, for practice following the remainder of the guide, or to ensure you have followed the steps correctly and your data looks the same, you can dwonload our pre-processed estimates *here*.
+
+### Step 2: Generating direct estimates and their sampling estimates
+
+This step is necessary in order to generate our poverty estimates for the in sample areas. Since the DHS survey employs a sampling strategy we cannot take the values they produce at face-value and first have to adjust them to make them to make them more representative of the whole sample.
+
+The first step is to download the Bangladesh household poverty data from the [DHS website](https://dhsprogram.com/Countries/Country-Main.cfm?ctry_id=1&c=Bangladesh&Country=Bangladesh&cn=&r=4). From this link you will need to click on the 2014/17 Bangladesh survey. The datasets we are interested are the household recode since this gives the household data on poverty in the country. We are also interested in the Bangladesh shapefile dataset since this gives the co-ordinates of every upazila. We will then harmonise these two datasets in order to portray the data on a map. To download these files you will need to register with DHS and give a brief explanation of what you intend to do with the data. For this you can explain that you wish to generate spatially disaggregated poverty estimates for the country. Top tip: when requesting access to the data, remember to tick the box requesting geospatial data as well.
+
+Note that when applying to the DHS for data they say that they will get back to you with their decision within 2 business days (for us it was just a matter of a couple of hours) but be mindful that you should apply for the data a couple of days before you decide to follow this guide.
+
+**Insert screenshot of the DHS website here with circles around the files you wish to download**
+
+**Insert Ida's method here:** First of all you have harmonise these two datasets by doing a spatial join. This generates the unique domain identifier for each observation so that you are able to identify each observation by both its upazila as well as its cluster. This method here should be able the data join so you have the geolocation connected to the household data.
+
+This new dataframe is represented by Ida's HH + Geospatial data.
+
+It is then merged with the sampling weights from the household data.
+
+**DHS 2014 data**
+
+We now have a dataframe which combines the household recode module for the 2014 DHS, the geo-location of clusters of households, and upazila codes to which the clusters belong. The GPS coordinates we use correspond to the centroid of a cluster of households, which has a random offset of 2km in urban areas and 5-10km in rural areas to preserve the privacy of households. However, the DHS note that efforts have been made for offsets to be specified in a way that preserves the original administrative units within which HHs reside - therefore this should not affect our matching of households to upazilas.
+
+This dataset we are now using has information on: Wealth index factor score, quintiles of the wealth index, strata, household weights, upazila, GPS location of clusters, cluster numbers.
+
+Our next step is to generate our variable of interest. In our case we are looking to create a poverty map so we will be creating a variable using the wealth index, however, this could easily be adapted in the future. We create the variable 'binary_wealth'. This is a binary variable that is set as equal to 1 if the household was defined as being in the lowest quintile of wealth in Bangladesh by the DHS survey. Otherwise the variable is set as equal to 0. By definition 20% of households across the country will be in this bottom quantile but you will be able to see which areas are poorer by seeing which areas across the country have a higher probability of a household being in this bottom quintile of wealth.
+
+We also create a variable to determine how many clusters were sampled in each upazila because depending on this, the estimates will be more or less precise due to the change in sample size. The number of clusters in each upazila is also necessary for our variance estimation in the next stage of the estimation procedure.
 
 First you need to install and load necessary packages for the estimation:
 
@@ -794,42 +869,6 @@ library(emdi)
 library(dplyr)
 library(sae)
 ```
-
-### Step 1: Gathering your geospatial data
-
-This step is covered extensively in part 1 of the guide. Ensure to save this dataset to your working directory since it is used throughout the process.
-
-Alternatively, for practice, you can use our pre-processed estimates downloadable *here*.
-
-### Step 2: Generating direct estimates and their sampling estimates
-
-This step is necessary in order to generate our poverty estimates for the in sample areas. Since the DHS survey employs a sampling strategy we cannot take the values they produce at face-value and first have to adjust them to make them to make them more representative of the whole sample.
-
-You download the datasets from the [DHS website](https://dhsprogram.com/Countries/Country-Main.cfm?ctry_id=1&c=Bangladesh&Country=Bangladesh&cn=&r=4). From this link you will need to click on the 2014/17 Bangladesh survey. The datasets we are interested are the household recode since this gives the data on poverty in the country. We are also interested in the Bangladesh shapefile dataset since this gives the co-ordinates of every upazila. To download these files you will need to register with DHS and give a brief explanation of what you intend to do with the data. For this you can explain that you wish to generate spatially disaggregated poverty estimates for the country. Top tip: when requesting access to the data, remember to tick the box requesting geospatial data as well.
-
-Note that when applying to the DHS for data they say that they will get back to you with their decision within 2 business days (for us it was just a matter of a couple of hours) but be mindful that you should apply for the data a couple of days before you decide to follow this guide.
-
-**Insert screenshot of the DHS website here with circles around the files you wish to download**
-
-First of all you have to generate the unique domain identifier for each observation so that you are able to identify each observation by both its upazila as well as its cluster. **Insert Ida's method here:** This method here should be able the data join so you have the geolocation connected to the household data.
-
-This new dataframe is represented by Ida's HH + Geospatial data.
-
-It is then merged with the sampling weights from the household data.
-
-**DHS 2014 data**
-
-Loading a file that combines the household recode module for the 2014 DHS, the geo-location of clusters of households, and upazila codes to which the clusters belong. GPS coordinates correspond to the centroid of a cluster of households, which has a random offset of 2km in urban areas and 5-10km in rural areas to preserve the privacy of households. However, the DHS note that efforts have been made for offsets to be specified in a way that preserves the original administrative units within which HHs reside - therefore this should not affect our matching of households to upazilas.
-
-This dataset has information on: Wealth index factor score, quintiles of the wealth index, strata, household weights, upazila, GPS location of clusters, cluster numbers.
-
-First we want to generate our variable of interest. In our case we use the variable 'prop_wealth_1'. This is the probability that a household will be in the lowest quintile of wealth across the whole survey. By definition 20% of households across the country will be in this bottom quantile but you will be able to see which areas are poorer by seeing which areas across the country have a higher probability of a household being in this bottom quintile of wealth. 
-
-Our variable 'binary_wealth' is a dummy variable that equals 1 if the household is a part of the poorest quintile of wealth in Bangladesh and is equal to 0 otherwise.
-
-
-We also createvariable to determine how many clusters are in each upazila because depending on this, the estimates will be more or less precise due to the change in sample size. The number of clusters in each upazila is necessary so that we know which method we will use to calculate our direct estimates in the next step.
-
 
 ```{r load DHS data, include=FALSE}
 # Load 2014 geo-referenced DHS data
@@ -845,7 +884,7 @@ frequency_table <- table(Ban_data$num_clusters)
 
 print(frequency_table)
 
-# Calculate the count of clusters per Upazila
+# Calculating the numbers of clusters per Upazila
 upazila_cluster_count <- Ban_data %>%
   group_by(ADM3_PCODE) %>%
   summarize(num_clusters = n_distinct(DHSCLUST))
@@ -857,20 +896,17 @@ cluster_summary <- table(upazila_cluster_count$num_clusters)
 # View the summary table
 print(cluster_summary)
 
-# Test - construct a binary variable for whether a HH belongs to the lowest wealth quintile
+# Constructing a binary variable for whether a HH belongs to the lowest wealth quintile.
 Ban_data$binary_wealth <- 0
 
 # Replace with 1 if the HH belongs to the lowest quintile
 Ban_data$binary_wealth[Ban_data$wealth_quintile_rank == 1] <- 1
 
 ```
-Now can generate the direct estimates and the sampling variances. The method is different if there is 1 cluster per upazila since by definition there will be the same variation in the cluster as in the whole upazila. Therefore we use a design effect if there is only one upazila in the cluster, if there is more than 1 cluster in the upazila we are able to calculate using the survey() package.
 
-First of all we calculate the direct estimates and the sampling variances for every upazila using the survey package, regardless of how many clusters are in the area. We will then overwrite the direct estimates and variances for the upazilas which have only one cluster of observations within them.
+Now we are able to generate the direct estimates and the sampling variances. The method varies if there is only 1 cluster per upazila compared to if there are multiple clusters, since by definition if there is only one cluster in the upazila there will be the same variation in the cluster as in the whole upazila. Therefore we use a design effect if there is only one upazila in the cluster, if there is more than 1 cluster in the upazila we are able to calculate using the survey() package.
 
-
-
-
+First of all we calculate the direct estimates and the sampling variances for every upazila using the survey package, regardless of how many clusters are in the area. The second step is that we will then overwrite the direct estimates and variances for the upazilas which have only one cluster using the second method of the design effect.
 
 **Direct and standard error estimation for all upazilas (irrespective of the number of clusters)**
 
@@ -893,13 +929,11 @@ summary(de$se)
 
 ```
 
-We now look at the direct estimates and sampling variances if there is only one cluster in an upazila. We use a design effect to do this. The design effect of a single-stage cluster sample, assuming equal selection probabilities and clusters of size M, is given by design effect(henceforth deff or de) = 1 + (M - 1)\* ICC where ICC is the intra-cluster correlation coefficient for the variable of interest. ICC is estimated by the variance of the poorest variable in the cluster divided by the variance of the poorest variable of the cluster added to the variance of the household.
+We now look at the direct estimates and sampling variances if there is only one cluster in an upazila. We use a design effect to do this. The design effect of a single-stage cluster sample, assuming equal selection probabilities and clusters of size M, is given by design effect (henceforth deff or de) = 1 + (M - 1)\* ICC where ICC is the intra-cluster correlation coefficient for the variable of interest. ICC is estimated by the variance of the binary_wealth variable in the cluster divided by the variance of the poorest variable of the cluster added to the variance of the household.
 
-The DHS design involves a second stage of selection of a group of 30 households out of those in the cluster (113 on average) therefore we have set M = 4.
+The DHS survey design involves a second stage of selection of a group of 30 households out of those in the cluster (113 on average) therefore we have set M = 4.
 
 We fit the model using the lme function from the package nlme. STRS stands for stratified simple random sampling.
-
-
 
 **Estimation of design effect for upazilas with one cluster**
 
@@ -962,6 +996,7 @@ View(final_de)
 ```
 
 Pre-smoothing this is what the CV looks like:
+
 ```{r}
 #  2. Test our data  #
 # Turn number of clusters into factor
@@ -976,16 +1011,17 @@ ggplot(final_de, aes(x=binary_wealth, y=cve, color=num_clusters_factor)) + geom_
 
 **Smoothing the variance estimates using a Generalised Variance Function**
 
-From the prototype: To reduce this volatility we use an additional smoothing step that involves the use the Generalised Variance Functions. Smoothing the variance estimates may be needed in order to improve the performance of area-level models. Smoothing involves the initial variance estimates being replaced by corresponding predicted values produced under a linear regression model with the response defined by standard error estimates. Predictors in this model include the direct estimates of Poorest, the square of the direct estimates, the number of clusters representing each upazila, the square of the number of clusters and the average sampling weight for a household in each upazila. In order to avoid undue impact of influential observations, the model is fitted by using only the data of upazilas with less than 5 clusters. Such a model explains 62% of the variability present in the data. After fitting the model, only the variances for upazilas represented by 2-4 clusters are smoothed. 
+To reduce the volatility in the coefficient of variation as seen in the graph above, we use an additional smoothing step that involves the use of Generalised Variance Functions. Smoothing the variance estimates may be needed in order to improve the performance of area-level models. Smoothing involves the initial variance estimates being replaced by corresponding predicted values produced under a linear regression model with the response defined by standard error estimates. Predictors in this model include the direct estimates of our variable of interest 'binary_wealth', the square of the direct estimates, the number of clusters representing each upazila, the square of the number of clusters and the average sampling weight for a household in each upazila. In order to avoid undue impact of influential observations, the model is fitted by using only the data of upazilas with less than 5 clusters. Such a model explains 62% of the variability present in the data. After fitting the model, only the variances for upazilas represented by 2-4 clusters are smoothed.
 
-I think this is what we need to do:
+The steps of this process are as follows:
 
-1. Calculate the average HH weight for each upazila
-2. Fit a linear model where the outcome is standard errors estimates and the predictors are: direct estimates of Poorest, the square of the direct estimates, the number of clusters representing each upazila, the square of the number of clusters and the average sampling weight for a household in each upazila. Use a subset of the upazilas that have fewer than 5 clusters --> what should this model be though??
-3. Make a data frame with fitted values from this linear model, upazilas to which those correspond, and the number of clusters.
-4. Replace the original cve by fitted values for upazilas that have 2-4 clusters.
+1.  Calculate the average HH weight for each upazila
 
-Note: According to the graph from the prototype I think they also smooth the variance for upazilas that have just one cluster
+2.  Fit a linear model where the outcome is an estimate of the standard errors and the predictors are: direct estimates of binary_wealth, the square of the direct estimates, the number of clusters representing each upazila, the square of the number of clusters and the average sampling weight for a household in each upazila. This process is done using a subset of the upazilas that have fewer than 5 clusters.
+
+3.  Make a data frame with fitted values from this linear model, upazilas to which those correspond, and the number of clusters.
+
+4.  Replace the original cve (coefficient of variation) by fitted values for upazilas that have 2-4 clusters.
 
 ```{r smoothing}
 # Calculate the average sampling weight for households in an upazila
@@ -1007,7 +1043,7 @@ final_de <- left_join(final_de, avg_weight_df)
 # Make a subset for upazilas with fewer than 5 clusters
 final_de_subset <- subset(final_de, num_clusters < 5)
 
-# Test - remove observations where standard errors are 0 (this does not tell us anything about the variability of the estimate)
+# Remove observations where standard errors are 0 (this does not tell us anything about the variability of the estimate since there is no variation)
 final_de_subset <- subset(final_de_subset, se.imp > 0)
 
 # Fitting a linear model
@@ -1018,7 +1054,6 @@ summary(model1)
 
 # In our case the model explains 59% variation in data and in Nikos's case 62%
 
-# Experiment below #
 
 # Save fitted values in a data frame - initial variance estimates should be replaced by predicted values from this model
 fitted <- as.data.frame(model1[["fitted.values"]])
@@ -1067,39 +1102,15 @@ ggplot(final_de, aes(x=binary_wealth, y=cve.2, color=num_clusters_factor)) + geo
 
 ```
 
+You can see in the graph above that the CV is much smoother and this is much more efficient when now predicting poverty using area level models.
 
-
-
-
-
-
-```{r}
-library(survey)
-DHS.design <- svydesign(ids = ~ DHSCLUST,
-                        weights = ~ Sample_Weight,
-                        strata = ~ hv022,
-                        data = Ban_data)
-
-
-de <- svyby(~ prop_wealth_1,
-            by = ~ADM3_PCODE,
-            design = DHS.design,
-            svymean)
-
-summary(de)
-```
-
-
-
-NB that we will be inserting Ida's step 2 in here. Now using the final_de dataset for se.GVF
-Also the BGD.zonal stats will be used for the geospatial variables
-
+Now using the final_de dataset for se.GVF Also the BGD.zonal stats will be used for the geospatial variables
 
 ### Step 3: How to combine your datasets. Getting your geospatial data, direct estimates and survey data in the same dataframe.
 
-First you load the necessary dataset from where you have it saved.
+First you load the necessary dataset from where you saved it after the previous step (or continue working in the same R session).
 
-NEW CODE with the new method of generating geospatial statistics.
+We use merge command to merge two dataframes together. We then use the column bind command to create the variable new_df\$se.GVF\^2 which is standard errors squared from the generalised variance function (GVF). This is used as the variable "vardir" which is an important argument in the FH model.
 
 ```{r}
 
@@ -1107,10 +1118,13 @@ BGD_zonal_new_version <- read_csv("C:/Users/nickl/iCloudDrive/Desktop/Oxford Pol
 
 View(BGD_zonal_new_version)
 
+# Creating new variable 'upazila.code' from ADM3_PCODE to make merge compatible  
 BGD_zonal_new_version$upazila.code <- substring(BGD_zonal_new_version$ADM3_PCODE, 3)
 
+# Merging the geospatial data and the household poverty data with updated variance estimation from step 2
 new_df <- merge(BGD_zonal_new_version, final_de[, c("upazila.code", "binary_wealth", "se.GVF", "num_clusters")], by = "upazila.code", all.x = TRUE)
 
+# Creating new variable with the
 new_df = cbind(new_df, new_df$se.GVF^2)
 
 attach(new_df)
@@ -1118,23 +1132,21 @@ attach(new_df)
 View(new_df)
 ```
 
-
-We use the column bind command to merge two dataframes together. This new dataframe now includes the variable for "vardir" which is standard errors squared from the generalised variance function (GVF). This is an important argument in the FH model prediction.
-
 ### Step 4: Covariate selection for initial model.
 
-This step follows the principle of parsimony in order to slim down the model to find only the geospatial covariates that have the highest predictive power. To do this we first create a new dataframe without the variables that were used to create the wealth index such as whether a household has a mobile phone or their access to sanitation facilities. Since these will clearly be highly correlated with our 'poorest' indicator of interest and we do not want these to be in the model. Also they are obviously not available for the out of sample data points.
+This step follows the principle of parsimony in order to slim down the model to find only the geospatial covariates that have the highest predictive power.
+
+To do this we first create a new subsetted dataframe, excluding the variables that were used to create the wealth index or the standard errors of the wealth index. Since these 1) are not geospatial covariates and 2) will clearly be highly correlated with our 'binary_wealth' indicator of interest. We also exclude the upazila.code column since we only want to include the geospatial covariates to see which are the most significant predictors of poverty.
+
+We then fit a full linear regression model using the new dataframe.
 
 ```{r}
+# Subset of the dataframe
 new_df2 <- new_df[,c(3:165)]
 
+# Fitting a linear regression model
 full_model2 <- lm(binary_wealth ~ ., data = new_df2)
 ```
-
-We trim the dataset of variables since we only want the geospatial variables at this stage and the variable of interest. We have no interest in the standard errors or the upazila code being used for prediction.
-
-We then fit a full linear regression model using the new dataframe
-
 
 We then perform stepwise selection based on BIC criterion to narrow down the number of variables from 150+ to around 15-20
 
@@ -1142,7 +1154,7 @@ We then perform stepwise selection based on BIC criterion to narrow down the num
 stepwise_model2 <- stepAIC(full_model2, direction = "both", trace = FALSE, k = log(nrow(new_df2)))
 ```
 
-We can then view the selected variables which we will use in our cursory model.
+We can then view the selected geospatial variables which we will use in our cursory model.
 
 ```{r}
 summary(stepwise_model2)
@@ -1150,14 +1162,11 @@ summary(stepwise_model2)
 
 ### Step 5: Fitting the model
 
-Our first step is running the estimation procedure without carrying out a transformation on the dataset. For this we use the variables that were selected to be most significant by the stepwise selection procedure above.
+Our first step of fitting the model is running a cursory model. For this we use the variables that were selected to be most significant by the stepwise selection procedure above. We also carry out the estimation with no transformation on a raw scale to see if the model offers reasonable predictive power.
 
-First of all we carry out the estimation with no transformation on a raw scale to see if the model offers reasonable predictive power.
+We can then run a couple of model diagnostic regressions to see how the raw scale fits the data and to see if the vital assumptions are satisfied.
 
-We can then run a couple of model diagnostic regressions to see how the raw scale fits the data.
-
-
-RAW SCALE ESTIMATION WITH NEW CODE
+RAW SCALE ESTIMATION
 
 ```{r}
 fh_raw_scale <- fh(fixed = binary_wealth ~ min.osm_dst_waterway_100m_2016_BGD + 
@@ -1178,9 +1187,9 @@ summary(fh_raw_scale)
 
 When looking at the model summary the adjusted R-squared is 0.57. This might seem like reasonable predictive power.
 
-However, we also need to look at normal probability plots of residuals and random errors to see if there is a clear departure from normality which is carried out below.
+However, we also need to look at normal probability plots of residuals and random errors to see if there is a clear departure from normality.
 
-These commands give 2 output plots showing: 1. Normal Q-Q plot showing level 1 residuals 2. Normal Q-Q plot showing the random effects.
+To do this, we generate 2 output plots showing: 1. Normal Q-Q plot showing level 1 residuals 2. Normal Q-Q plot showing the random effects.
 
 ```{r}
 lev1 = fh_raw_scale$model$real_residuals
@@ -1189,11 +1198,9 @@ qqnorm(lev1)
 qqnorm(lev2)                   
 ```
 
-Especially in output plot 1 this graph resembles more of an exponential growth function rather than a 45 degree line which we would hope for.
+Especially in output plot 1 this graph resembles more of an upwards curve rather than a 45 degree line which we would hope for. This is our first warning sign that potentially the model is currently not very well fit.
 
-The second diagnostic model is important if we are going to use the model for predictive purposes.
-
-This next function will output direct and model-based point estimates and corresponding variances and MSEs provided that the MSE argument was set equal to TRUE when fitting the area- level model.
+Therefore, since we are not convinced, we also need to critically evaluate the next diagnostic check. This next function will generate direct and model-based point estimates of our variable of interest 'binary_wealth' as well as corresponding variances and MSEs (mean squared errors). Note that this is only possible if the MSE argument was set equal to TRUE when fitting the area-level model. This second diagnostic model is important to evaluate if we are going to use the model for predictive purposes.
 
 ```{r}
 est_raw = estimators(fh_raw_scale,
@@ -1201,16 +1208,16 @@ est_raw = estimators(fh_raw_scale,
 summary(fh_raw_scale$ind$FH)
 ```
 
-We notice that the model-based point estimates include negative predicted values (min = -2.19) despite the fact that we are modelling a proportion. This is a consequence of using a model that does not fit well and illustrates the importance of using model diagnostics.
+We notice that the model-based point estimates include negative predicted values (min = -2.19) for our variable of interest despite the fact that we are modelling a proportion. This is a consequence of using a model that does not fit well and illustrates the importance of using model diagnostics.
 
-As a result in order to better fit the data we are going to try using the arcsin transformation. This is common when using income data. Using this transformation requires additional arguments, namely the effective sample size which is defined by the sample size divided by the design effect, as well as the type of backtransformation.
+As a result, in order for the model to better fit the data we are going to try using an arcsin transformation. The arcsin transformation is often used when data is in the form of percentages or proportions that are close to either 0 or 1. The transformation stabilizes the variance of data that follows a binomial distribution, especially when the proportions are close to the boundaries of 0 or 1, as is the case here since 'binary_wealth' is a variable indicating the percentage or proportion of households in each area that are in poverty. Using this transformation requires additional arguments, namely the effective sample size which is defined by the sample size divided by the design effect, as well as the type of backtransformation.
 
-First of all, in order to do this, we need to generate the argument relating to the effective sample size. First you find out how many households have been surveyed in each upazila. You then load the design effect that we calculated in step 2.
+First of all, in order to do this, we need to generate the argument relating to the effective sample size. To do this you first calculate how many households have been surveyed in each upazila from the initial DHS survey. You then load the design effect that we calculated in step 2. The number of households per upazila is then divided by the design effect in order to calculate the effective sample size.
 
-You then merge this with the new_df we are using to make sure we have this information in that survey.
+You can then merge this with the new_df we are using to make sure we have all these variables in one dataset.
 
 ```{r}
-
+# Calculating the number of households surveyed per upazila
 bgd_geo_2014 <- bgd_geo_2014 %>%
   group_by(ADM3_PCODE) %>%
   mutate(num_unique_hhid = n_distinct(hhid)) %>%
@@ -1219,7 +1226,7 @@ bgd_geo_2014 <- bgd_geo_2014 %>%
 bgd_geo_2014$upazila.code <- substring(bgd_geo_2014$ADM3_PCODE, 3)
 View(bgd_geo_2014)
 
-
+# Merging this new variable with the dataset we are using for the FH model
 new_df <- merge(new_df, bgd_geo_2014[, c("upazila.code", "num_unique_hhid")], by = "upazila.code", all.x = TRUE)
 
 cleaned_df <- distinct(new_df, upazila.code, .keep_all = TRUE)
@@ -1227,10 +1234,10 @@ cleaned_df <- distinct(new_df, upazila.code, .keep_all = TRUE)
 View(cleaned_df)
 ```
 
-Now we estimate an initial cursory model using the variables selected by an initial AIC/BIC variable selection.
+Now we estimate an initial model using the arcsin transformation discussed above whilst still using the geospatial variables which were selected by an initial AIC/BIC variable selection.
 
+OUR NEW CODE
 
-OUR NEW CODE 
 ```{r}
 
 fh_arcsin <- fh(fixed = binary_wealth ~ min.osm_dst_waterway_100m_2016_BGD + 
@@ -1248,10 +1255,8 @@ fh_arcsin <- fh(fixed = binary_wealth ~ min.osm_dst_waterway_100m_2016_BGD +
 
 summary(fh_arcsin)
 ```
+
 NB We have initially have set MSE = FALSE above to in order to speed the model stepwise selection step up (the next step) but we will be changing MSE back to true in step 6 when we compute the out of sample estimates.
-
-
-HERE WE SHOULD PROBABLY CHECK AGAIN THAT MODEL DIAGNOSTICS ARE SATISFIED with the graphs etc
 
 ```{r}
 lev1 = fh_arcsin$model$real_residuals
@@ -1264,9 +1269,9 @@ qqnorm(lev2)
 summary(fh_arcsin$ind$FH)
 ```
 
-Now we are satisfied that this transformation satisfies the model assumptions we can carry on with the remaining modelling steps.
+Now we can see that both Q-Q plots have close to linear 45 degree relationships. Furthermore, when looking at the second diagnostic model, the range of estimates for the variable 'binary_wealth' is between 0 and 1 which is much more appropriate for a proportion. The mean is close to the value of 0.2 which also makes sense since the variable is calculated by the number of households in the bottom quintile of wealth in the country. Note this may not be exact since population could vary between upazilas and this is just the average of all values without any weighting to take account of population. Now we are satisfied that this transformation satisfies the model assumptions we can carry on with the remaining modelling steps.
 
-We now use the step function using the BIC criterion to see if additional variables can be dropped from the mode. Note that this takes a long time to estimate.
+We now use the step function again, this time using the BIC criterion to see if additional variables can be dropped from the model. This is again following the principle of parsimony to prevent overfitting when the model begins to do out of sample prediction. Note that this takes a long time to estimate.
 
 ```{r}
 step(fh_arcsin, criteria = "BIC") 
@@ -1275,8 +1280,6 @@ step(fh_arcsin, criteria = "BIC")
 We then use the variables that are left by this selection process to create our final arcsin model. This is the model we use to produce our out of sample estimates of poverty.
 
 ### Step 6: FH model prediction for out of sample estimates
-
-
 
 ```{r}
 
@@ -1307,9 +1310,9 @@ est = estimators(fh_arcsin_final)
 summary(est$ind$FH)
 ```
 
-Unlike earlier, this estimation now shows that there are no negative predicted estimates of the proportion of the poorest households
+Unlike earlier, this estimation now shows that there are no negative predicted estimates of the variable of interest 'binary_wealth'.
 
-We now show graphically the results of this estimation. This function gives 4 output plots to help show that the normality assumption has not been violated.
+We now show graphically the results of this estimation to also graphically show that the model fit is sufficient and the assumptions are satisfied. This function gives 4 output plots to help show that the normality assumption has not been violated. The four plots are as follows:
 
 1\. Normal Q-Q plot of standardized residuals. We want these first two to be as close to a 45 degree line as possible.
 
@@ -1325,24 +1328,24 @@ plot(fh_arcsin_final)
 
 ### Step 7: Comparison between direct estimates and model estimates
 
-Ideally, model-based point estimates should be consistent with the direct estimates we calculated in step 2. We should also expect that the use of model-based methods will produce estimates with improved precision compared to direct estimates.
+Ideally, model-based point estimates and variances should be consistent with the direct estimates from the survey and their respective variances which we calculated in step 2. We should also expect that the use of model-based methods will produce estimates with improved precision compared to direct estimates.
 
-This command gives the first 6 results just so you can get a general impression that there is an improved precision when using FH estimates vs direct estimates
+This command gives the first 6 results just so you can get a general impression that there is an improved precision when using FH estimates vs direct estimates but the values are also very similar. We are also able to see that for domain 100447 which was out of sample in the DHS survey (hence the NA) we now have estimates for the variable 'binary_wealth' through using the FH model!
 
 ```{r}
 head(estimators(fh_arcsin_final,
                 MSE = TRUE))
 ```
 
-We can now graphically compare direct estimates to model based estimates by using the plot command.
+We are now also able to graphically compare direct estimates to model based estimates by using the plot command.
 
-The output below plots the direct against model-based point estimates. The results show that model-based estimates are correlated well with direct estimates.
+The plots below compare the direct estimates against the model-based point estimates. The results show that model-based estimates are correlated well with direct estimates.
 
 ```{r}
 compare_plot(fh_arcsin_final) 
 ```
 
-We can then carry out a Brown test to test this relationship computationally. This carries out a Brown test to test the Null hypothesis that EBLUP estimates do not differ significantly from the direct estimates
+Despite this relationship passing the 'eye-test' we then also carry out a Brown test to test this relationship computationally. This command carries out a Brown test to test the Null hypothesis that EBLUP estimates do not differ significantly from the direct estimates
 
 ```{r}
 compare(fh_arcsin_final)
@@ -1350,7 +1353,7 @@ compare(fh_arcsin_final)
 
 The output of this command shows that the correlation between the two sets of point estimates is 0.78. In addition, this command performs a statistical test on the differences between the direct and model-based point estimates. The p-value of the test is 1 indicating that the null hypothesis of no difference between the two sets of estimates is not rejected.
 
-**Benchmark the estimates if required**
+**Benchmark the estimates here if required**
 
 Good for statistical offices if they want estimates to sum to official figures for reporting
 
@@ -1384,21 +1387,23 @@ We know set our working directory to where we have downloaded our Bangladesh adm
 ```{r}
 setwd("/Users/nicklindsay/Downloads/bgd_adm_bbs_20201113_SHP")
 
+# Reading Bangladesh shapefile at administrative level 3
 bgd_admin3 <- st_read("bgd_admbnda_adm3_bbs_20201113.shp")
 
 extent(bgd_admin3)
 ```
+
 OUR CODE
 
 ```{r}
 setwd("C:/Users/nickl/iCloudDrive/Desktop/Oxford Policy Management/Bang_Rep/Admin_level3")
 
+# Reading Bangladesh shapefile at administrative level 3
 bgd_admin3 <- st_read("bgd_admbnda_adm3_bbs_20201113.shp")
 
 ```
 
-
-We then assign this shape file a name and use the fortify function in order to get it in to a format that can be used for data visualisation.
+We then assign this shape file a name and use the fortify function in order to get it in to a format that can be used for data visualisation. The fortify function converts a shapefile's geometry into a dataframe that includes columns such as "long" or "lat" representing coordinates of geometries which makes it into a format suitable for plotting with packages in R such as ggplot.
 
 ```{r}
 setwd("/Users/nicklindsay/Downloads/bgd_adm_bbs_20201113_SHP")
@@ -1408,7 +1413,7 @@ upazila.shp.f <- fortify(upazila.shp)
 
 We now need to prepare the data in order to merge the shape file and the estimates for the model so we need to find a common variable or order of the observations.
 
-We therefore create a new variable using the 'est' estimators and ordering it in order to match it with the arcsin_model
+We therefore create a new variable using the 'est' estimators and ordering it in order to match it with the arcsin_model version of the Fay-Herriot model we generated above.
 
 ```{r}
 est.maps <- data.frame(est) %>%
@@ -1427,7 +1432,7 @@ est.maps$id <- seq(1,
 
 Note that now there is a column called ADM3_CODE, the observations are arranged in order of this variable. And then they have been assigned an ID number relative to this order
 
-We now just need to merge the shape file with the data frame which indludes both the direct and FH estimates
+We now just need to merge the shape file with the data frame which includes both the direct and FH estimates
 
 ```{r}
 est.shp.coef <- merge(upazila.shp.f,
@@ -1455,6 +1460,8 @@ ggplot() + geom_polygon(data = final.est.plot,
   theme_nothing(legend = TRUE)
 ```
 
+When you look at this map you can clearly see the 179 out of sample areas represented by the regions in grey.
+
 **Map of FH estimates**
 
 To create the visualisation for the FH estimates you use the command fill = FH
@@ -1471,6 +1478,8 @@ ggplot() + geom_polygon(data = final.est.plot,
                        breaks = pretty_breaks(n = 5)) +
   theme_nothing(legend = TRUE)
 ```
+
+Here all the previously out of sample areas in grey are now shown with their poverty rates as estimated by the Fay-Herriot model. The FH model has used the most statistically significant geospatial covariates to fit a model using data from the DHS household survey as a ground-truth measure of poverty to then predict poverty for out-of-sample areas.
 
 ### Exporting the results to your medium of choice
 
@@ -1545,6 +1554,3 @@ It's important to carefully consider these caveats and assess the suitability of
 **R-squared:** R-squared, also known as the coefficient of determination, measures the proportion of the variance in the response variable that is explained by the predictors in a regression model.
 
 **EBLUP Estimates:** Empirical Best Linear Unbiased Prediction estimates. EBLUP estimates strike a balance between the sample data and the auxiliary information to generate reliable estimates at the small area level.
-
-
-
