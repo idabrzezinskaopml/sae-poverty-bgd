@@ -62,6 +62,8 @@ Figure XX below demonstrates the process in six steps:
 
 Datasets no. 3-5 will need harmonising, while the World Pop datasets are pre-harmonised and do not need any processing from us.
 
+See \@fig-steps for an illustration.
+
 **Step 2**: Set extent the same as the Base Layer. We want our layers to cover just Bangladesh (as opposed to, for example, the entirety of South-East Asia). Setting the extent will ensure that we are working within the same range of coordinates.
 
 **Step 3**: Change the spatial resolution to that of the Base Layer (\~100m). This means all our data will be organised into pixels covering an area of 100m x 100m.
@@ -71,6 +73,8 @@ Datasets no. 3-5 will need harmonising, while the World Pop datasets are pre-har
 **Step 5**: Mask to obtain the "shape" of Bangladesh.
 
 **Step 6**: Estimate zonal statistics (mean, max, min, sd etc.) for each geo-spatial dataset for each upazila.
+
+!\[steps\](images/daigram vol 3.png){#fig-steps}
 
 ![](images/daigram%20vol%203.png)
 
@@ -240,7 +244,7 @@ Given that our entire workflow will be carried out in R to make it accessible, o
 
 Recently spatial data in R has been standardised using the base package `sp`. Although a newer version of this package exists, called `sf` , it is useful to understand basic data structures under `sp`. Let's have a look at the spatial data classes by running the chunk below:
 
-```{r}
+```{r sp package}
 library(sp)
 getClass("Spatial")
 ```
@@ -279,7 +283,7 @@ To explore the structure of raster data let us create en empty (no data values) 
 
 -   Extent (minimum and maximum values of longitude and latitude).
 
-```{r}
+```{r empty raster}
 library(raster)
 r <- raster(ncol=10, nrow = 10, xmx=-116,xmn=-126,ymn=42,ymx=46)
 r
@@ -287,14 +291,14 @@ r
 
 Note that just specifying the number of rows and columns and extent was sufficient to create a `RasterLayer` object. The number of rows and columns defined our spatial resolution of the raster. In addition, the standard CRS `+proj=longlat +datum=WGS84 +no_defs` was automatically assigned. At the moment, our raster is empty, i.e. it is simply a grid with no data values. Let us generate some data to populate the raster by assigning random values from the unit distribution to each grid cell.
 
-```{r}
+```{r fill raster}
 r[] <- runif(n=ncell(r))
 r
 ```
 
 Now the summary of our RasterLayer object includes minimum and maximum values of our randomly generated data. Let's visualise this!
 
-```{r}
+```{r plot raster}
 plot(r)
 ```
 
@@ -338,14 +342,14 @@ The below tables provide details on these data sets.
 ### Base layers
 
 | Geo-spatial file name             | Description                                                          | Year | Link to download                                                                                                               |
-|:----------------------------------|:---------------------------------------------------------------------|:-----|:-------------------------------------------------------------------------------------------------------------------------------|
+|:------------|:---------------|:------------|:-------------------------------|
 | bgd_level0_100m_2000_2020.tif     | WorldPop Administrative Level 0 mastergrid base layer for Bangladesh | 2020 | [World Pop Hub - National boundaries](https://www.worldpop.org/geodata/summary?id=24282)                                       |
 | bgd_admbnda_adm3_bbs_20201113.shp | Administrative Level 3 (Upazila) Units in Bangladesh                 | 2015 | [Bangladesh - Subnational Administrative Boundaries - Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-bgd) |
 
 ### Geo-spatial data sets to be harmonised
 
 |                                                                             |                                                                              |      |                                                                                                                                                                                                                                                                                                  |
-|-----------------------------------------------------------------------------|------------------------------------------------------------------------------|:-----|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|------------|------------|:-----------|--------------------------------------|
 | **Geo-spatial file name**                                                   | Description                                                                  | Year | Link to download                                                                                                                                                                                                                                                                                 |
 | SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif | VIIRS night-time lights (global)                                             | 2015 | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/#v1)                                                                                                                                                                                                                            |
 | 2015_accessibility_to_cities_v1.0.tif                                       | MAP travel time to high-density urban centres (global)                       | 2015 | [Malaria Atlas - Accessibility to Cities](https://data.malariaatlas.org/maps?layers=Accessibility:201501_Global_Travel_Time_to_Cities,Malaria:202206_Global_Pf_Parasite_Rate)                                                                                                                    |
@@ -362,7 +366,7 @@ The below tables provide details on these data sets.
 ### WorldPop harmonised geo-spatial data sets
 
 |                                           |                                                                         |           |                                                                |
-|-------------------------------------------|-------------------------------------------------------------------------|-----------|----------------------------------------------------------------|
+|---------------|-----------------------|---------------|--------------------|
 | **Geo-spatial File Name**                 | **Description**                                                         | **Year**  | **Link to Download**                                           |
 | bgd_srtm_topo_100m.tif                    | SRTM topography in BGD                                                  | 2000      | [World Pop](https://www.worldpop.org/project/categories?id=14) |
 | bgd_srtm_slope_100m.tif                   | SRTM slope (derivative of topography) in BGD                            | 2000      |                                                                |
@@ -507,7 +511,7 @@ Apart from the raster file defining the national boundaries of Bangladesh, we ar
 
 As before, we will start by simply typing the name of our spatial object into the console. This will provide information on: geometry, dimensions, extent, CRS, as well as give us a preview into the features. To demonstrate this, I saved our shapefile in two formats: 1) an `sf` object with `multipolygon` geometry, and 2) a `sp` object called `SpatialPolygonsDataFrame`.
 
-```{r}
+```{r plot shapefile}
 # Inspect the sf multipolygon object with admin 3 boundaries
 shapefile.zone.plot
 
@@ -608,7 +612,7 @@ Function 2 should be applied to all demographic maps from Meta and will execute 
 
 Running the chunk below will create the second function `geo_process2` and it will show up under "Functions" in you environment.
 
-```{r}
+```{r function sum}
 # Function for automating the processing of geo-spatial covariates for use in poverty modelling
 geo_process2 <- function(aux.raster, base.raster, label, value) {
   
@@ -651,7 +655,7 @@ In the chunk below, we will process accessibility data from the Malaria Atlas. T
 
 We will create a new list to store our processed datasets called `matlas.processed`, then use a loop to apply our `geo_process` function to all three Malaria Atlas datasets.
 
-```{r}
+```{r matlas rasters}
 # See that all the files have loaded
 matlas.rasters
 
@@ -685,7 +689,7 @@ Now let's visualise our results! In the code chunk below, I'll present three way
 2.  A high-quality plot image (same as point 1 but manually changing R's default plot resolution to improve quality)
 3.  An interactive html widget using the `leaflet` package
 
-```{r}
+```{r matlas visualisation}
 # Three ways of visualising our data:
 
 ## 1. Simple plot ##
@@ -744,7 +748,7 @@ Just a note that these datasets use population density per pixel as their unit o
 
 As before, we create a list `fblist.processed`, where we will store all the harmonised rasters with demographic information, and apply a loop to process all the seven raster layers with population density for Bangladesh.
 
-```{r}
+```{r meta rasters}
 # Check that all the files were picked up by this 
 fb.rasters
 
@@ -791,7 +795,7 @@ Visualisations show the population density (per pixel) for 7 population groups f
 
 The final dataset that requires harmonisation is the Nightlights Intensity raster from the VIIRS satellite. It contains codified values of radiance per pixel. We will follow the same procedure as with the Malaria Atlas datasets and simply apply our `geo_process` function. In this case, there is no need to recode missing values. The output, `nightlights.raster.processed` should again show dimensions, resolution, extent, CRS that are the same as the base layer. In addition, we can see the range of minimum and maximum values of nightlights intensity.
 
-```{r}
+```{r nightlights raster}
 # Apply the geo processing function
 nightlights.raster.processed <- geo_process(aux.raster = nightlights.raster, base.raster = base.layer.raster, label = "Nightlights_data", value = 0)
 
@@ -848,7 +852,7 @@ The WorldPop datasets already have the same spatial resolution, extent, and dime
 
 As an example, let's produce a simple base R plot of the 11th raster object from that list, which shows distance to the closest road. Even without any processing, the plot comes out nicely formatted, as World Pop has pre-harmonised this data. Coastal areas are clearly the furthest away from any road. Unfortunately, the raster object is too large to create an interactive map using `leaflet`.
 
-```{r}
+```{r worldpop rasters}
 # See that all the files have loaded
 worldpop.rasters
 
@@ -868,7 +872,7 @@ We begin by putting all of our rasters into one list, `full.raster.list` and cre
 
 Now we can calculate our zonal statistics: mean, minimum value, maximum value, sum, standard deviation, and the number of observations. We will make use of the `exact_extract` function, which is the quickest and most computationally efficient way of obtaining key statistics from geo-spatial data at the chosen administrative level. Supplying our `raster.stack` with all geo-spatial data and `shapefile.zonal.plot`, which contains upazila boundaries in the zonal function will calculate all the statistics of interest. We will save those in a data frame format (which should be fairly familiar!), with column names indicating the zonal statistic for each geo-spatial layer. We will also include a column with the administrative code for each upazila, given by `ADM3_PCODE`. The name of this final data frame is `BGD.zonal.stats`.
 
-```{r}
+```{r zonal stats}
 # Make a list with all the rasters 
 full.raster.list <- c(matlas.processed, fblist.processed, worldpop.rasters, nightlights.raster.processed)
 
