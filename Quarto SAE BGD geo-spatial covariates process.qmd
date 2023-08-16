@@ -283,14 +283,14 @@ We will be working with the following data sets:
 ### Base layers
 
 | Geo-spatial file name             | Description                                                          | Year | Link to download                                                                                                               |
-|:----------------------------------|:---------------------------------------------------------------------|:-----|:-------------------------------------------------------------------------------------------------------------------------------|
+|:------------|:---------------|:------------|:-------------------------------|
 | bgd_level0_100m_2000_2020.tif     | WorldPop Administrative Level 0 mastergrid base layer for Bangladesh | 2020 | [World Pop Hub - National boundaries](https://www.worldpop.org/geodata/summary?id=24282)                                       |
 | bgd_admbnda_adm3_bbs_20201113.shp | Administrative Level 3 (Upazila) Units in Bangladesh                 | 2015 | [Bangladesh - Subnational Administrative Boundaries - Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-bgd) |
 
 ### Geo-spatial data sets to be harmonised
 
 |                                                                             |                                                                              |      |                                                                                                                                                                                                                                                                                                  |
-|-----------------------------------------------------------------------------|------------------------------------------------------------------------------|:-----|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|------------|------------|:-----------|--------------------------------------|
 | **Geo-spatial file name**                                                   | Description                                                                  | Year | Link to download                                                                                                                                                                                                                                                                                 |
 | SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif | VIIRS night-time lights (global)                                             | 2015 | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/#v1)                                                                                                                                                                                                                            |
 | 2015_accessibility_to_cities_v1.0.tif                                       | MAP travel time to high-density urban centres (global)                       | 2015 | [Malaria Atlas - Accessibility to Cities](https://data.malariaatlas.org/maps?layers=Accessibility:201501_Global_Travel_Time_to_Cities,Malaria:202206_Global_Pf_Parasite_Rate)                                                                                                                    |
@@ -307,7 +307,7 @@ We will be working with the following data sets:
 ### WorldPop harmonised geo-spatial data sets
 
 |                                           |                                                                         |           |                                                                |
-|-------------------------------------------|-------------------------------------------------------------------------|-----------|----------------------------------------------------------------|
+|---------------|-----------------------|---------------|--------------------|
 | **Geo-spatial File Name**                 | **Description**                                                         | **Year**  | **Link to Download**                                           |
 | bgd_srtm_topo_100m.tif                    | SRTM topography in BGD                                                  | 2000      | [World Pop](https://www.worldpop.org/project/categories?id=14) |
 | bgd_srtm_slope_100m.tif                   | SRTM slope (derivative of topography) in BGD                            | 2000      |                                                                |
@@ -834,7 +834,7 @@ This step of the estimation procedure is the material covered in part 1 of the g
 
 Alternatively, for practice following the remainder of the guide, or to ensure you have followed the steps correctly and your data looks the same, you can dwonload our pre-processed estimates *here*.
 
-### Step 2: Generating direct estimates and their sampling estimates
+### Step 2: Generating direct estimates of poverty and their sampling variances
 
 This step is necessary in order to generate our poverty estimates for the in sample areas. Since the DHS survey employs a sampling strategy we cannot take the values they produce at face-value and first have to adjust them to make them to make them more representative of the whole sample.
 
@@ -1102,7 +1102,7 @@ ggplot(final_de, aes(x=binary_wealth, y=cve.2, color=num_clusters_factor)) + geo
 
 ```
 
-You can see in the graph above that the CV is much smoother and this is much more efficient when now predicting poverty using area level models.
+You can see in the graph above that the CV is much smoother and this is much more appropriate when predicting variables using area level models since it reduces noise, stabilizes estimates and enhances model performance.
 
 Now using the final_de dataset for se.GVF Also the BGD.zonal stats will be used for the geospatial variables
 
