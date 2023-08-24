@@ -1176,6 +1176,10 @@ bgd_dhs_geo_2014 <- bgd_dhs_geo_2014[ , -which(names(bgd_dhs_geo_2014) %in% c("g
 write.csv(bgd_dhs_geo_2014, "bgd_geo_2014.csv")
 ```
 
+![Source: Aaron Maxwell University of West Virginia](images/West Virginia spatial join.png){fig-align="center" width="534"}
+
+This figure, showing the location of airfields in West Virginia, is an example of how a spatial join works. The main shapefile has the county lines loaded and the outline of the shape representing the state border. The second shapefile shows every airfield and their respective gps coordinates. When the two shapefiles are projected in the same perspective a spatial join is then able to tell you in which county the airfield is based. This is the same concept as our study with the spatial join informing us in which upazila each cluster of households is located based on the GPS coordinates.
+
 Once we format the new dataframe correctly and remove the unnecessary columns, the new dataframe is represented by bgd_geo_2014.csv. This dataframe combines the required variables from the household recode module for the 2014 DHS, the geo-location of clusters of households, and upazila codes to which the clusters belong. This dataset we are now using has information on: wealth index raw score, quintile ranking of the wealth index, strata, household weights, upazila, number of clusters and GPS location of clusters.
 
 The GPS coordinates we use correspond to the centroid of a cluster of households, which has a random offset of 2km in urban areas and 5-10km in rural areas to preserve the privacy of households. However, the DHS note that efforts have been made for offsets to be specified in a way that preserves the original administrative units within which HHs reside - therefore this should not affect our matching of households to upazilas.
@@ -1698,7 +1702,7 @@ The output of this command shows that the correlation between the two sets of po
 
 **Benchmark the estimates here if required**
 
-Good for statistical offices if they want estimates to sum to official figures for reporting
+This is useful for statistical offices if they want estimates to sum to official figures for reporting.
 
 ### Step 8: Visualising the results on administrative level 3 (Upazila) scale:
 
@@ -1791,7 +1795,7 @@ final.est.plot <- est.shp.coef[order(est.shp.coef$order),]
 
 **Map of direct estimates**
 
-The command for creating the maps of direct estimates vs FH estimates are almost identical. To create the visualisation for the direct estimates you use the argument "fill = Direct", as opposed to "fill = FH" for the FH estimates.
+The command for creating the maps of direct estimates vs FH estimates are almost identical. To create the visualisation for the direct estimates you use the argument "fill = Direct", as opposed to "fill = FH" for the FH estimates. You are able to adjust the title of this map under the name argument, technically the estimation is showing the probability a household in that upazila is in the bottom quintile of wealth distribution across the country. You are also easily able to adjust the scale of the plot, for example setting pretty_breaks(n=10) if you want the scale at 0.1 (1/10) intervals of probability instead of what it is currently set at 0.2 (1/5).
 
 ```{r}
 ggplot() + geom_polygon(data = final.est.plot,
@@ -1800,14 +1804,16 @@ ggplot() + geom_polygon(data = final.est.plot,
                             fill = Direct),
                         color = "black",
                         linewidth = 0.25) + coord_map() +
-  scale_fill_distiller(name = "Poorest",
+  scale_fill_distiller(name = "% Households in Poverty",
                        palette = "Greens",
                        direction = 1,
                        breaks = pretty_breaks(n = 5)) +
   theme_nothing(legend = TRUE)
 ```
 
+::: callout-note
 When you look at this map you can clearly see the 179 out of sample areas represented by the regions in grey.
+:::
 
 **Map of FH estimates**
 
@@ -1819,7 +1825,7 @@ ggplot() + geom_polygon(data = final.est.plot,
                             group = group,
                             fill = FH), color = "black",
                         linewidth = 0.25) + coord_map() +
-  scale_fill_distiller(name = "Poorest",
+  scale_fill_distiller(name = "% Households in Poverty",
                        palette = "Greens",
                        direction = 1,
                        breaks = pretty_breaks(n = 5)) +
@@ -1829,6 +1835,16 @@ ggplot() + geom_polygon(data = final.est.plot,
 Here all the previously out of sample areas in grey are now shown with their poverty rates as estimated by the Fay-Herriot model. The FH model has used the most statistically significant geospatial covariates to fit a model using data from the DHS household survey as a ground-truth measure of poverty to then predict poverty for out-of-sample areas.
 
 ### Exporting the results to your medium of choice
+
+If, in addition to the visualisations, you want the raw data for further analysis then it is very easy to export the data to an Excel file. You can then carry out further data-processing on your medium of choice. This command will export the model summary as well as direct and model-based point and uncertainty estimates. The file will be saved in your working directory.
+
+```{r}
+# Exporting estimates to an excel file 
+write.excel(fh_arcsin_final,
+            file = "fh_arcsin.xlsx",
+            MSE = TRUE)
+```
+
 
 # Conclusion / Caveats
 
