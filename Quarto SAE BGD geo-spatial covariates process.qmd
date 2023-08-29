@@ -473,7 +473,7 @@ The below tables provide details on these data sets.
 ### Geo-spatial data sets to be harmonised
 
 |                                                                             |                                                                              |      |                                                                                                                                                                                                                                                                                                  |
-|------------------|------------------|:-----------------|--------------------|
+|------------------|------------------|:-----------------|-------------------|
 | **Geo-spatial file name**                                                   | Description                                                                  | Year | Link to download                                                                                                                                                                                                                                                                                 |
 | SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif | VIIRS night-time lights (global)                                             | 2015 | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/#v1)                                                                                                                                                                                                                            |
 | 2015_accessibility_to_cities_v1.0.tif                                       | MAP travel time to high-density urban centres (global)                       | 2015 | [Malaria Atlas - Accessibility to Cities](https://data.malariaatlas.org/maps?layers=Accessibility:201501_Global_Travel_Time_to_Cities,Malaria:202206_Global_Pf_Parasite_Rate)                                                                                                                    |
@@ -1035,21 +1035,27 @@ Congrats! You have made it to the end of Section A on processing geo-spatial cov
 
 # Introduction
 
-Section A of the guide showed you how to gather and harmonise geospatial data from online in order to make it into a single dataframe ready for analysis. However, as a reminder, the complete estimation procedure of the Fay-Herriot model is an 8 step process! Section B will explain to you how you go from the geospatial dataset you have produced in the first section of the guide, to producing poverty estimates for every upazila in Bangladesh and displaying this information on a map. The complete steps of the estimation procedure are as follows:
+Section A of the guide showed you how to gather and harmonise geospatial data from online in order to make it into a single dataframe ready for analysis. However, as a reminder, the complete estimation procedure of the Fay-Herriot model is an 8 step process! Section B will explain to you how you go from the geospatial dataset you have produced in the first section of the guide, to producing poverty estimates for every upazila in Bangladesh and displaying this information on a map like the one seen below!
+
+!['Poorest' indicates the probability that a household in that upazila is ranked in the bottom quintile of wealth in Bangladesh.](images/FH Bangladesh.png){fig-align="center" width="437"}
+
+The complete steps of the estimation procedure are as follows:
 
 Step 1: Gathering the geospatial data and compiling into a harmonised dataset.
 
-You can either start with the geospatial co-ordinates you generated in section A or, if you just want to practice the estimation procedure, you are able to download our pre-processed dataframe which [here.]{.underline} Section A of our guide explains how to compile this geospatial data in detail.
+You can either start with the geospatial co-ordinates you generated in section A, or, if you just want to practice the estimation procedure, you are able to download our pre-processed dataframe which [here.]{.underline} Section A of our guide explains how to compile this geospatial dataframe in detail.
 
-Step 2: Generating direct estimates of poverty and their sampling variance for the in-sample observations.
+Step 2: Carrying out a spatial join of the datasets and then generating direct estimates of poverty and their sampling variance for the in-sample observations.
 
-Surveys often employ complex sampling designs, with elements of stratification and multistage sampling with unequal probabilities. In order to account for this, we need to calculate direct estimates of our variable of interest (in our case is poverty) and estimates of their variances. This is in order to prevent bias being introduced into the estimation. We carry out this step using the data from the wealth index in the DHS household dataset.
+Our first step here is carrying out a spatial join. Each cluster of households in the DHS survey is uniquely identified but we do not know which upazila they reside within. In order to solve this issue, we overlay the distribution of clusters over a shapefile of the whole country and assign upazila codes to the cluster depending on which polygon they reside within.
 
-Once we generate the direct estimates and their variances. We then smooth the variances using a generalised variance function. This improves performance of an area-level model by reducing noise, stablising estimates as well as accounting for uncertainty in the data because of the limited sample size which is an inherent problem in area-level models.
+Surveys often employ complex sampling designs, with elements of stratification and multistage sampling with unequal probabilities. In order to account for this, we need to calculate direct estimates of our variable of interest (in our case this is poverty) and estimates of their variances. This is in order to prevent bias being introduced into the estimation. We carry out this step using household wealth data downloaded from the DHS survey.
 
-Step 3: Merging the geospatial data to the household data and your direct estimates.
+Once we generate the direct estimates and their variances. We then smooth the variances using a generalised variance function. This improves performance of an area-level model by reducing noise, stablising estimates as well as accounting for uncertainty in the data because of the limited sample size which is an inherent problem when using area-level models.
 
-Now we need to combine the geospatial data from section A of the guide, the DHS household survey and the direct estimates and their variances that you generated in step 2 of the process. In order to combine this information into one big dataset we need a unique common identifier and for this we merge the observations using the unique domain identifier 'upazila.code'. This code uniquely identifies every single administrative level 3 (upazila level) area in Bangladesh so that R knows which area you are talking about when looking at the values of household poverty and the geospatial covariates. This also is the area code we use later to merge the dataset with the shapefile in order to display our estimates on a map!
+Step 3: Merging the geospatial data to the direct estimates of poverty generated in step 2.
+
+Now we need to combine the geospatial data from section A of the guide and the direct estimates and their variances that you generated in step 2 of the process. In order to combine this information into one big dataset we need a unique common identifier and for this we merge the observations using the unique domain identifier 'upazila.code'. This code uniquely identifies every single administrative level 3 (upazila level) area in Bangladesh so that R knows which area you are referring to when looking at the values of household poverty and the geospatial covariates. This also is the area code we use later to merge the dataset with the shapefile in order to display our estimates on a map!
 
 Step 4: Selecting the geospatial covariates with the most predictive power
 
@@ -1077,7 +1083,7 @@ In this step we compare the direct point poverty estimates we generated in step 
 
 Step 8: Visualisation of the results.
 
-The final step of the process is visualising the results. To do this we have to download a Bangladesh shapefile from online which includes the co-ordinates of the country's border lines and includes the polygon shapes for each upazila. We merge the dataset using the unique upazila district code and then visualise the relative wealth in each domain by using a gradient colour scheme.
+The final step of the process is visualising the results. To do this we use the main Bangladesh shapefile again which includes the co-ordinates of the country's border lines and includes the polygon shapes for each upazila. We combine this shapefile with our dataset using the unique upazila district code and then visualise the relative wealth in each domain by using a gradient colour scheme.
 
 # Estimation
 
@@ -1089,7 +1095,7 @@ This step of the estimation procedure is the material covered in part 1 of the g
 
 Alternatively, for practice following the remainder of the guide, or to ensure you have followed the steps correctly and your data looks the same, you can download our pre-processed estimates *here*.
 
-### Step 2: Generating direct estimates of poverty and their sampling variances
+### Step 2: Spatial joining of the datasets and then generating direct estimates of poverty and their sampling variances
 
 This step is necessary in order to generate our poverty estimates for the in sample areas. Since the DHS survey employs a sampling strategy we cannot take the values they produce at face-value and first have to adjust them to make them to make them more representative of the whole sample.
 
@@ -1176,7 +1182,7 @@ bgd_dhs_geo_2014 <- bgd_dhs_geo_2014[ , -which(names(bgd_dhs_geo_2014) %in% c("g
 write.csv(bgd_dhs_geo_2014, "bgd_geo_2014.csv")
 ```
 
-![Source: Aaron Maxwell University of West Virginia](images/West Virginia spatial join.png){fig-align="center" width="534"}
+![Source: Aaron Maxwell University of West Virginia](images/West%20Virginia%20spatial%20join.png){fig-align="center" width="534"}
 
 This figure, showing the location of airfields in West Virginia, is an example of how a spatial join works. The main shapefile has the county lines loaded and the outline of the shape representing the state border. The second shapefile shows every airfield and their respective gps coordinates. When the two shapefiles are projected in the same perspective a spatial join is then able to tell you in which county the airfield is based. This is the same concept as our study with the spatial join informing us in which upazila each cluster of households is located based on the GPS coordinates.
 
@@ -1845,8 +1851,7 @@ write.excel(fh_arcsin_final,
             MSE = TRUE)
 ```
 
-
-# Conclusion / Caveats
+# Conclusion
 
 This guide has run through how to produce poverty estimates for out of sample areas using the Fay-Herriot model in R. Part 1 of the guide details how to collect the geospatial data from various online sources and harmonise the information into one single dataset. Part 2 explains the estimation procedure and the steps that must be taken to ensure precise, robust estimates. The combination of household data and geospatial data rather than census data (which is the method that has traditionally been used) enables the user to produce poverty estimates with more frequency and at a lower cost. Furthermore the public availability of geospatial data ensures that this method is available to a wider audience of agencies which should add valuable momentum to the poverty reduction conversation.
 
@@ -1921,5 +1926,3 @@ It's important to carefully consider these caveats and assess the suitability of
 **Stratification:** Stratification refers to the process of dividing the target population into distinct sub-groups or 'strata' based on certain characteristics or attributes relevant to the study. The method ensures you capture the diversity within the population in your sample while ensuring more accurate estimates within each subgroup
 
 **Noise:** Noise refers to the random or unstructured variation in a variable's values that is not related to the underlying phenomenon being measured. Noise can arise from various sources such as measurement errors, environmental factors, human error or other random influences.
-
--   
