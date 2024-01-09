@@ -39,6 +39,8 @@ Page number:
 
 Social protection programs and appropriate policy decisions are important drivers of poverty reduction but they need suitable data in order to effectively target those who need help the most. Policy makers therefore require the most current statistics as well as figures that give an idea of poverty distribution across the whole country. This method of small area estimation can help solve both of these issues.
 
+#PJ: Comment from Paul.
+
 Poverty estimates are a crucial measure for policymakers and development practitioners to understand the extent of poverty in a country and design effective poverty alleviation programs. This guide will tell you how to produce these estimates.
 
 **The Fay-Herriot (FH) Model**
@@ -461,35 +463,35 @@ The below tables provide details on these data sets.
 
 ### Base layers
 
-| Geo-spatial file name             | Description                                                          | Year | Link to download                                                                                                               |
+| Geo-spatial file name \| Description \| Year \| Link to download \|
 
-|:-----------------|:-----------------|:-----------------|:------------------|
+\|:-----------------\|:-----------------\|:-----------------\|:------------------\|
 
-|:----------------|:----------------|:----------------|:----------------------|
+\|:----------------\|:----------------\|:----------------\|:----------------------\|
 
-| bgd_level0_100m_2000_2020.tif     | WorldPop Administrative Level 0 mastergrid base layer for Bangladesh | 2020 | [World Pop Hub - National boundaries](https://www.worldpop.org/geodata/summary?id=24282)                                       |
-| bgd_admbnda_adm3_bbs_20201113.shp | Administrative Level 3 (Upazila) Units in Bangladesh                 | 2015 | [Bangladesh - Subnational Administrative Boundaries - Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-bgd) |
+| bgd_level0_100m_2000_2020.tif \| WorldPop Administrative Level 0 mastergrid base layer for Bangladesh \| 2020 \| [World Pop Hub - National boundaries](https://www.worldpop.org/geodata/summary?id=24282) \|
+| bgd_admbnda_adm3_bbs_20201113.shp \| Administrative Level 3 (Upazila) Units in Bangladesh \| 2015 \| [Bangladesh - Subnational Administrative Boundaries - Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-bgd) \|
 
 ### Geo-spatial data sets to be harmonised
 
-|                                                                             |                                                                              |      |                                                                                                                                                                                                                                                                                                  |
+|                                                                             \| \| \| \|
 
-|------------------|------------------|:-----------------|-------------------|
+\|------------------\|------------------\|:-----------------\|-------------------\|
 
-|----------------|----------------|:---------------|------------------------|
+\|----------------\|----------------\|:---------------\|------------------------\|
 
-| **Geo-spatial file name**                                                   | Description                                                                  | Year | Link to download                                                                                                                                                                                                                                                                                 |
-| SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif | VIIRS night-time lights (global)                                             | 2015 | [Earth Observation Group](https://eogdata.mines.edu/products/vnl/#v1)                                                                                                                                                                                                                            |
-| 2015_accessibility_to_cities_v1.0.tif                                       | MAP travel time to high-density urban centres (global)                       | 2015 | [Malaria Atlas - Accessibility to Cities](https://data.malariaatlas.org/maps?layers=Accessibility:201501_Global_Travel_Time_to_Cities,Malaria:202206_Global_Pf_Parasite_Rate)                                                                                                                    |
-| 2020_motorized_travel_time_to_healthcare.tif                                | MAP motorised only travel time to healthcare facilities (global)             | 2019 | [Malaria Atlas - Motorised Time Travel to Healthcare](https://data.malariaatlas.org/maps?layers=Accessibility:202001_Global_Motorized_Travel_Time_to_Healthcare,Malaria:202206_Global_Pf_Parasite_Rate&extent=-11815912.856289707,-6356003.33856192,28286163.259866484,14615055.359158086)       |
-| 2020_walking_only_travel_time_to_healthcare.tif                             | MAP walking only travel time to healthcare facilities (global)               | 2019 | [Malaria Atlas - Walking Only Time Travel to Healthcare](https://data.malariaatlas.org/maps?layers=Accessibility:202001_Global_Walking_Only_Travel_Time_To_Healthcare,Malaria:202206_Global_Pf_Parasite_Rate&extent=-11815912.856289707,-6356003.33856192,28286163.259866484,14615055.359158086) |
-| bgd_general_2020.tif                                                        | Meta (Facebook) Population density -- Overall; BGD                           | 2020 | [Humanitarian Data Exchange - Demographic Maps from Meta](https://data.humdata.org/dataset/bangladesh-high-resolution-population-density-maps-demographic-estimates)                                                                                                                             |
-| bgd_men_2020.tif                                                            | Meta (Facebook) Population density -- Men; BGD                               | 2020 |                                                                                                                                                                                                                                                                                                  |
-| bgd_elderly_60_plus_2020.tif                                                | Meta (Facebook) Population density -- Elderly (aged 60+); BGD                | 2020 |                                                                                                                                                                                                                                                                                                  |
-| bgd_women_of_reproductive_age_15_49_2020.tif                                | Meta (Facebook) Population density -- Women of reproductive age (15-49); BGD | 2020 |                                                                                                                                                                                                                                                                                                  |
-| bgd_women_2020.tif                                                          | Meta (Facebook) Population density -- Women; BGD                             | 2020 |                                                                                                                                                                                                                                                                                                  |
-| bgd_youth_15_24_2020.tif                                                    | Meta (Facebook) Population density -- Youths aged 15-24; BGD for 2020        | 2020 |                                                                                                                                                                                                                                                                                                  |
-| bgd_children_under_five_2020.tif                                            | Meta (Facebook) Population density -- Children under 5; BGD                  | 2020 |                                                                                                                                                                                                                                                                                                  |
+| **Geo-spatial file name** \| Description \| Year \| Link to download \|
+| SVDNB_npp_20150101-20151231_75N060E_vcm-orm_v10_c201701311200.avg_rade9.tif \| VIIRS night-time lights (global) \| 2015 \| [Earth Observation Group](https://eogdata.mines.edu/products/vnl/#v1) \|
+| 2015_accessibility_to_cities_v1.0.tif \| MAP travel time to high-density urban centres (global) \| 2015 \| [Malaria Atlas - Accessibility to Cities](https://data.malariaatlas.org/maps?layers=Accessibility:201501_Global_Travel_Time_to_Cities,Malaria:202206_Global_Pf_Parasite_Rate) \|
+| 2020_motorized_travel_time_to_healthcare.tif \| MAP motorised only travel time to healthcare facilities (global) \| 2019 \| [Malaria Atlas - Motorised Time Travel to Healthcare](https://data.malariaatlas.org/maps?layers=Accessibility:202001_Global_Motorized_Travel_Time_to_Healthcare,Malaria:202206_Global_Pf_Parasite_Rate&extent=-11815912.856289707,-6356003.33856192,28286163.259866484,14615055.359158086) \|
+| 2020_walking_only_travel_time_to_healthcare.tif \| MAP walking only travel time to healthcare facilities (global) \| 2019 \| [Malaria Atlas - Walking Only Time Travel to Healthcare](https://data.malariaatlas.org/maps?layers=Accessibility:202001_Global_Walking_Only_Travel_Time_To_Healthcare,Malaria:202206_Global_Pf_Parasite_Rate&extent=-11815912.856289707,-6356003.33856192,28286163.259866484,14615055.359158086) \|
+| bgd_general_2020.tif \| Meta (Facebook) Population density -- Overall; BGD \| 2020 \| [Humanitarian Data Exchange - Demographic Maps from Meta](https://data.humdata.org/dataset/bangladesh-high-resolution-population-density-maps-demographic-estimates) \|
+| bgd_men_2020.tif \| Meta (Facebook) Population density -- Men; BGD \| 2020 \| \|
+| bgd_elderly_60_plus_2020.tif \| Meta (Facebook) Population density -- Elderly (aged 60+); BGD \| 2020 \| \|
+| bgd_women_of_reproductive_age_15_49_2020.tif \| Meta (Facebook) Population density -- Women of reproductive age (15-49); BGD \| 2020 \| \|
+| bgd_women_2020.tif \| Meta (Facebook) Population density -- Women; BGD \| 2020 \| \|
+| bgd_youth_15_24_2020.tif \| Meta (Facebook) Population density -- Youths aged 15-24; BGD for 2020 \| 2020 \| \|
+| bgd_children_under_five_2020.tif \| Meta (Facebook) Population density -- Children under 5; BGD \| 2020 \| \|
 
 ### WorldPop harmonised geo-spatial data sets
 
@@ -1025,10 +1027,9 @@ Congrats! You have made it to the end of Section A on processing geo-spatial cov
 
 ## 4. Caveats, problems, things to look out for
 
-
 **Replication:** This guide is intended to be replicable with various types of geo-spatial data sources and country contexts - we would welcome all such replication exercises and hope that our material can be used to produce small area estimates of poverty in countries other than Bangladesh! That said, the exact raster manipulation as well as processing steps needed will depend on your specific geo-spatial data. Always check the key elements of your raster data to inform the processing you will need to do - our procedure is not to be simply copy pasted (though it provides many useful functions you can work with). CRS, spatial resolution, extent, number of cells, and dimensions are always good things to check.
 
--  
+-   
 
 -   **Time period of geo-spatial data**: whenever possible, try to obtain geo-spatial data for the same time period as the household survey data that contains the poverty variable (or any other outcome you are interested in modelling). If that is not possible - say that you can only access geo-spatial data that is older than your poverty data - you should consider whether this information is outdated, or could still be considered relevant (for instance the elevation of mountain ranges is unlikely to have changed much over time, but demographic data will change quite quickly).
 
@@ -1044,7 +1045,7 @@ Congrats! You have made it to the end of Section A on processing geo-spatial cov
 
 Section A of the guide showed you how to gather and harmonise geospatial data from online in order to make it into a single dataframe ready for analysis. However, as a reminder, the complete estimation procedure of the Fay-Herriot model is an 8 step process! Section B will explain to you how you go from the geospatial dataset you have produced in the first section of the guide, to producing poverty estimates for every upazila in Bangladesh and displaying this information on a map like the one seen below!
 
-!['Poorest' indicates the probability that a household in that upazila is ranked in the bottom quintile of wealth in Bangladesh.](images/FH Bangladesh.png){fig-align="center" width="437"}
+!['Poorest' indicates the probability that a household in that upazila is ranked in the bottom quintile of wealth in Bangladesh.](images/FH%20Bangladesh.png){fig-align="center" width="437"}
 
 The complete steps of the estimation procedure are as follows:
 
@@ -1941,10 +1942,8 @@ It's important to carefully consider these caveats and assess the suitability of
 
 **R-squared:** R-squared, also known as the coefficient of determination, measures the proportion of the variance in the response variable that is explained by the predictors in a regression model.
 
-
 **EBLUP Estimates:** Empirical Best Linear Unbiased Prediction estimates. EBLUP estimates strike a balance between the sample data and the auxiliary information to generate reliable estimates at the small area level.
 
 **Stratification:** Stratification refers to the process of dividing the target population into distinct sub-groups or 'strata' based on certain characteristics or attributes relevant to the study. The method ensures you capture the diversity within the population in your sample while ensuring more accurate estimates within each subgroup
 
 **Noise:** Noise refers to the random or unstructured variation in a variable's values that is not related to the underlying phenomenon being measured. Noise can arise from various sources such as measurement errors, environmental factors, human error or other random influences.
-
